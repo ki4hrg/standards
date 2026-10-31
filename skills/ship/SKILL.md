@@ -75,8 +75,10 @@ session didn't start in the target repo, say so and hand the work to a session s
 ## 5. Open the PR
 
 - Title: a Conventional Commit, `type(scope): outcome-first summary`, with type one of `feat fix
-  docs refactor perf test build ci chore revert`. Add `!` for a breaking change to data or an
-  external interface. The title becomes the commit on `main`.
+  docs refactor perf test build ci chore revert`. Scope is lowercase; several are comma-separated
+  with no space (`fix(api,forms):`). Add `!` for a breaking change to data or an external
+  interface. The title becomes the commit on `main`. If the title check fails, edit the title and
+  `gh run rerun <run-id> --failed`; no new push needed.
 - Body: the repo's PR template. **Verification** lists what you actually ran and saw. If the work
   came from an issue, the body says `Closes #n`.
 - Anything you found and didn't fix (a review finding, an inconsistency, a gap outside this
