@@ -50,12 +50,20 @@ jobs:
     # red before anyone relies on the merge. The title becomes the commit on main.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Conventional Commit title
         env:
-          TITLE: ${{ github.event.pull_request.title }}
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
-          re='^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+'
+          # Read the title now, not from the event: after fixing a title, re-running
+          # the failed jobs is enough (the event still carries the old one).
+          TITLE=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json title -q .title)
+          # One or more scopes, comma-separated: fix(api,forms): ...
+          re='^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+(,[a-z0-9._/-]+)*\))?!?: .+'
           if ! printf '%s' "$TITLE" | grep -Eq "$re"; then
             echo "::error::PR title is not a Conventional Commit: \"$TITLE\". Expected: type(scope): summary — types: feat fix docs refactor perf test build ci chore revert."
             exit 1
@@ -104,12 +112,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
-          TITLE: ${{ github.event.pull_request.title }}
           # Only the commit these checks ran on may merge. A push after the run
           # started fails the merge here, and the new commit's own run takes over.
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           state=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json state -q .state)
+          # The current title, which the title job just checked, not the event's.
+          TITLE=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json title -q .title)
           if [ "$state" = "MERGED" ]; then
             # Another run (or a person) merged it, and that path started its own deploy.
             echo "Already merged."; exit 0

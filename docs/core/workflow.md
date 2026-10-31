@@ -29,9 +29,13 @@ How a change gets from a prompt to production. Applies to every profile.
   (`scripts/repo-settings.sh`).
 - The PR title is a Conventional Commit and becomes the commit on `main`:
   `type(scope): outcome-first summary`, where type is one of
-  `feat fix docs refactor perf test build ci chore revert`. Scope is optional. Add `!` for a
+  `feat fix docs refactor perf test build ci chore revert`. Scope is optional, lowercase; several
+  scopes are comma-separated with no space (`fix(api,forms): …`). Add `!` for a
   breaking change to data or an external interface (MCP tools, webhooks, env vars).
 - Commits on the branch can be anything; nobody reads them after the squash.
+- `merge-on-green` checks the title. If it fails, fix the title (`gh pr edit <n> --title …`) and
+  re-run the failed jobs (`gh run rerun <run-id> --failed`); the check reads the current title, so
+  no new push is needed.
 
 ## Merging
 
