@@ -77,6 +77,19 @@ There is no human review before merging, so review happens in the session:
   done, what was verified and what wasn't, where to resume, and the branch. `docs/HANDOFF.md`
   is only for efforts that span several issues, such as a migration sweep.
 
+## Dev machine
+
+What a machine needs to run every check locally. Missing pieces aren't blockers: a check that
+can't run here runs in CI instead (`ship`).
+
+- **Node 24 on `PATH`, installed somewhere permanent** (a version manager or `~/.local`). Never in
+  a session's temp or scratchpad directory, which can be wiped on restart and take running work
+  with it.
+- **Docker** (user in the `docker` group) for database checks and Testcontainers. Recommended,
+  not required.
+- **Memory:** `next build` and `tsc` on a large generated client (Prisma) want about 3 GB of heap.
+  On a smaller machine, set `NODE_OPTIONS=--max-old-space-size=…` or let CI run them.
+
 ## Versions and releases
 
 - Apps are unversioned: merging to `main` is the release.
