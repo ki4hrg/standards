@@ -47,7 +47,20 @@ For Postgres:
   a versioned subdirectory).
 - `pg_isready` healthcheck.
 - No published port unless something outside the stack needs it.
-- The app gets `DATABASE_URL` **without** a password, plus `PGPASSWORD`.
+- The app gets `DATABASE_URL` **without** a password, plus `PGPASSWORD`. postgres.js and
+  node-postgres read `PGPASSWORD`; **Prisma doesn't** (it fails with P1000). A Prisma app keeps
+  the same compose variables and has its entrypoint put the encoded password into the URL before
+  anything connects:
+
+  ```sh
+  if [ -n "$PGPASSWORD" ]; then
+    DATABASE_URL=$(node -e 'const u = new URL(process.env.DATABASE_URL);
+      u.password = encodeURIComponent(process.env.PGPASSWORD); process.stdout.write(u.href)')
+    export DATABASE_URL
+  fi
+  ```
+
+  `encodeURIComponent` is what keeps `/ @ : % # ?` in a password from breaking the URL.
 - A `backup` service (nightly `pg_dump -Fc`, kept N days) when the database holds anything that
   can't be recreated. Back up the backup volume off the host.
 
