@@ -6,7 +6,8 @@ were never decided by me: an agent wrote them once and they spread by copying. A
 standard only if it is listed here.
 
 Provenance key:
-- **Decided**: chosen by me in the standards interview (2026-10-31).
+- **Decided**: chosen by me in the standards interview (2026-10-31), including the follow-up
+  round on rules raised by the first migration pilot.
 - **Established**: an earlier explicit decision of mine, usually made after an incident, and
   already consistent across projects.
 - **Default**: proposed during the interview without objection; easy to revisit.
@@ -20,10 +21,10 @@ Provenance key:
 | One branch per PR: after a PR merges, new work starts on a new branch from `origin/main`; a merged branch is never reused. No stacked PRs by default. | Decided | Follow-up PRs from an already squash-merged branch repeated the old changes and conflicted with them. Fixes squash's main failure mode instead of switching to merge commits. |
 | PR titles are Conventional Commits; the title becomes the squash commit subject. Branch commits are free-form. | Decided | A consistent `main` history. The earlier "Conventional Commits" rules in some repos were agent boilerplate and were not followed. |
 | PRs merge themselves when CI is green: the agent adds an `automerge` label; the `merge-on-green` workflow merges the tested commit and starts the deploy. Agents don't merge. No personal token. | Decided | Agents had been merging seconds after opening a PR, before CI ran. GitHub's native auto-merge waits only for *required* checks, which private repos on the free plan cannot have. |
-| A check that can't run locally (memory, no Docker) isn't a pass: the PR opens without `automerge`, and the label goes on once CI is green. | Default | First migration pilot: `tsc` on a large Prisma client ran out of memory on a small dev host. |
-| A GitHub billing or spending-limit failure ("job was not started") stops the work: no label, no re-runs, no code changes; tell John. | Default | First migration pilot: billing blocked every job for hours, and merge-on-green can't tell that from a real failure. |
-| The dependency audit covers dev dependencies too. Clear an advisory by upgrading, then `overrides`, then (only if no fix exists and it doesn't apply) a recorded per-advisory ignore. npm has no such ignore, so an npm repo that needs one moves to pnpm. | Default | Build tools run in CI and on dev machines, and some ship in the image. Raised in the first migration pilot. |
-| Migration: a repo whose audit already fails fixes small things inside its Phase 1 PR, and bigger ones (a framework major) in a PR before Phase 1 that John merges by hand. A stack item forced by a critical/high advisory comes forward from Phase 6 as its own PR. | Default | Otherwise Phase 1 can never go green, and the fixes have no CI to go through. Raised in the first migration pilot. |
+| A check that can't run locally (memory, no Docker) isn't a pass: the PR opens without `automerge`, and the label goes on once CI is green. | Decided | First migration pilot: `tsc` on a large Prisma client ran out of memory on a small dev host. |
+| A GitHub billing or spending-limit failure ("job was not started") stops the work: no label, no re-runs, no code changes; tell John. | Decided | First migration pilot: billing blocked every job for hours, and merge-on-green can't tell that from a real failure. |
+| The dependency audit covers dev dependencies too. Clear an advisory by upgrading, then `overrides`, then (only if no fix exists and it doesn't apply) a recorded per-advisory ignore. npm has no such ignore, so an npm repo that needs one moves to pnpm. | Decided | Build tools run in CI and on dev machines, and some ship in the image. Raised in the first migration pilot. |
+| Migration: a repo whose audit already fails fixes small things inside its Phase 1 PR, and bigger ones (a framework major) in a PR before Phase 1 that John merges by hand. A stack item forced by a critical/high advisory comes forward from Phase 6 as its own PR. | Decided | Otherwise Phase 1 can never go green, and the fixes have no CI to go through. Raised in the first migration pilot. |
 | Before opening a PR the agent runs `/code-review` on its diff and fixes what it finds; `/security-review` too when the diff touches a sensitive path. | Decided | Nothing is reviewed by a person before merging, so review happens in the session. |
 | Plans, specs and handoffs live in the repo's `docs/`, never only in `~/.claude/plans/`. | Default | Several CLAUDE.md files pointed at plan files that no longer exist. |
 | App repos are unversioned: merging to `main` is the release. Distributed artifacts (WordPress plugins, add-ons) use `vX.Y.Z` tags with a CI check that the tag matches the version in the code. | Default | Only distributed things need versions. |
@@ -58,7 +59,7 @@ Provenance key:
 | Two deploy modes: Dockhand git stack (webhook), or a service embedded in another stack (no webhook; release-driven tag with auto-update). | Established | The webhook does not apply to a service that lives in someone else's stack. |
 | Container healthchecks on `/api/health` (no auth, no database call); the app waits for the database with `service_healthy`. | Established | Rolled out to every app on the same day. |
 | Node 24, PostgreSQL 18 (data volume mounted at `/var/lib/postgresql`). | Established | PG18 stores data in a versioned subdirectory. |
-| An existing Postgres stack may keep `PGDATA=/var/lib/postgresql/data` with the volume at `.../data`, recorded as a repo exception; move it only at a major-version upgrade. | Default | Moving the mount means a dump and restore with no benefit; a major upgrade needs one anyway. Raised in the first migration pilot. |
+| An existing Postgres stack may keep `PGDATA=/var/lib/postgresql/data` with the volume at `.../data`, recorded as a repo exception; move it only at a major-version upgrade. | Decided | Moving the mount means a dump and restore with no benefit; a major upgrade needs one anyway. Raised in the first migration pilot. |
 | The Postgres password travels in `PGPASSWORD`, beside a `DATABASE_URL` that has no password. | Established | A `/` in the password broke URL parsing and caused a restart loop. |
 
 ## Stack (Next.js app profile)
@@ -83,8 +84,8 @@ Provenance key:
 | Standard | Provenance | Why |
 |---|---|---|
 | Shared behavioural rules (see `design.md`). | Established, collected in the interview | These were already my most consistent explicit preferences. |
-| UI copy follows the `ui-verbosity-reduction` skill: written to it from the start, applied by `ship` to strings a PR changes, and run over a whole app occasionally. | Default (proposed) | Agent-built UIs over-explain. Preventing that costs nothing; cleaning it up later costs a full pass. |
-| Casing: Title Case for labels, buttons, headings, tabs and badges; sentence case for descriptions, hints, empty states, confirms and errors. A project overrides this only by recording it. | Default (from the skill) | Mixed casing across apps was agent output, not a decision. |
+| UI copy follows the `ui-verbosity-reduction` skill: written to it from the start, applied by `ship` to strings a PR changes, and run over a whole app occasionally. | Decided | Agent-built UIs over-explain. Preventing that costs nothing; cleaning it up later costs a full pass. |
+| Casing: Title Case for labels, buttons, headings, tabs and badges; sentence case for descriptions, hints, empty states, confirms and errors. A project overrides this only by recording it. | Decided | Mixed casing across apps was agent output, not a decision. |
 | Every app uses the same token *names*; each app chooses its own palette and fonts. AA contrast is checked in CI. | Decided | Components and agents work the same way in every app, without every app looking the same. |
 | Dark mode is required: system preference by default, with a light/dark/system toggle and no flash on load. | Decided | Support had been anywhere from missing to mandatory. |
 
