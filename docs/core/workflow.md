@@ -49,8 +49,13 @@ PRs merge themselves when CI is green.
 5. If CI fails, the agent fixes it on the same branch. A PR is not finished until it is merged or
    the person has been told why it is not.
 
-Remove the label, or open the PR as a draft, to hold a change for a person to review: schema
-changes that drop data, changes to auth, anything the session was unsure of.
+Remove the label to hold a change for a person to review: schema changes that drop data, changes
+to auth, anything the session was unsure of.
+
+**A draft means work is still going on.** Open a PR as a draft only while it isn't finished. Once
+it is (checks pass, reviews done, description final), mark it ready with `gh pr ready <n>`, even
+when it's held for John without the label: a draft tells him there's nothing to look at yet.
+`merge-on-green` skips drafts.
 
 ## Review
 

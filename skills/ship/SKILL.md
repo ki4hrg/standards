@@ -92,6 +92,10 @@ that exact prefix is what John's permissions allow), with what you saw, where, a
 
   In those cases, leave it unlabelled and tell John why in one line.
 
+If the PR is a draft, mark it ready (`gh pr ready <n>`) once steps 2 to 4 are done, labelled or
+not. A draft says the work isn't finished; one left as a draft never merges and John doesn't
+know to look at it.
+
 If `gh` isn't available (some cloud sessions), use the environment's own PR tool. If the label
 can't be set, tell John.
 
