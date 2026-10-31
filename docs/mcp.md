@@ -10,7 +10,7 @@ claude.ai connector (web, desktop and mobile).
   instance per request, no session state in memory, so it works behind any proxy and across
   restarts.
 - **Shared package (planned):** the OAuth server and tool helpers below will live in one package
-  used by every app. Until it exists, copy from the most recent app that implements them and note
+  on public npm, used by every app. Until it exists, copy from the most recent app that implements them and note
   the source in `docs/ARCHITECTURE.md`.
 
 ## Auth

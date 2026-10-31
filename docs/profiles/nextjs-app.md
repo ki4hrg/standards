@@ -16,7 +16,9 @@ skill does this). The core docs (`../core/`) apply in full.
 | Auth | Own sessions (argon2 via `@node-rs/argon2`), `openid-client` for OIDC |
 | Styling | Tailwind CSS 4 with the shared `@theme` tokens (`../design.md`) |
 | Tests | Vitest against real Postgres (`@testcontainers/postgresql`). Needs Docker; on a dev machine without it, CI runs the database tests (the `ship` skill). |
-| Lint | ESLint with `eslint-config-next` |
+| Lint | ESLint with `eslint-config-next` and `eslint-config-prettier` |
+| Format | Prettier, default settings (no config file beyond `.prettierignore`) |
+| Components | The shared kit in `components/ui/` (`../design.md`), styled only through the tokens. Not built yet |
 | MCP | `@modelcontextprotocol/sdk` (`../mcp.md`) |
 
 Pin exact versions for anything whose upgrades need care (Next, Drizzle, the Anthropic SDK, auth
@@ -31,7 +33,8 @@ Every app has these, which CI calls:
   "dev": "next dev",
   "build": "next build",
   "typecheck": "tsc --noEmit",
-  "lint": "eslint .",
+  "lint": "eslint . && prettier --check .",
+  "format": "prettier --write .",
   "test": "vitest run",
   "db:generate": "drizzle-kit generate",
   "db:migrate": "tsx lib/db/migrate.ts",

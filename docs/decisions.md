@@ -7,7 +7,7 @@ standard only if it is listed here.
 
 Provenance key:
 - **Decided**: chosen by me in the standards interview (2026-10-31), including the follow-up
-  round on rules raised by the first migration pilot.
+  rounds on rules raised by the first migration pilot and on the open questions.
 - **Established**: an earlier explicit decision of mine, usually made after an incident, and
   already consistent across projects.
 - **Default**: proposed during the interview without objection; easy to revisit.
@@ -30,6 +30,8 @@ Provenance key:
 | Issues are the unit of work (PR says `Closes #n`). A plan in `docs/plans/` exists only when the work needs more than one PR or session, linked from its issue; never only in `~/.claude/plans/`. | Decided | Sessions already start from issues. Several CLAUDE.md files pointed at plan files that no longer exist. |
 | Follow-ups an agent finds and doesn't fix become issues labelled `agent-found`, for John to triage. Agents may open these without asking (a permission rule allows exactly `gh issue create --label agent-found`). | Decided | Follow-ups noted in PR descriptions were never seen again. |
 | A session that stops partway through an issue hands off in a comment on the issue. `docs/HANDOFF.md` only for multi-issue efforts (a migration sweep). | Decided | The handoff sits next to the work it describes. |
+| Dependabot PRs are merged by hand from the PR list once CI is green; their titles are Conventional Commits (`chore(deps): …`, set by `commit-message` in `dependabot.yml`). | Decided | Dependabot-triggered workflows get a read-only token, so `merge-on-green` can't merge them; a `pull_request_target` workflow or a personal token would add risk for little gain. Untitled, they failed the title check (first migration pilot). |
+| GitHub stays on the free plan; `merge-on-green` stands in for required checks and native auto-merge. | Decided | It works and was proven in the first migration pilot. Revisit if it causes trouble. |
 | App repos are unversioned: merging to `main` is the release. Distributed artifacts (WordPress plugins, add-ons) use `vX.Y.Z` tags with a CI check that the tag matches the version in the code. | Decided | Only distributed things need versions. |
 
 ## Quality
@@ -46,12 +48,12 @@ Provenance key:
 | Standard | Provenance | Why |
 |---|---|---|
 | Dependabot (weekly, minor/patch grouped) for the package manager, Docker and GitHub Actions. | Decided | No repo had automated dependency updates. |
-| Dependabot ignores Node and Postgres image majors, and `@types/node` majors. | Default | The runtime and database majors are stack decisions, and a Postgres major needs a dump and restore. Raised in the first migration pilot (a Node 25 PR). |
+| Dependabot ignores Node and Postgres image majors, and `@types/node` majors. | Decided | The runtime and database majors are stack decisions, and a Postgres major needs a dump and restore. Raised in the first migration pilot (a Node 25 PR). |
 | CI runs a dependency audit on every PR; high and above fails. | Decided | No repo scanned for vulnerable dependencies. |
 | Secret scanning is the GitGuardian GitHub app, on every repo. No second scanner in CI. | Decided | It was already installed and checking every PR. |
 | Required secrets use `${VAR:?message}` in compose, so a missing secret fails the deploy instead of running with a default. | Established | A localhost default once shipped to production. |
 | Containers run as a non-root user. | Decided | Mixed across projects today. |
-| Routes called by `fetch` (API routes, webhooks) refuse with 401/403 JSON, never a redirect to sign-in. | Default | `fetch` follows the redirect to a 200 page and the client reports success. Raised in the first migration pilot. |
+| Routes called by `fetch` (API routes, webhooks) refuse with 401/403 JSON, never a redirect to sign-in. | Decided | `fetch` follows the redirect to a 200 page and the client reports success. Raised in the first migration pilot. |
 
 ## Deploy
 
@@ -74,6 +76,8 @@ Provenance key:
 | Next.js (current major, App Router), TypeScript strict with `noUncheckedIndexedAccess`, pnpm. | Decided | The newer half of my projects already use this. |
 | Drizzle ORM with drizzle-kit migrations: append-only, any backfill in the same migration, applied at container start, checked in CI against the schema. | Decided | `prisma db push` at boot could not add unique constraints safely and forced workarounds. |
 | zod 4. | Decided | See Quality. |
+| Prettier with default settings; `pnpm lint` runs `prettier --check`. | Decided | Only two projects formatted, with different settings. Defaults leave nothing to argue about. |
+| Python services: uv with a committed `uv.lock`. | Decided | One fast tool for environments, installs and locking. |
 | Own session handling (argon2) plus `openid-client` for OIDC. OIDC rules: `OIDC_ONLY`, `OIDC_TRUST_EMAIL`; a sign-in never creates an account or re-links one. | Decided (library), Established (OIDC rules) | Small code that is fully understood; no beta auth dependency. |
 
 ## MCP
@@ -81,7 +85,7 @@ Provenance key:
 | Standard | Provenance | Why |
 |---|---|---|
 | MCP at `/mcp` on the app's origin, using the official `@modelcontextprotocol/sdk` (stateless Streamable HTTP). | Decided (SDK), Established (path) | There were four or more hand-rolled or differently-styled servers. |
-| One shared package for the OAuth 2.1 authorization server and tool helpers. | Decided | Three separate OAuth servers had been written. Not built yet. |
+| One shared package for the OAuth 2.1 authorization server and tool helpers, published to public npm. | Decided | Three separate OAuth servers had been written. Public npm installs in CI and Docker builds with no token (GitHub Packages needs one even for public packages). Not built yet. |
 | `snake_case` `verb_noun` tool names; `list_`/`get_` pairs; a `title` and annotations on every tool; refusals are `isError` results with a readable message. | Decided (from the most common existing practice) | One tool vocabulary across apps. |
 
 ## Design
@@ -92,6 +96,11 @@ Provenance key:
 | UI copy follows the `ui-verbosity-reduction` skill: written to it from the start, applied by `ship` to strings a PR changes, and run over a whole app occasionally. | Decided | Agent-built UIs over-explain. Preventing that costs nothing; cleaning it up later costs a full pass. |
 | Casing: Title Case for labels, buttons, headings, tabs and badges; sentence case for descriptions, hints, empty states, confirms and errors. A project overrides this only by recording it. | Decided | Mixed casing across apps was agent output, not a decision. |
 | Every app uses the same token *names*; each app chooses its own palette and fonts. AA contrast is checked in CI. | Decided | Components and agents work the same way in every app, without every app looking the same. |
+| A small shared component kit (Button, Card, Section, PageHeader, IconButton, StatusBadge, EmptyState) in the Next.js template, styled only through the shared tokens. | Decided | Token names alone left every app rebuilding the same components with different behaviour. Not built yet. |
+| Page subtitles: optional, one line, only when the page needs context the title can't give. | Decided | Two projects disagreed; a ban lost useful context, unlimited ones narrated the UI. |
+| An empty card collapses to its muted header and its add action; a full empty state only when a page's only list is empty. | Decided | "None added" cards filled pages with nothing. |
+| No count badges in card headers by default; only where the count isn't visible in the card (collapsed or paginated). | Decided | A badge repeating what's on screen is noise. |
+| Creating a record: inline form or modal, the app's choice; either way it stays on the page. | Decided | Both work; what matters is not navigating away and back. |
 | Dark mode is required: system preference by default, with a light/dark/system toggle and no flash on load. | Decided | Support had been anywhere from missing to mandatory. |
 
 ## Agent docs

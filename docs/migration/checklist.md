@@ -201,6 +201,10 @@ framework without complaint. Stop servers left running from before, so the smoke
 new build.
 
 - [ ] Package manager pnpm, Node 24.
+- [ ] Prettier with defaults, in its own formatting-only PR (nothing else in the diff), with the
+  commit added to `.git-blame-ignore-revs`.
+- [ ] Once the shared component kit exists, it replaces the app's own Button/Card/etc., screen by
+  screen.
 - [ ] Prisma → Drizzle with real migrations. The biggest item: generate a baseline migration from
   the live schema first, and prove a round-trip on a copy of production data.
 - [ ] Auth library → own sessions plus `openid-client`, keeping the OIDC rules.

@@ -11,8 +11,8 @@ In short:
 
 - **The test:** would someone who has never seen this screen still know what to do if this
   string were shorter? If yes, shorten it. Shorter must not mean vaguer.
-- **Don't narrate the UI** or point at the control beside the text. No subtitles that repeat the
-  title.
+- **Don't narrate the UI** or point at the control beside the text. A page subtitle is optional:
+  one line, only when the page needs context the title can't give, never one that repeats it.
 - **Don't litigate settled decisions.** Show the state, not the reasoning behind it.
 - **Let design direct.** Colour, button style, icons and position say what's primary or
   dangerous. Don't repeat it in prose.
@@ -42,6 +42,10 @@ app now and then, and once when a repo is brought up to standard.
   phone, working content first.
 - Information is grouped in cards with a header. The card's actions sit in its header on the
   right.
+- **An empty card collapses** to its muted header with its add action, not a "None added" body. A
+  full empty state (`EmptyState`) only when a page's only list is empty.
+- **No count badges in card headers**, unless the count isn't visible in the card itself (it's
+  collapsed or paginated).
 - Lists: clicking a row opens it; no separate "view" link.
 - Reports and anything printable get a print stylesheet or a print route.
 
@@ -53,7 +57,8 @@ app now and then, and once when a repo is brought up to standard.
   so on. Icon-only buttons carry their label as a tooltip and `aria-label`.
 - **Detail pages load read-only.** An edit button reveals an inline form in place. A dedicated edit
   page only when the form is too complex for inline.
-- **Creating stays on the page** (inline form or modal), rather than navigating away and back.
+- **Creating stays on the page**, rather than navigating away and back: an inline form in the card
+  or a modal, whichever suits the app. Be consistent within an app.
 - **Destructive actions confirm inline, in two steps:** the button is replaced in place by "Delete?"
   with Confirm and Cancel. Never the browser's `confirm()`. A modal confirm is only for a delete
   that cascades to other records, and it says what else goes.
@@ -77,7 +82,7 @@ the values in `app/globals.css` (template: `templates/nextjs-app/app/globals.css
 | `danger`, `danger-soft` | Destructive, failed, overdue |
 | `radius-card`, `radius-control` | Corner radii |
 
-Status colours come from one map in the app (a `StatusBadge` or similar). Don't invent a status
+Status colours come from one map in the app (the kit's `StatusBadge`). Don't invent a status
 colour inline.
 
 **Contrast:** every text/background token pair meets WCAG AA (4.5:1 for body text) in both

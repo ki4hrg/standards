@@ -26,7 +26,7 @@ The reusable `security.yml` workflow runs:
 ## Dependabot
 
 Every repo has `.github/dependabot.yml` with weekly updates for its package ecosystem, Docker base
-images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem (every ecosystem in the file, as in the
+images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem, and `commit-message: { prefix: chore, include: scope }` so titles pass the Conventional Commit check (every ecosystem in the file, as in the
 template). Dependabot
 PRs go through CI like any other; merge them from the PR list. Majors of the runtime and
 database images (Node, Postgres) and `@types/node` are ignored: those versions are a stack

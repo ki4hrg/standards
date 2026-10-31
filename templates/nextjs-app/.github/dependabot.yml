@@ -5,6 +5,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # PR title becomes "chore(deps): …", which merge-on-green's title check accepts.
+    commit-message:
+      prefix: chore
+      include: scope
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -17,6 +21,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -29,6 +36,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -41,6 +51,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
     groups:
       minor-and-patch:
         update-types: [minor, patch]
