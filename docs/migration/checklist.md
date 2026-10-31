@@ -34,6 +34,9 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 - [ ] Run the `conform` skill. Save its report as `docs/plans/standards-conformance.md`, once
   John says yes.
 - [ ] Get John's yes or no on each **candidate** rule from the CLAUDE.md triage.
+- [ ] Run the dependency audit locally (`npm audit --audit-level=high`, `pnpm audit …`, or the
+  profile's equivalent). Phase 1 makes it a gate, so whatever fails now will block Phase 1's
+  own PR. Plan the fixes (see Phase 1).
 - [ ] Agree with John which phases are in scope for this sweep. Phase 6 (stack) is out unless he
   says otherwise. Record the scope in the handoff.
 
@@ -51,6 +54,12 @@ dependencies.*
 - [ ] A repo still on npm passes `package-manager: npm` to `node-check` and
   `package-managers: npm` to `security`. Moving to pnpm is Phase 6.
 - [ ] CI runs on `pull_request`. `image` needs every check job.
+- [ ] **If the audit fails today**, the Phase 1 PR can't go green, and there's no PR CI yet for
+  fix PRs to go through. So:
+  - small fixes (`npm audit fix` without `--force`, `overrides` per `security.md`) go **in the
+    Phase 1 PR**, listed in its description;
+  - anything bigger (a framework major, a stack item) is its own PR **before** Phase 1, verified
+    locally (typecheck, lint, build, audit, and a run of the app), and merged by John by hand.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
   repo.
 - [ ] `merge-on-green` job with `actions: write`. Run `scripts/repo-settings.sh owner/repo`
@@ -160,6 +169,11 @@ verbosity rules.*
 ## Phase 6: Stack alignment (only when John asks, per repo)
 
 Each item gets its own plan in `docs/plans/` before any code.
+
+**Exception:** a stack item forced by a critical or high advisory (a framework major whose older
+versions won't be patched, or moving npm → pnpm to ignore an unfixable advisory) comes forward as
+its own PR, with its plan, whenever it's needed. The rest of Phase 6 stays out of scope. John
+watches its deploy, as for Phase 2.
 
 - [ ] Package manager pnpm, Node 24.
 - [ ] Prisma → Drizzle with real migrations. The biggest item: generate a baseline migration from

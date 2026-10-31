@@ -5,10 +5,21 @@
 The reusable `security.yml` workflow runs:
 
 - **Dependency audit** for the repo's package manager (`pnpm audit`, `npm audit`,
-  `composer audit`, or `pip-audit` through uv), failing on **high** or above. If an advisory has
-  no fix yet and does not affect the app, record the exception in `docs/DECISIONS.md` and ignore
-  that one advisory in the package manager's own config (pnpm: `auditConfig.ignoreGhsas` in
-  `pnpm-workspace.yaml`; composer: `config.audit.ignore`). Don't lower the level for everything.
+  `composer audit`, or `pip-audit` through uv), failing on **high** or above. Dev dependencies
+  are audited too, on purpose: build tools run in CI with a token and on dev machines, and some
+  ship in the image anyway (an ORM's CLI for migrations).
+
+  To clear an advisory, in order of preference:
+  1. Upgrade the direct dependency.
+  2. Force a patched version of the transitive one (pnpm `overrides` in `pnpm-workspace.yaml`,
+     npm `overrides` in `package.json`), and check the app still builds and passes.
+  3. If no patched version exists and the advisory doesn't affect the app, record the exception in
+     `docs/DECISIONS.md` and ignore that one advisory in the package manager's config (pnpm:
+     `auditConfig.ignoreGhsas` in `pnpm-workspace.yaml`; composer: `config.audit.ignore`).
+     **npm has no per-advisory ignore.** An npm repo that needs one moves to pnpm for it (the
+     Phase 6 item, brought forward).
+
+  Never lower the audit level for everything.
 - **Secrets:** the GitGuardian GitHub app checks every PR. A new repo must be inside its
   repository access. A real leak is fixed by rotating the secret, not by rewriting history.
 
