@@ -1,0 +1,49 @@
+name: close-linked-issues
+
+# Close the issues a merged PR names with a closing keyword ("Closes #n").
+# GitHub doesn't do this when the merge was made with GITHUB_TOKEN, which is how
+# merge-on-green merges. Call it after merge-on-green, only when it merged:
+#
+#   close-issues:
+#     needs: automerge
+#     if: needs.automerge.outputs.merged == 'true'
+#     permissions: { issues: write, pull-requests: read }
+#     uses: ki4hrg/standards/.github/workflows/close-linked-issues.yml@v1
+#
+# A separate workflow because merge-on-green's callers don't grant `issues: write`,
+# and a called workflow asking for more than its caller grants fails to start.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  close:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Close issues the PR closes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Only issues in this repo: the token can't close issues elsewhere.
+          issues=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json closingIssuesReferences \
+            --jq ".closingIssuesReferences[] | select(.repository.nameWithOwner == \"$GITHUB_REPOSITORY\") | .number")
+          if [ -z "$issues" ]; then
+            echo "No linked issues."; exit 0
+          fi
+          for n in $issues; do
+            state=$(gh issue view "$n" --repo "$GITHUB_REPOSITORY" --json state -q .state)
+            if [ "$state" = "OPEN" ]; then
+              gh issue close "$n" --repo "$GITHUB_REPOSITORY" --reason completed \
+                --comment "Closed by #$PR (merged by merge-on-green)."
+            else
+              echo "#$n already $state."
+            fi
+          done

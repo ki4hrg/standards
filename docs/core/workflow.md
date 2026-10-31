@@ -41,7 +41,9 @@ PRs merge themselves when CI is green.
    they find.
 2. The agent opens the PR and adds the `automerge` label, unless the person asked to look first.
 3. CI runs. When every job passes, `merge-on-green` squash-merges the exact commit that was
-   tested and starts the `main` pipeline, which builds the image and deploys.
+   tested and starts the `main` pipeline, which builds the image and deploys. `close-linked-issues`
+   then closes the issues the PR names with `Closes #n` (GitHub skips that for a merge made by
+   the workflow token).
 4. The agent watches CI and reports the merge and the deploy. It does **not** merge the PR itself:
    merging seconds after opening, before CI ran, is how broken builds used to reach `main`.
 5. If CI fails, the agent fixes it on the same branch. A PR is not finished until it is merged or

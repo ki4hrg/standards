@@ -34,6 +34,12 @@ on:
           workflow_dispatch and build/deploy on main. Empty skips the dispatch.
         type: string
         default: ci.yml
+    outputs:
+      merged:
+        description: >-
+          'true' when this run merged the PR. Use it to run close-linked-issues,
+          because GitHub doesn't close linked issues on a GITHUB_TOKEN merge.
+        value: ${{ jobs.merge.outputs.merged }}
 
 permissions:
   contents: read
@@ -63,6 +69,8 @@ jobs:
       && contains(github.event.pull_request.labels.*.name, inputs.label)
       && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
+    outputs:
+      merged: ${{ steps.merge.outputs.merged }}
     permissions:
       contents: write
       pull-requests: write

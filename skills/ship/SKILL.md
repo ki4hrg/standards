@@ -109,7 +109,9 @@ recent account payments have failed" or mentions a spending limit, that is **Git
 not the code. Don't push fixes, re-run, or add the label: tell John, and stop until he says it's
 cleared.
 
-When `merge-on-green` has merged, say so. Then follow the
+When `merge-on-green` has merged, say so, and check the issue from `Closes #n` closed (the
+`close-issues` job does it; a repo without that job yet needs it closed by hand, with a comment
+naming the PR). Then follow the
 dispatched `main` run (`gh run list --branch main --limit 1`, `gh run watch`) and report the
 deploy result. The work isn't done until the PR has merged or John knows why it hasn't. If
 the session must end first, say where things stand, and comment the same on the issue the work

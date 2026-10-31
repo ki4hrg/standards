@@ -66,7 +66,7 @@ dependencies.*
     PR's upgrade didn't touch. The bigger PR stays one change.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
   repo.
-- [ ] `merge-on-green` job with `actions: write`. Run `scripts/repo-settings.sh owner/repo`
+- [ ] `merge-on-green` job with `actions: write`, and the `close-issues` job after it (as in the template). Run `scripts/repo-settings.sh owner/repo`
   (squash only, delete branch on merge, `automerge` label).
 - [ ] Workflow `permissions:` are least-privilege.
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
