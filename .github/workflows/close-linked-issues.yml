@@ -32,11 +32,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
+          BODY: ${{ github.event.pull_request.body }}
         run: |
           # Only issues in this repo: the token can't close issues elsewhere.
+          # `repository` here has `owner.login` and `name`, not `nameWithOwner`.
           issues=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json closingIssuesReferences \
-            --jq ".closingIssuesReferences[] | select(.repository.nameWithOwner == \"$GITHUB_REPOSITORY\") | .number")
+            --jq ".closingIssuesReferences[] | select((.repository.owner.login + \"/\" + .repository.name) == \"$GITHUB_REPOSITORY\") | .number")
           if [ -z "$issues" ]; then
+            # Not silent: a same-repo "Closes #n" that resolved to nothing means
+            # the issue stays open, so fail and let the watching agent close it.
+            if printf '%s' "$BODY" | grep -Eiq '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]+#[0-9]+'; then
+              echo "::error::The PR body has a closing keyword but GitHub lists no closing issue in this repo. Close it by hand."
+              exit 1
+            fi
             echo "No linked issues."; exit 0
           fi
           for n in $issues; do
