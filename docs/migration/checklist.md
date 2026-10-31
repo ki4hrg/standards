@@ -28,6 +28,9 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 - [ ] A recent Actions run in the repo actually **started** (green or red, not "job was not
   started"). Billing or a spending limit blocks every job in seconds, and merge-on-green can't
   tell that from a real failure. If runs are blocked, stop and tell John.
+- [ ] **Ask John to confirm** the repo's Dockhand stack has **Force redeploy** and **Re-pull
+  images** on, and whether its `/api/health` is reachable from GitHub (then `APP_HEALTH_URL` is
+  set). Agents can't see Dockhand, so this is his answer, recorded in the sweep tracker.
 
 ## Phase 0: Audit and triage (no code changes)
 
@@ -72,8 +75,9 @@ dependencies.*
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
   compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
-  is documented. The Dockhand stack has **Force redeploy** and **Re-pull images** on, and the
-  `APP_HEALTH_URL` variable is set if `/api/health` is reachable from GitHub (`deploy.md`).
+  is documented. John has confirmed the Dockhand stack has **Force redeploy** and **Re-pull
+  images** on (Before each repo), and the `APP_HEALTH_URL` variable is set if `/api/health` is
+  reachable from GitHub (`deploy.md`).
 - [ ] **Verify:**
   - this PR's own run is green on the PR;
   - labelling it `automerge` merges it;

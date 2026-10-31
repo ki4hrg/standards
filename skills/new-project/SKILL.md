@@ -95,7 +95,9 @@ unless he says otherwise), and wait for a yes. Then:
      what's serving;
    - the GitGuardian app's repository access, if it isn't set to all repos;
    - the GHCR package visibility after the first image push;
-   - the Dockhand stack itself, with **Force redeploy** and **Re-pull images** on.
+   - the Dockhand stack itself, with **Force redeploy** and **Re-pull images** on. Ask him to
+     confirm both before the first deploy: agents can't see Dockhand, and without them a quick
+     second merge isn't deployed.
 
 ## 5. Summary
 
