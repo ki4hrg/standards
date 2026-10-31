@@ -39,6 +39,11 @@ dependencies.*
 - [ ] Replace the workflow with the template caller (`templates/<profile>/.github/workflows/ci.yml`).
   Keep repo-specific jobs, but nothing may sit between `image` and `deploy` except checks. Move
   any e2e suite onto PRs only, or make it manual.
+- [ ] Set the check's `scripts` to the ones the repo **has now** (often just `typecheck lint`; add a
+  `typecheck` script running `tsc --noEmit` if missing). Each later phase adds what it creates:
+  `test` in Phase 3, `db:drift` once real migrations exist, `check:contrast` in Phase 5.
+- [ ] A repo still on npm passes `package-manager: npm` to `node-check` and
+  `package-managers: npm` to `security`. Moving to pnpm is Phase 6.
 - [ ] CI runs on `pull_request`. `image` needs every check job.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
   repo.
@@ -66,7 +71,10 @@ running.*
   - no localhost defaults for public URLs.
 - [ ] **Postgres:**
   - `PGPASSWORD` beside a password-less `DATABASE_URL`;
-  - PG18 volume at `/var/lib/postgresql`;
+  - PG18 volume at `/var/lib/postgresql`. An existing stack that pins
+    `PGDATA=/var/lib/postgresql/data` with the volume at `.../data` keeps it, recorded as an
+    exception in `docs/DECISIONS.md`: moving it means a dump and restore, for no gain. Only move it
+    during a Postgres major-version upgrade, which needs the dump and restore anyway;
   - no published port unless something needs it.
 - [ ] Healthchecks: app on `/api/health` (no auth, no DB, reports `GIT_REVISION`); DB with
   `pg_isready`; `depends_on: service_healthy`.
@@ -88,6 +96,10 @@ running.*
 
 *Done when every input from outside is parsed and every entry point authenticates itself.*
 
+- [ ] If the repo has no test runner, set one up first, per its profile (Next.js: Vitest on real
+  Postgres via Testcontainers), as its own PR. Add `test` to the CI check's `scripts`. The
+  refusal tests below need it. Converting existing mocked tests to real Postgres stays in
+  Phase 6.
 - [ ] Inventory every entry point:
   - server actions;
   - route handlers;
@@ -143,13 +155,15 @@ Each item gets its own plan in `docs/plans/` before any code.
 - [ ] Auth library → own sessions plus `openid-client`, keeping the OIDC rules.
 - [ ] MCP → the official SDK, with `snake_case` tool names. Use the shared OAuth package once it
   exists.
-- [ ] Tests on real Postgres where they were mocked or missing.
+- [ ] Tests on real Postgres where they were mocked. (A missing test runner is set up in Phase 3.)
 
 ## Close out
 
 - [ ] Run `conform` again. Each remaining gap is either an issue or a recorded, accepted
   exception in `docs/DECISIONS.md`.
-- [ ] Update the sweep tracker.
+- [ ] Update the sweep tracker. It names private repos, so it is not in this public repo: it is
+  `private/sweep-tracker.md` in John's local clone (gitignored). A session without it reports
+  the repo's phase status for John to record.
 
 ## Other profiles
 

@@ -1,7 +1,10 @@
 name: node-check
 
-# Typecheck, lint and test a pnpm project. Testcontainers works as-is: Docker is
+# Typecheck, lint and test a Node project. Testcontainers works as-is: Docker is
 # present on GitHub's Ubuntu runners.
+#
+# pnpm is the standard; `package-manager: npm` exists so a repo that hasn't moved to
+# pnpm yet (a migration Phase 6 item) can still adopt this check in Phase 1.
 #
 #   check:
 #     uses: ki4hrg/standards/.github/workflows/node-check.yml@v1
@@ -15,8 +18,12 @@ on:
       working-directory:
         type: string
         default: '.'
+      package-manager:
+        description: pnpm or npm.
+        type: string
+        default: pnpm
       scripts:
-        description: pnpm scripts to run in order, space-separated. Each must exist in package.json.
+        description: package.json scripts to run in order, space-separated. Each must exist in package.json.
         type: string
         default: typecheck lint test
       runs-on:
@@ -36,22 +43,33 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v7
+      - name: Validate package-manager
+        env:
+          PM: ${{ inputs.package-manager }}
+        run: |
+          case "$PM" in pnpm|npm) ;; *) echo "::error::package-manager must be pnpm or npm, got '$PM'"; exit 1 ;; esac
       # Reads the version from `packageManager` in package.json.
-      - uses: pnpm/action-setup@v4
+      - if: inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
         with:
           package_json_file: ${{ inputs.working-directory }}/package.json
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ inputs.node-version }}
-          cache: pnpm
-          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+          cache: ${{ inputs.package-manager }}
+          cache-dependency-path: ${{ inputs.working-directory }}/${{ inputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json' }}
+      # Both install exactly what the lockfile says and fail if it is out of date.
+      - if: inputs.package-manager == 'pnpm'
+        run: pnpm install --frozen-lockfile
+      - if: inputs.package-manager == 'npm'
+        run: npm ci
       - name: Run checks
         env:
+          PM: ${{ inputs.package-manager }}
           SCRIPTS: ${{ inputs.scripts }}
         run: |
           for s in $SCRIPTS; do
-            echo "::group::pnpm $s"
-            pnpm run "$s"
+            echo "::group::$PM run $s"
+            "$PM" run "$s"
             echo "::endgroup::"
           done

@@ -8,6 +8,8 @@ name: ci
 on:
   push:
     branches: [main]
+    # A docs-only direct push doesn't rebuild or redeploy. PRs always run (merge-on-green).
+    paths-ignore: ['docs/**', '**/*.md']
   pull_request:
     types: [opened, synchronize, reopened, labeled, ready_for_review]
   # merge-on-green dispatches this after merging; also a manual redeploy.

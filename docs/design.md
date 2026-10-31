@@ -86,7 +86,9 @@ themes, checked in CI by a script over the token file (`pnpm check:contrast`).
 ## Dark mode
 
 Required. The app follows the system setting by default and offers a light/dark/system toggle in
-settings or the user menu. The choice is stored in `localStorage` and applied by an inline script
+settings or the user menu. The choice is stored in `localStorage` (the one per-user
+preference that belongs there rather than in the database: it must apply before first paint,
+with no request, and may reasonably differ per device) and applied by an inline script
 in `<head>` before first paint, so the page never flashes the wrong theme. Dark values are a
 second set of the same tokens, so a component written with tokens needs no `dark:` classes. Check
 new screens in both themes and at phone width.

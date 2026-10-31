@@ -7,6 +7,9 @@ name: ci
 on:
   push:
     branches: [main]
+    # A docs-only direct push (allowed by workflow.md) doesn't rebuild or redeploy.
+    # Push only: PRs always run, because merge-on-green needs a green run to merge.
+    paths-ignore: ['docs/**', '**/*.md']
   pull_request:
     # `labeled`: adding `automerge` to a PR whose checks already ran starts the merge.
     types: [opened, synchronize, reopened, labeled, ready_for_review]

@@ -54,6 +54,7 @@ Provenance key:
 | Two deploy modes: Dockhand git stack (webhook), or a service embedded in another stack (no webhook; release-driven tag with auto-update). | Established | The webhook does not apply to a service that lives in someone else's stack. |
 | Container healthchecks on `/api/health` (no auth, no database call); the app waits for the database with `service_healthy`. | Established | Rolled out to every app on the same day. |
 | Node 24, PostgreSQL 18 (data volume mounted at `/var/lib/postgresql`). | Established | PG18 stores data in a versioned subdirectory. |
+| An existing Postgres stack may keep `PGDATA=/var/lib/postgresql/data` with the volume at `.../data`, recorded as a repo exception; move it only at a major-version upgrade. | Default | Moving the mount means a dump and restore with no benefit; a major upgrade needs one anyway. Raised in the first migration pilot. |
 | The Postgres password travels in `PGPASSWORD`, beside a `DATABASE_URL` that has no password. | Established | A `/` in the password broke URL parsing and caused a restart loop. |
 
 ## Stack (Next.js app profile)
