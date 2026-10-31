@@ -60,6 +60,10 @@ dependencies.*
     Phase 1 PR**, listed in its description;
   - anything bigger (a framework major, a stack item) is its own PR **before** Phase 1, verified
     locally (typecheck, lint, build, audit, and a run of the app), and merged by John by hand.
+    That PR gets no CI run (there's no PR CI yet). Checks needing a database run locally if the
+    machine has Docker; otherwise on the deploy John watches.
+  - non-breaking fixes for *other* advisories still go in the Phase 1 PR, even ones the bigger
+    PR's upgrade didn't touch. The bigger PR stays one change.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
   repo.
 - [ ] `merge-on-green` job with `actions: write`. Run `scripts/repo-settings.sh owner/repo`
@@ -174,6 +178,12 @@ Each item gets its own plan in `docs/plans/` before any code.
 versions won't be patched, or moving npm → pnpm to ignore an unfixable advisory) comes forward as
 its own PR, with its plan, whenever it's needed. The rest of Phase 6 stays out of scope. John
 watches its deploy, as for Phase 2.
+
+A framework major changes runtime behaviour that types and the build don't catch. Its plan has a
+**Runtime behaviour changes** section: go through the upgrade guide for defaults and semantics that
+changed (form state after a server action, request body size limits, caching, middleware) and say
+what each means for this app. If one would break a rule in `design.md` or `security.md` (forms
+keeping what was typed, uploads arriving whole), fix it in the same PR.
 
 - [ ] Package manager pnpm, Node 24.
 - [ ] Prisma → Drizzle with real migrations. The biggest item: generate a baseline migration from

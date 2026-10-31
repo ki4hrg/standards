@@ -31,7 +31,20 @@ that is not the same as passing: say which check didn't run and why in the PR's 
 section, open the PR **without** the `automerge` label, and let CI be the check. Add the label
 only once that run is green.
 
+Database checks (migrations, Testcontainers tests, a smoke run against Postgres) need Docker. If
+this machine has none, they're checks that can't run here: CI runs them.
+
+**If the repo has no PR CI yet** (its workflow runs only on push to `main`, as before migration
+Phase 1), nothing checks the PR but you. Say so in the PR, run everything that can run locally,
+don't add the label (there's no `merge-on-green` to read it), and leave the merge to John. What
+couldn't run locally gets checked on the deploy John watches, and the first CI run is the one
+after the merge: follow it and report.
+
 ## 3. Review your own diff
+
+Run both reviews from the repo's root: they diff against the default branch, and fail when the
+working directory is another repo or `origin/HEAD` isn't set. If it isn't, run
+`git remote set-head origin -a` first.
 
 1. Invoke the `code-review` skill on the branch's diff against `main`. Fix real findings. For a
    finding you don't fix, note in the PR why.

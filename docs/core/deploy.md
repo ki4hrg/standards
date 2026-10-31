@@ -87,4 +87,6 @@ auto-update (Dockhand auto-update or Diun) pull, or redeploy by hand. Say which 
 ## Checking what's running
 
 Compare the revision `/api/health` reports (or the image's `org.opencontainers.image.revision`
-label) with `git rev-parse HEAD`. The tag name proves nothing.
+label) with `git rev-parse HEAD`. The tag name proves nothing. Before an app has `/api/health`
+(migration Phase 2), read the label:
+`docker inspect -f '{{ index .Config.Labels "org.opencontainers.image.revision" }}' <container>`.
