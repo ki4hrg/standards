@@ -14,6 +14,11 @@ merges, so this skill is the review.
 - On `main`: if the repo's CLAUDE.md allows direct pushes (infra/ops repo, single-file utility, not
   yet deployed) or the diff touches only docs, commit and push to `main` after step 2, then stop.
   Otherwise create a branch first.
+- **Never reuse a branch whose PR has merged.** Check with `gh pr list --head <branch> --state
+  merged`. If it has, start a new branch from a freshly fetched `origin/main` and cherry-pick only
+  the new commits onto it. A squash merge leaves the branch's old commits off `main`'s history, so
+  a second PR from the same branch repeats them and conflicts. This applies to `claude/*` session
+  branches too: a session that continues after its PR merged moves to a new branch.
 - One change per PR. If the work holds unrelated changes, split them.
 
 ## 2. Checks
@@ -76,3 +81,5 @@ dispatched `main` run (`gh run list --branch main --limit 1`, `gh run watch`) an
 deploy result. The work isn't done until the PR has merged or John knows why it hasn't. If
 the session must end first, say where things stand; the label will still merge the PR when
 CI passes.
+
+After the merge, any further work in this session goes on a new branch (step 1).

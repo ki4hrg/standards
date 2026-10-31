@@ -12,6 +12,14 @@ How a change gets from a prompt to production. Applies to every profile.
   - changes that touch only `docs/`, `CLAUDE.md` or `README.md`.
   A repo that relies on one of these exceptions says so in its CLAUDE.md.
 - Keep a PR to one change. Several unrelated changes go in several PRs.
+- **A branch is used for one PR, then abandoned.** After its PR merges, start the next change on a
+  new branch from a freshly fetched `origin/main` (`git fetch && git switch -c <new> origin/main`).
+  Never push more work to a merged branch and open a second PR from it: the squash commit on
+  `main` doesn't share history with the branch's commits, so the new PR repeats the old changes
+  and conflicts with them. If follow-up commits already landed on a merged branch, cherry-pick
+  just those onto a new branch from `origin/main`.
+- Don't stack PRs (a branch cut from another unmerged branch) unless it's needed. If one is
+  stacked, rebase it after its parent merges: `git rebase --onto origin/main <parent> <child>`.
 - Use the PR template (`.github/pull_request_template.md`). The "Verification" section says what
   was actually run, not what should work.
 
