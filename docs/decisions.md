@@ -46,10 +46,12 @@ Provenance key:
 | Standard | Provenance | Why |
 |---|---|---|
 | Dependabot (weekly, minor/patch grouped) for the package manager, Docker and GitHub Actions. | Decided | No repo had automated dependency updates. |
+| Dependabot ignores Node and Postgres image majors, and `@types/node` majors. | Default | The runtime and database majors are stack decisions, and a Postgres major needs a dump and restore. Raised in the first migration pilot (a Node 25 PR). |
 | CI runs a dependency audit on every PR; high and above fails. | Decided | No repo scanned for vulnerable dependencies. |
 | Secret scanning is the GitGuardian GitHub app, on every repo. No second scanner in CI. | Decided | It was already installed and checking every PR. |
 | Required secrets use `${VAR:?message}` in compose, so a missing secret fails the deploy instead of running with a default. | Established | A localhost default once shipped to production. |
 | Containers run as a non-root user. | Decided | Mixed across projects today. |
+| Routes called by `fetch` (API routes, webhooks) refuse with 401/403 JSON, never a redirect to sign-in. | Default | `fetch` follows the redirect to a 200 page and the client reports success. Raised in the first migration pilot. |
 
 ## Deploy
 

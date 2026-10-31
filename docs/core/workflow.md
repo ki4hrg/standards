@@ -83,9 +83,11 @@ There is no human review before merging, so review happens in the session:
   session's directory and can't change it, and `/security-review` and `/code-review` review the
   repo they run in. A coordinating session (a migration sweep) hands each repo's work to a session
   started in that repo, not to its own subagents.
-- **Agents may open `agent-found` issues** without asking: John's settings allow exactly
-  `gh issue create --label agent-found …`, with the label first. Any other issue, comment or
-  external write still asks.
+- **Agents may open `agent-found` issues and add the `automerge` label** without asking. John's
+  settings allow exactly `gh issue create --label agent-found …` (label first) and
+  `gh pr edit <n> --add-label automerge` (nothing after it). Any other issue, comment, label or
+  external write still asks. In auto mode the classifier blocks labelling as a merge without
+  review unless `autoMode.allow` also describes it; see Dev machine.
 
 ## Dev machine
 
@@ -100,6 +102,10 @@ can't run here runs in CI instead (`ship`).
 - **Browsers for smoke tests:** if Playwright can't launch on the host (missing system
   libraries, no sudo), run it in the `mcr.microsoft.com/playwright` image matching the installed
   Playwright version.
+- **Claude Code settings** (`~/.claude/settings.json`, one-time): `permissions.allow` gets
+  `Bash(gh issue create --label agent-found *)` and `Bash(gh pr edit * --add-label automerge)`;
+  `autoMode.allow` gets a sentence for each, saying what it covers and what it doesn't (merging,
+  other labels). Without them every PR waits on a prompt to label it.
 - **Memory:** `next build` and `tsc` on a large generated client (Prisma) want about 3 GB of heap.
   On a smaller machine, set `NODE_OPTIONS=--max-old-space-size=…` or let CI run them.
 

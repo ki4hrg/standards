@@ -83,7 +83,8 @@ session didn't start in the target repo, say so and hand the work to a session s
   change) becomes an issue: `gh issue create --label agent-found --repo <owner/repo> --title … --body …` (label first:
 that exact prefix is what John's permissions allow), with what you saw, where, and
   why it matters. Link them from the PR.
-- Add the `automerge` label, **unless**:
+- Add the `automerge` label with exactly `gh pr edit <n> --add-label automerge` (the form John's
+  permissions allow; `workflow.md`, Dev machine), **unless**:
   - John asked to see it first;
   - a migration drops or rewrites data;
   - a security-review finding is left open;

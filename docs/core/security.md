@@ -28,7 +28,9 @@ The reusable `security.yml` workflow runs:
 Every repo has `.github/dependabot.yml` with weekly updates for its package ecosystem, Docker base
 images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem (every ecosystem in the file, as in the
 template). Dependabot
-PRs go through CI like any other; merge them from the PR list. (`merge-on-green` can't merge them:
+PRs go through CI like any other; merge them from the PR list. Majors of the runtime and
+database images (Node, Postgres) and `@types/node` are ignored: those versions are a stack
+decision (`decisions.md`), and a Postgres major needs a dump and restore. (`merge-on-green` can't merge them:
 workflows triggered by Dependabot get a read-only token.)
 
 ## In the session
@@ -42,11 +44,19 @@ workflows triggered by Dependabot get a read-only token.)
 - **Authenticate where the request arrives.** A layout or middleware guard does not cover server
   actions or `app/api/` routes; each authenticates itself. Keep a route-guard table in
   `docs/ARCHITECTURE.md`.
+- **Routes called by `fetch` refuse with a status, not a redirect.** An API route, webhook or
+  anything a client calls with `fetch` answers 401 or 403 with a JSON body. A redirect to the
+  sign-in page is followed by `fetch` to a 200 HTML page, and the client reports success. Only
+  page navigations redirect to sign-in.
 - **Authorize per call**, including in MCP tools: check the scope and the user's access to the
   specific record.
-- **Size limits are per route, after auth.** A large request-body limit belongs only on the
-  routes that need it (uploads), checked after the request authenticates. Never raise a global
-  limit that unauthenticated requests also get. (Next.js specifics in its profile.)
+- **Size limits are per route.** A large request-body limit belongs only on the routes that need
+  it (uploads, webhooks that carry mail or files). Never raise a global limit that
+  unauthenticated requests also get. (Next.js specifics in its profile.)
+  - An upload route authenticates first, then enforces its limit.
+  - A signed webhook can't authenticate before reading, because the signature covers the body.
+    It requires a `Content-Length` (411 without one), refuses one over its cap (413), then reads
+    the body and verifies the signature before parsing it.
 - **Never log or return secrets**: not in audit rows, logs, error messages or MCP output.
 - **Encrypt stored third-party tokens** with a key that is separate from the session secret, so
   rotating sessions does not destroy them.

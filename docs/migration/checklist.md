@@ -151,6 +151,12 @@ running.*
   - project facts and domain spec are moved to `docs/`;
   - accepted candidates are kept.
 - [ ] Every path and command CLAUDE.md names exists. Stale facts are fixed or removed.
+- [ ] **Fact-check:** a reviewer that didn't write the new CLAUDE.md and `docs/ARCHITECTURE.md`
+  (a fresh session or subagent in the repo) checks every rule, path and behaviour they describe
+  against the code. A rule described backwards gets an agent to rebuild the bug it prevents.
+- [ ] A rule the triage marks as replaced by a later phase (for example, "replaced by
+  `lib/env.ts`" before that file exists) stays, as a project fact, until that phase lands.
+  Otherwise the detail it carries is lost.
 - [ ] `docs/claude-candidates.md` exists. Rules John deferred are listed there.
 - [ ] Plans referenced outside the repo (`~/.claude/plans/…`) are recovered into `docs/plans/` or
   the reference is removed.
@@ -187,6 +193,12 @@ A framework major changes runtime behaviour that types and the build don't catch
 changed (form state after a server action, request body size limits, caching, middleware) and say
 what each means for this app. If one would break a rule in `design.md` or `security.md` (forms
 keeping what was typed, uploads arriving whole), fix it in the same PR.
+
+After a framework major merges, reinstall dependencies from the lockfile in every checkout and
+worktree (`pnpm install --frozen-lockfile` or `npm ci`) and confirm the version (`next --version`)
+before building or smoke testing. A checkout that still has the old `node_modules` builds the old
+framework without complaint. Stop servers left running from before, so the smoke test reaches the
+new build.
 
 - [ ] Package manager pnpm, Node 24.
 - [ ] Prisma → Drizzle with real migrations. The biggest item: generate a baseline migration from

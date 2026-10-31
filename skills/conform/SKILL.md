@@ -67,7 +67,9 @@ conflicts) and evidence (a file and line, or a command and its output). Cover at
 
 Sort every rule in CLAUDE.md (and AGENTS.md, and any rules in `docs/`) into:
 
-- **Drop:** contradicts a standard, or repeats one (the standards repo already says it).
+- **Drop:** contradicts a standard, or repeats one (the standards repo already says it). A rule
+  that a standard replaces but the repo hasn't adopted yet (a later phase) is not dropped: it
+  moves to docs as a fact until that phase lands, so its details survive.
 - **Move to docs:** a true project fact or a domain spec. Say where it goes.
 - **Candidate:** a real rule that isn't a standard. For each, give the evidence for whether John
   chose it or an agent did:

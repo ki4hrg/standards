@@ -87,8 +87,15 @@ instrumentation.ts  validates env at boot; starts jobs
   the reset only on refusal.
 - **Request body size:** keep Next's proxy body limit (`proxyClientMaxBodySize`) at its default or
   lower. It applies to every route the proxy matches, signed in or not, so raising it for uploads
-  lets anonymous requests buffer large bodies anywhere. Exclude upload routes from the proxy
-  matcher instead, and have each one authenticate first and enforce its own size limit.
+  lets anonymous requests buffer large bodies anywhere. Exclude routes that take large bodies
+  (uploads, inbound email and other webhooks) from the proxy matcher instead, and have each
+  enforce its own limit (`security.md`: uploads authenticate first; signed webhooks cap
+  `Content-Length`, then verify). Check every such route before lowering the limit: removing a
+  raised one cuts their bodies at the default and breaks them.
+- **API routes refuse with JSON.** Routes outside the layout guard and anything a client calls with
+  `fetch` return 401/403 JSON, never a redirect to sign-in (the auth library's or a
+  `requirePermission`-style helper's): `fetch` follows the redirect to a 200 page and the client
+  reports success. Exclude them from any auth proxy that redirects.
 - **Dates** shown to the user are computed in the user's time zone, through one date helper module.
 - **Background jobs** start from `instrumentation.ts` and take a Postgres advisory lock, so two
   instances never run the same job at once.
