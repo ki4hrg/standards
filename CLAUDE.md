@@ -15,6 +15,10 @@ Code plugin (this repo's root is the plugin). See README.md.
   default or meaning, or to a job name a caller `needs`, is breaking: it goes to `v2`. Compatible
   changes move the `v1` tag forward after `main` is green. Keep templates' callers in sync with
   the inputs.
+- **Docs never get ahead of `v1`.** A doc, template or skill change that relies on a new workflow
+  input or behaviour lands in the same push as the workflow change, and the `v1` tag moves to
+  that commit before anyone is told to use it. Otherwise a repo following the docs calls an
+  input `v1` doesn't have yet.
 - Workflows: least-privilege `permissions`, runners pinned to `ubuntu-24.04`, a comment explaining
   every non-obvious step.
 - Skills reference the docs by path relative to the plugin root. If you move a doc, update the

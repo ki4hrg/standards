@@ -23,6 +23,12 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 - [ ] The repo's GitHub owner can call public reusable workflows. This is on by default; check
   under Settings → Actions → General → "Allow actions and reusable workflows".
 
+## Before each repo
+
+- [ ] A recent Actions run in the repo actually **started** (green or red, not "job was not
+  started"). Billing or a spending limit blocks every job in seconds, and merge-on-green can't
+  tell that from a real failure. If runs are blocked, stop and tell John.
+
 ## Phase 0: Audit and triage (no code changes)
 
 - [ ] Run the `conform` skill. Save its report as `docs/plans/standards-conformance.md`, once
@@ -50,6 +56,8 @@ dependencies.*
 - [ ] `merge-on-green` job with `actions: write`. Run `scripts/repo-settings.sh owner/repo`
   (squash only, delete branch on merge, `automerge` label).
 - [ ] Workflow `permissions:` are least-privilege.
+- [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
+  compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
   is documented.
 - [ ] **Verify:**
@@ -57,6 +65,10 @@ dependencies.*
   - labelling it `automerge` merges it;
   - the dispatched `main` run builds and deploys;
   - the deploy job reports success.
+
+  If jobs fail in seconds with "The job was not started because recent account payments have
+  failed" (or a spending-limit message), that's billing: don't label, re-run or change code. Tell
+  John.
 
 ## Phase 2: Runtime hardening (John watches the deploy)
 

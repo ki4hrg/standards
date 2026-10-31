@@ -15,7 +15,8 @@ The reusable `security.yml` workflow runs:
 ## Dependabot
 
 Every repo has `.github/dependabot.yml` with weekly updates for its package ecosystem, Docker base
-images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem. Dependabot
+images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem (every ecosystem in the file, as in the
+template). Dependabot
 PRs go through CI like any other; merge them from the PR list. (`merge-on-green` can't merge them:
 workflows triggered by Dependabot get a read-only token.)
 

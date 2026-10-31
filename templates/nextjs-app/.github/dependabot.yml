@@ -1,6 +1,7 @@
 version: 2
 updates:
-  - package-ecosystem: npm   # covers pnpm-lock.yaml
+  # Dependabot's `npm` ecosystem also reads pnpm-lock.yaml.
+  - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
@@ -12,13 +13,22 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
 
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

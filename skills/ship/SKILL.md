@@ -26,6 +26,11 @@ merges, so this skill is the review.
 Run the commands CLAUDE.md says must pass (for a Next.js app: `pnpm typecheck && pnpm lint &&
 pnpm test`; also `pnpm db:drift` if the schema changed). Fix failures. Don't open a PR on red.
 
+If a check **can't run** here (out of memory, no Docker for Testcontainers, missing toolchain),
+that is not the same as passing: say which check didn't run and why in the PR's Verification
+section, open the PR **without** the `automerge` label, and let CI be the check. Add the label
+only once that run is green.
+
 ## 3. Review your own diff
 
 1. Invoke the `code-review` skill on the branch's diff against `main`. Fix real findings. For a
@@ -76,7 +81,12 @@ tested commit and starts the deploy. A session merging right after opening the P
 had run, is how broken builds used to reach `main`.
 
 Watch CI (`gh pr checks <n> --watch`). If a job fails, fix it on the same branch and push; the
-new commit gets its own run. When `merge-on-green` has merged, say so. Then follow the
+new commit gets its own run.
+
+If every job fails within seconds and the annotation says "The job was not started because
+recent account payments have failed" or mentions a spending limit, that is **GitHub billing**,
+not the code. Don't push fixes, re-run, or add the label: tell John, and stop until he says it's
+cleared. When `merge-on-green` has merged, say so. Then follow the
 dispatched `main` run (`gh run list --branch main --limit 1`, `gh run watch`) and report the
 deploy result. The work isn't done until the PR has merged or John knows why it hasn't. If
 the session must end first, say where things stand; the label will still merge the PR when

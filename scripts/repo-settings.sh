@@ -23,14 +23,20 @@ gh label create automerge --repo "$repo" --force \
   --color 0E8A16 --description "Squash-merge when CI is green (merge-on-green)"
 
 # GitHub's own secret scanning: free on public repos; on private repos it needs
-# GitHub Advanced Security, so a refusal here is expected and harmless. The
-# GitGuardian app covers every repo it has access to either way.
+# GitHub Advanced Security. Not required by the standard: the GitGuardian app is
+# the secret scanner (docs/core/security.md). This only turns it on where it's free.
 gh api -X PATCH "repos/$repo" --silent --input - <<'JSON' 2>/dev/null \
-  || echo "GitHub secret scanning not available on this plan; GitGuardian covers it."
+  || echo "GitHub secret scanning isn't available on this plan (fine: GitGuardian is the scanner)."
 {"security_and_analysis":{"secret_scanning":{"status":"enabled"},"secret_scanning_push_protection":{"status":"enabled"}}}
 JSON
 
 echo "Applied standard settings to $repo."
 echo "Still to do by hand:"
-echo "  - Settings → Secrets and variables → Actions: DOCKHAND_WEBHOOK_URL (and DOCKHAND_WEBHOOK_TOKEN), deploy mode A"
+# dockhand-deploy.yml reads the URL from Secrets or Variables; only remind if neither has it.
+if gh secret list --repo "$repo" --json name -q '.[].name' | grep -qx DOCKHAND_WEBHOOK_URL \
+  || gh variable list --repo "$repo" --json name -q '.[].name' | grep -qx DOCKHAND_WEBHOOK_URL; then
+  :
+else
+  echo "  - Settings → Secrets and variables → Actions: DOCKHAND_WEBHOOK_URL (and DOCKHAND_WEBHOOK_TOKEN), if it deploys by webhook (mode A)"
+fi
 echo "  - GitGuardian app: make sure its repository access includes $repo"
