@@ -1,0 +1,7 @@
+{
+  "name": "standards",
+  "version": "0.1.0",
+  "description": "Engineering standards for ki4hrg projects: new-project, ship and conform skills, backed by the docs in this repo.",
+  "author": { "name": "John Fleischauer" },
+  "repository": "https://github.com/ki4hrg/standards"
+}

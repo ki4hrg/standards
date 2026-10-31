@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/*
+ * Colour tokens. The names are shared by every app (standards docs/design.md);
+ * the values are this app's own. Components use the names, never raw palette
+ * classes, so light and dark can't drift apart and need no `dark:` classes.
+ *
+ * Theme: <ThemeScript> (components/theme.tsx) sets data-theme on <html> before
+ * first paint, from the saved choice or the system setting.
+ * `pnpm check:contrast` checks every text/background pair below in both themes.
+ */
+@theme {
+  --color-page: #f6f5f2;
+  --color-card: #ffffff;
+  --color-sunk: #efede8;
+  --color-line: #e2dfd8;
+  --color-ink: #1c1b19;
+  --color-ink-2: #4a4741;
+  --color-ink-3: #6b675f;
+  --color-accent: #0f6b5c;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #e1f0ec;
+  --color-ok: #1d6b33;
+  --color-ok-soft: #e3f3e7;
+  --color-warn: #8a4b00;
+  --color-warn-soft: #fdf1df;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-page: #141412;
+  --color-card: #1e1d1b;
+  --color-sunk: #262522;
+  --color-line: #35332f;
+  --color-ink: #f2f0ea;
+  --color-ink-2: #cfcbc2;
+  --color-ink-3: #a29d93;
+  --color-accent: #5cc4ae;
+  --color-accent-ink: #0b1c18;
+  --color-accent-soft: #17332d;
+  --color-ok: #7fd49a;
+  --color-ok-soft: #16301f;
+  --color-warn: #f0b45c;
+  --color-warn-soft: #33260f;
+  --color-danger: #f28b82;
+  --color-danger-soft: #3a1714;
+}
+
+/* `dark:` follows the app's theme, not only the system setting. Rarely needed
+   with tokens; there for images and one-offs. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+}
+
+/* iOS Safari zooms whenever a focused field renders below 16px and never zooms
+   back out. Enforce the floor on touch devices instead of chasing every input. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

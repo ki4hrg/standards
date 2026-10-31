@@ -1,0 +1,188 @@
+# Bringing a repo up to standard
+
+A checklist for a session aligning one existing repo with these standards. Work through it in
+order: the phases are sorted by how much harm each gap can do. A repo doesn't have to finish
+every phase in one sweep; stopping after any phase leaves it better than it was.
+
+## Ground rules
+
+- **One repo at a time, one phase per PR** (or several PRs per phase). Never mix a safety fix
+  with a refactor.
+- **Phases 2 and 6 never get the `automerge` label.** They change how the app boots or stores
+  data. John watches the first deploy. Back up the database first (`pg_dump -Fc`).
+- Every PR still goes through `ship`: checks, `/code-review`, `/security-review` where it
+  applies.
+- Don't change behaviour the standards don't ask for. If something looks wrong but isn't covered,
+  note it in the handoff.
+- Record progress in the repo's `docs/HANDOFF.md`, using the block at the end, so the next session
+  starts where this one stopped.
+
+## Before the first repo (once)
+
+- [ ] The standards repo is published and tagged `v1`.
+- [ ] The repo's GitHub owner can call public reusable workflows. This is on by default; check
+  under Settings → Actions → General → "Allow actions and reusable workflows".
+
+## Phase 0: Audit and triage (no code changes)
+
+- [ ] Run the `conform` skill. Save its report as `docs/plans/standards-conformance.md`, once
+  John says yes.
+- [ ] Get John's yes or no on each **candidate** rule from the CLAUDE.md triage.
+- [ ] Agree with John which phases are in scope for this sweep. Phase 6 (stack) is out unless he
+  says otherwise. Record the scope in the handoff.
+
+## Phase 1: Pipeline and safety
+
+*Done when no unchecked change can reach `main` and every change is checked for vulnerable
+dependencies.*
+
+- [ ] Replace the workflow with the template caller (`templates/<profile>/.github/workflows/ci.yml`).
+  Keep repo-specific jobs, but nothing may sit between `image` and `deploy` except checks. Move
+  any e2e suite onto PRs only, or make it manual.
+- [ ] CI runs on `pull_request`. `image` needs every check job.
+- [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
+  repo.
+- [ ] `merge-on-green` job with `actions: write`. Run `scripts/repo-settings.sh owner/repo`
+  (squash only, delete branch on merge, `automerge` label).
+- [ ] Workflow `permissions:` are least-privilege.
+- [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
+  is documented.
+- [ ] **Verify:**
+  - this PR's own run is green on the PR;
+  - labelling it `automerge` merges it;
+  - the dispatched `main` run builds and deploys;
+  - the deploy job reports success.
+
+## Phase 2: Runtime hardening (John watches the deploy)
+
+*Done when the container runs as non-root, refuses to boot on bad config, and reports what it is
+running.*
+
+- [ ] **compose:**
+  - no `build:`;
+  - `pull_policy: always` on mutable tags;
+  - `${VAR:?}` on every required secret;
+  - no hard-coded credentials;
+  - no localhost defaults for public URLs.
+- [ ] **Postgres:**
+  - `PGPASSWORD` beside a password-less `DATABASE_URL`;
+  - PG18 volume at `/var/lib/postgresql`;
+  - no published port unless something needs it.
+- [ ] Healthchecks: app on `/api/health` (no auth, no DB, reports `GIT_REVISION`); DB with
+  `pg_isready`; `depends_on: service_healthy`.
+- [ ] **Dockerfile:**
+  - non-root user;
+  - writable dirs `chown`ed before `USER`. **Existing volumes keep their old owner:** plan a
+    one-off `chown` on the host, or the app fails to write after deploy;
+  - `GIT_REVISION` build arg.
+- [ ] Environment validated at boot (`instrumentation.ts` / settings class).
+- [ ] Migrations, not `db push`, if the ORM already supports them. Switching ORMs is Phase 6.
+- [ ] `docs/DEPLOYMENT.md`: deploy mode, host architecture, exposure, backups.
+- [ ] **Verify after deploy:**
+  - `/api/health` reports the merged commit;
+  - `docker exec <app> id` is not root;
+  - the app can write to its volumes;
+  - a missing secret fails `compose up` with its message.
+
+## Phase 3: Trust boundaries
+
+*Done when every input from outside is parsed and every entry point authenticates itself.*
+
+- [ ] Inventory every entry point:
+  - server actions;
+  - route handlers;
+  - the MCP endpoint and each tool;
+  - inbound email and webhooks;
+  - public or token-link pages;
+  - file uploads.
+- [ ] Each one parses its input with zod (or the stack's equivalent) and authenticates and
+  authorizes per call. Nothing relies on the layout guard alone.
+- [ ] A route-guard table in `docs/ARCHITECTURE.md`.
+- [ ] Webhooks verify a signature or secret. Secrets never appear in logs, errors or MCP output.
+- [ ] Tests cover the refusals: bad input, wrong user, wrong tenant.
+- [ ] `/security-review` on the whole phase.
+
+## Phase 4: Agent docs
+
+*Done when CLAUDE.md is short, current, and says nothing the standards already say.*
+
+- [ ] CLAUDE.md is about 150 lines or fewer, per the triage:
+  - rules that duplicate or contradict a standard are dropped;
+  - project facts and domain spec are moved to `docs/`;
+  - accepted candidates are kept.
+- [ ] Every path and command CLAUDE.md names exists. Stale facts are fixed or removed.
+- [ ] `docs/claude-candidates.md` exists. Rules John deferred are listed there.
+- [ ] Plans referenced outside the repo (`~/.claude/plans/…`) are recovered into `docs/plans/` or
+  the reference is removed.
+- [ ] `.claude/settings.json` enables the standards plugin. `AGENTS.md` is a one-line pointer.
+- [ ] `.github/pull_request_template.md`. `.env.example` is complete and matches the README.
+- [ ] Any exception the repo relies on is stated in CLAUDE.md, for example direct pushes to
+  `main` for an infra repo.
+
+## Phase 5: Design and copy
+
+*Done when the app follows the shared token names and dark mode, and its copy passes the
+verbosity rules.*
+
+- [ ] Token names from `design.md` are defined in the app's CSS. Components use them, not raw
+  palette classes. This can be done screen by screen across several PRs.
+- [ ] Dark mode: system default, a light/dark/system toggle, no flash on load.
+- [ ] `check:contrast` in CI.
+- [ ] A full `ui-verbosity-reduction` pass, including casing. Renamed terms are made consistent
+  across the app.
+- [ ] Destructive actions confirm inline. One primary button per screen. Phone width works.
+- [ ] **Verify:** screenshots of the main screens in light, dark, and at 360px.
+
+## Phase 6: Stack alignment (only when John asks, per repo)
+
+Each item gets its own plan in `docs/plans/` before any code.
+
+- [ ] Package manager pnpm, Node 24.
+- [ ] Prisma → Drizzle with real migrations. The biggest item: generate a baseline migration from
+  the live schema first, and prove a round-trip on a copy of production data.
+- [ ] Auth library → own sessions plus `openid-client`, keeping the OIDC rules.
+- [ ] MCP → the official SDK, with `snake_case` tool names. Use the shared OAuth package once it
+  exists.
+- [ ] Tests on real Postgres where they were mocked or missing.
+
+## Close out
+
+- [ ] Run `conform` again. Each remaining gap is either an issue or a recorded, accepted
+  exception in `docs/DECISIONS.md`.
+- [ ] Update the sweep tracker.
+
+## Other profiles
+
+- **Python service:** phases 0–4 apply as written (ruff, pytest, uv lock; `pydantic-settings`
+  for phase 2). Phase 5 only if it has a UI.
+- **WordPress plugin:** phase 1 means the plugin CI and tag-release workflow from its profile,
+  plus `security.yml` with `composer npm`. Skip phase 2. Phase 3 means nonces, capabilities,
+  sanitize/escape and REST `permission_callback`.
+- **Laravel app:** phase 1 per its profile. Phase 2 for whatever the host runs. Phase 3 uses
+  Laravel's validation and policies.
+- **Infra/ops repo:** phase 0 and phase 4 only. Direct pushes to `main` are allowed.
+
+## Handoff block
+
+Paste into the repo's `docs/HANDOFF.md` and keep it current:
+
+```markdown
+## Standards sweep — <date>
+
+Standards version: v1 · Scope agreed with John: phases <…> (stack: <in/out>)
+
+| Phase | Status | PRs | Notes |
+|---|---|---|---|
+| 0 Audit | done / partial / — | | report: docs/plans/standards-conformance.md |
+| 1 Pipeline | | | |
+| 2 Runtime | | | |
+| 3 Boundaries | | | |
+| 4 Agent docs | | | |
+| 5 Design/copy | | | |
+| 6 Stack | | | |
+
+Verified: <what was run and seen, with dates>
+Not verified: <what wasn't, and why>
+Open decisions for John: <yes/no questions>
+Resume at: <phase and checklist item>
+```

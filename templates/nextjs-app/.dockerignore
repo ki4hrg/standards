@@ -1,0 +1,13 @@
+.git
+.github
+.next
+.next-*
+node_modules
+dist
+docs
+test
+e2e
+*.md
+.env*
+!.env.example
+compose*.yaml

@@ -1,0 +1,57 @@
+name: node-check
+
+# Typecheck, lint and test a pnpm project. Testcontainers works as-is: Docker is
+# present on GitHub's Ubuntu runners.
+#
+#   check:
+#     uses: ki4hrg/standards/.github/workflows/node-check.yml@v1
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: '24'
+      working-directory:
+        type: string
+        default: '.'
+      scripts:
+        description: pnpm scripts to run in order, space-separated. Each must exist in package.json.
+        type: string
+        default: typecheck lint test
+      runs-on:
+        type: string
+        # Pinned rather than ubuntu-latest so an image change never lands unannounced.
+        # Bump here, once, after a green run on the new image.
+        default: ubuntu-24.04
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ${{ inputs.runs-on }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v7
+      # Reads the version from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Run checks
+        env:
+          SCRIPTS: ${{ inputs.scripts }}
+        run: |
+          for s in $SCRIPTS; do
+            echo "::group::pnpm $s"
+            pnpm run "$s"
+            echo "::endgroup::"
+          done

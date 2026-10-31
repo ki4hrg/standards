@@ -1,0 +1,55 @@
+name: ci
+
+# PR: check + security → image (build only) → merge-on-green (if labelled `automerge`)
+# main: check + security → image (build + push to GHCR) → deploy (Dockhand webhook)
+# For deploy mode B (service in another stack), drop `deploy` and publish on
+# version tags instead: standards docs/core/deploy.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+  # merge-on-green dispatches this after merging; also a manual redeploy.
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ki4hrg/standards/.github/workflows/python-check.yml@v1
+
+  security:
+    uses: ki4hrg/standards/.github/workflows/security.yml@v1
+    with:
+      package-managers: uv
+
+  image:
+    needs: [check, security]
+    permissions:
+      contents: read
+      packages: write
+    uses: ki4hrg/standards/.github/workflows/image.yml@v1
+    with:
+      push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      platforms: linux/amd64
+
+  automerge:
+    needs: [check, security, image]
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write   # dispatches this workflow on main after merging
+    uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
+
+  deploy:
+    needs: image
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    uses: ki4hrg/standards/.github/workflows/dockhand-deploy.yml@v1
+    secrets: inherit

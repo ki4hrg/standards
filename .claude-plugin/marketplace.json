@@ -1,0 +1,11 @@
+{
+  "name": "ki4hrg-standards",
+  "owner": { "name": "John Fleischauer" },
+  "plugins": [
+    {
+      "name": "standards",
+      "source": "./",
+      "description": "Engineering standards: start a project to standard, land work through PRs, audit a repo against the standards."
+    }
+  ]
+}

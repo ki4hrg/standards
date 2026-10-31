@@ -1,0 +1,61 @@
+name: __APP__
+
+services:
+  app:
+    # Built and pushed by GitHub Actions. No `build:` block: this stack only pulls.
+    image: ${APP_IMAGE:-ghcr.io/__OWNER__/__APP__:main}
+    # `:main` is a mutable tag and `docker compose up` does not re-pull a tag it
+    # already has. Without this, a redeploy keeps running the old image.
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      # The password travels beside the URL, not inside it: a `/` or `@` in the
+      # password breaks URL parsing and the app restart-loops.
+      DATABASE_URL: postgres://__APP__@db:5432/__APP__
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      # The external HTTPS origin. OAuth discovery and absolute links are built from it.
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
+      # Single sign-on: off unless issuer, id and secret are all set; two of three
+      # fails the boot. Redirect URI: ${PUBLIC_BASE_URL}/login/oidc/callback.
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_ONLY: ${OIDC_ONLY:-}
+      OIDC_TRUST_EMAIL: ${OIDC_TRUST_EMAIL:-}
+      TZ: ${TZ:-America/New_York}
+    healthcheck:
+      # alpine has no curl. The entrypoint migrates before the server listens,
+      # hence the start_period.
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+    # Exposure depends on the host (docs/DEPLOYMENT.md): either publish a port for
+    # the reverse proxy, or join the proxy's external network with no port.
+    ports:
+      - '${APP_PORT:?set APP_PORT}:3000'
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: __APP__
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: __APP__
+    volumes:
+      # PG18 keeps data in a version subdirectory and wants the mount at
+      # /var/lib/postgresql, not /var/lib/postgresql/data.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U __APP__']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

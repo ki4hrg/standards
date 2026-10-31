@@ -1,0 +1,121 @@
+name: merge-on-green
+
+# Squash-merge a PR labelled `automerge` once every job it `needs` has passed,
+# then start the deploy. Call it as the last job of the PR workflow
+# (docs/core/workflow.md). This is the only path that merges: agents add the
+# label and watch; they don't merge.
+#
+# Why not GitHub's native auto-merge: it waits only for *required* checks, and
+# private repos on the free plan cannot require checks, so it would merge at once.
+#
+# No personal token is needed. A merge made with GITHUB_TOKEN does not trigger the
+# push-to-main workflow (GitHub suppresses runs caused by that token), but
+# `workflow_dispatch` is exempt from that rule, so after merging this job
+# dispatches the caller's workflow on main, which builds and deploys.
+#
+# The branch is deleted by the repo's "delete branch on merge" setting
+# (scripts/repo-settings.sh).
+#
+#   automerge:
+#     needs: [check, security, image]
+#     if: github.event_name == 'pull_request'
+#     permissions: { contents: write, pull-requests: write, actions: write }
+#     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
+
+on:
+  workflow_call:
+    inputs:
+      label:
+        type: string
+        default: automerge
+      workflow:
+        description: >-
+          The workflow file to dispatch on main after merging. It must accept
+          workflow_dispatch and build/deploy on main. Empty skips the dispatch.
+        type: string
+        default: ci.yml
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    # Runs on every PR that reaches this point, labelled or not, so a bad title is
+    # red before anyone relies on the merge. The title becomes the commit on main.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Conventional Commit title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          re='^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: .+'
+          if ! printf '%s' "$TITLE" | grep -Eq "$re"; then
+            echo "::error::PR title is not a Conventional Commit: \"$TITLE\". Expected: type(scope): summary — types: feat fix docs refactor perf test build ci chore revert."
+            exit 1
+          fi
+
+  merge:
+    needs: title
+    if: >-
+      github.event_name == 'pull_request'
+      && !github.event.pull_request.draft
+      && contains(github.event.pull_request.labels.*.name, inputs.label)
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      # `needs` covers this workflow's own jobs. Checks from GitHub apps (GitGuardian)
+      # run outside it, so wait for them too, on the same commit.
+      - name: Wait for app checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          for i in $(seq 1 60); do
+            runs=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/check-runs?per_page=100" \
+              --jq '[.check_runs[] | select(.app.slug != "github-actions")]')
+            pending=$(jq '[.[] | select(.status != "completed")] | length' <<<"$runs")
+            failed=$(jq -r '[.[] | select(.status == "completed" and (.conclusion | IN("success","neutral","skipped") | not)) | .name] | join(", ")' <<<"$runs")
+            if [ -n "$failed" ]; then
+              echo "::error::App check failed: $failed"; exit 1
+            fi
+            if [ "$pending" -eq 0 ]; then
+              echo "App checks passed: $(jq -r '[.[].name] | join(", ") | if . == "" then "none" else . end' <<<"$runs")"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::App checks still running after 10 minutes."; exit 1
+
+      - name: Squash-merge the tested commit
+        id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          # Only the commit these checks ran on may merge. A push after the run
+          # started fails the merge here, and the new commit's own run takes over.
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          state=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json state -q .state)
+          if [ "$state" = "MERGED" ]; then
+            # Another run (or a person) merged it, and that path started its own deploy.
+            echo "Already merged."; exit 0
+          fi
+          gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash \
+            --match-head-commit "$SHA" --subject "$TITLE (#$PR)"
+          echo "merged=true" >> "$GITHUB_OUTPUT"
+
+      - name: Start the main pipeline
+        if: steps.merge.outputs.merged == 'true' && inputs.workflow != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: ${{ inputs.workflow }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          gh workflow run "$WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$BASE"
+          echo "Dispatched $WORKFLOW on $BASE."
