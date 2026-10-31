@@ -91,6 +91,8 @@ unless he says otherwise), and wait for a yes. Then:
 2. `scripts/repo-settings.sh <owner>/<name>` from this plugin's root.
 3. Tell John what is left for him to set:
    - `DOCKHAND_WEBHOOK_URL` and `DOCKHAND_WEBHOOK_TOKEN`;
+   - the `APP_HEALTH_URL` variable (the public `/api/health` URL), so the deploy job checks
+     what's serving;
    - the GitGuardian app's repository access, if it isn't set to all repos;
    - the GHCR package visibility after the first image push;
    - the Dockhand stack itself.

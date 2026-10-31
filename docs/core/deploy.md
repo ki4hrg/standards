@@ -88,7 +88,12 @@ calls the stack's webhook after the image is pushed:
 - `DOCKHAND_WEBHOOK_URL` and optional `DOCKHAND_WEBHOOK_TOKEN` read from Secrets or Variables;
 - skipped cleanly when the URL is not set (forks, new repos);
 - **fails unless the JSON body says `success: true`**: Dockhand answers 200 even when the stack
-  fails to come up.
+  fails to come up;
+- **checks the running revision** when the `APP_HEALTH_URL` variable is set (the app's
+  `/api/health`, reachable from GitHub's runners): it waits up to 5 minutes for this commit, or a
+  later one, to be serving. Dockhand decides whether to redeploy by the git commit, not the image,
+  so two merges minutes apart can leave the second image unpulled while Dockhand answers
+  `success: true`, "No changes detected". Without `APP_HEALTH_URL`, that reply fails the job.
 
 The reusable `dockhand-deploy.yml` does all of this.
 

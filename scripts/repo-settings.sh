@@ -42,4 +42,7 @@ if gh secret list --repo "$repo" --json name -q '.[].name' | grep -qx DOCKHAND_W
 else
   echo "  - Settings → Secrets and variables → Actions: DOCKHAND_WEBHOOK_URL (and DOCKHAND_WEBHOOK_TOKEN), if it deploys by webhook (mode A)"
 fi
+if ! gh variable list --repo "$repo" --json name -q '.[].name' | grep -qx APP_HEALTH_URL; then
+  echo "  - Variable APP_HEALTH_URL (the app's public /api/health URL), so the deploy job checks what's serving"
+fi
 echo "  - GitGuardian app: make sure its repository access includes $repo"

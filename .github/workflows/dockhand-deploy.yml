@@ -7,6 +7,15 @@ name: dockhand-deploy
 # `secrets: inherit`. With no URL set, the job is skipped successfully, so forks
 # and brand-new repos stay green.
 #
+# Dockhand decides whether to redeploy by the git commit, not the image digest. When
+# two merges land minutes apart, the first deploy can sync the second commit while
+# `:main` is still the first image; the second deploy then gets "No changes
+# detected" and the new image is never pulled, with `success: true`. So:
+# - with APP_HEALTH_URL set (a Variable: the app's public /api/health URL), the job
+#   waits until the app reports this commit, or a later one, as its revision;
+# - without it, "No changes detected" fails the job, because nothing proves the new
+#   image is running.
+#
 #   deploy:
 #     needs: image
 #     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -29,6 +38,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Trigger Dockhand sync
+        id: trigger
         env:
           WEBHOOK_URL: ${{ secrets.DOCKHAND_WEBHOOK_URL || vars.DOCKHAND_WEBHOOK_URL }}
           WEBHOOK_TOKEN: ${{ secrets.DOCKHAND_WEBHOOK_TOKEN || vars.DOCKHAND_WEBHOOK_TOKEN }}
@@ -75,3 +85,43 @@ jobs:
             echo "::error::Dockhand accepted the request but the deploy did not succeed — see the response above."
             exit 1
           fi
+          if printf '%s' "$body" | grep -q 'No changes detected'; then
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "triggered=true" >> "$GITHUB_OUTPUT"
+
+      - name: Check the running revision
+        if: steps.trigger.outputs.triggered == 'true'
+        env:
+          HEALTH_URL: ${{ vars.APP_HEALTH_URL }}
+          SKIPPED: ${{ steps.trigger.outputs.skipped }}
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            if [ "$SKIPPED" = "true" ]; then
+              echo "::error::Dockhand skipped the redeploy (\"No changes detected\"): it compares git commits, so this commit's image may not have been pulled. Redeploy the stack in Dockhand and check /api/health. Set the APP_HEALTH_URL variable to have this job check it."
+              exit 1
+            fi
+            echo "APP_HEALTH_URL is not set; not checking the running revision."
+            exit 0
+          fi
+
+          # Migrations run before the server starts, so allow a few minutes.
+          rev=""
+          for i in $(seq 1 30); do
+            rev=$(curl -sS --max-time 10 "$HEALTH_URL" | jq -r '.revision // empty' 2>/dev/null || true)
+            if [ "$rev" = "$SHA" ]; then
+              echo "Serving $SHA."; exit 0
+            fi
+            # A later commit already deployed includes this one.
+            if [ -n "$rev" ]; then
+              cmp=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SHA...$rev" --jq .status 2>/dev/null || true)
+              if [ "$cmp" = "ahead" ]; then
+                echo "Serving $rev, which is ahead of $SHA."; exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "::error::After 5 minutes the app reports revision '${rev:-none}', not $SHA. Dockhand didn't pull the new image (it compares git commits, not images). Redeploy the stack in Dockhand."
+          exit 1
