@@ -63,6 +63,7 @@ jobs:
     needs: automerge
     if: needs.automerge.outputs.merged == 'true'
     permissions:
+      contents: read
       issues: write
       pull-requests: read
     uses: ki4hrg/standards/.github/workflows/close-linked-issues.yml@v1

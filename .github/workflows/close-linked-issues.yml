@@ -7,7 +7,7 @@ name: close-linked-issues
 #   close-issues:
 #     needs: automerge
 #     if: needs.automerge.outputs.merged == 'true'
-#     permissions: { issues: write, pull-requests: read }
+#     permissions: { contents: read, issues: write, pull-requests: read }
 #     uses: ki4hrg/standards/.github/workflows/close-linked-issues.yml@v1
 #
 # A separate workflow because merge-on-green's callers don't grant `issues: write`,
@@ -16,8 +16,9 @@ name: close-linked-issues
 on:
   workflow_call:
 
-permissions:
-  contents: read
+# No workflow-level `permissions:`. A called workflow may not ask for anything its
+# caller's job doesn't grant, and a workflow-level `contents: read` here made callers
+# that grant only issues/pull-requests fail to start (startup_failure).
 
 jobs:
   close:
