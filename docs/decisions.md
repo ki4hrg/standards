@@ -26,8 +26,10 @@ Provenance key:
 | The dependency audit covers dev dependencies too. Clear an advisory by upgrading, then `overrides`, then (only if no fix exists and it doesn't apply) a recorded per-advisory ignore. npm has no such ignore, so an npm repo that needs one moves to pnpm. | Decided | Build tools run in CI and on dev machines, and some ship in the image. Raised in the first migration pilot. |
 | Migration: a repo whose audit already fails fixes small things inside its Phase 1 PR, and bigger ones (a framework major) in a PR before Phase 1 that John merges by hand. A stack item forced by a critical/high advisory comes forward from Phase 6 as its own PR. | Decided | Otherwise Phase 1 can never go green, and the fixes have no CI to go through. Raised in the first migration pilot. |
 | Before opening a PR the agent runs `/code-review` on its diff and fixes what it finds; `/security-review` too when the diff touches a sensitive path. | Decided | Nothing is reviewed by a person before merging, so review happens in the session. |
-| Plans, specs and handoffs live in the repo's `docs/`, never only in `~/.claude/plans/`. | Default | Several CLAUDE.md files pointed at plan files that no longer exist. |
-| App repos are unversioned: merging to `main` is the release. Distributed artifacts (WordPress plugins, add-ons) use `vX.Y.Z` tags with a CI check that the tag matches the version in the code. | Default | Only distributed things need versions. |
+| Issues are the unit of work (PR says `Closes #n`). A plan in `docs/plans/` exists only when the work needs more than one PR or session, linked from its issue; never only in `~/.claude/plans/`. | Decided | Sessions already start from issues. Several CLAUDE.md files pointed at plan files that no longer exist. |
+| Follow-ups an agent finds and doesn't fix become issues labelled `agent-found`, for John to triage. | Decided | Follow-ups noted in PR descriptions were never seen again. |
+| A session that stops partway through an issue hands off in a comment on the issue. `docs/HANDOFF.md` only for multi-issue efforts (a migration sweep). | Decided | The handoff sits next to the work it describes. |
+| App repos are unversioned: merging to `main` is the release. Distributed artifacts (WordPress plugins, add-ons) use `vX.Y.Z` tags with a CI check that the tag matches the version in the code. | Decided | Only distributed things need versions. |
 
 ## Quality
 
@@ -46,7 +48,7 @@ Provenance key:
 | CI runs a dependency audit on every PR; high and above fails. | Decided | No repo scanned for vulnerable dependencies. |
 | Secret scanning is the GitGuardian GitHub app, on every repo. No second scanner in CI. | Decided | It was already installed and checking every PR. |
 | Required secrets use `${VAR:?message}` in compose, so a missing secret fails the deploy instead of running with a default. | Established | A localhost default once shipped to production. |
-| Containers run as a non-root user. | Default | Mixed across projects today. |
+| Containers run as a non-root user. | Decided | Mixed across projects today. |
 
 ## Deploy
 
@@ -77,7 +79,7 @@ Provenance key:
 |---|---|---|
 | MCP at `/mcp` on the app's origin, using the official `@modelcontextprotocol/sdk` (stateless Streamable HTTP). | Decided (SDK), Established (path) | There were four or more hand-rolled or differently-styled servers. |
 | One shared package for the OAuth 2.1 authorization server and tool helpers. | Decided | Three separate OAuth servers had been written. Not built yet. |
-| `snake_case` `verb_noun` tool names; `list_`/`get_` pairs; a `title` and annotations on every tool; refusals are `isError` results with a readable message. | Default, from the most common existing practice | One tool vocabulary across apps. |
+| `snake_case` `verb_noun` tool names; `list_`/`get_` pairs; a `title` and annotations on every tool; refusals are `isError` results with a readable message. | Decided (from the most common existing practice) | One tool vocabulary across apps. |
 
 ## Design
 

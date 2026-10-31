@@ -45,8 +45,8 @@ only once that run is green.
    - file uploads.
    Fix what it finds.
 3. If the diff adds or changes user-facing text, apply the `ui-verbosity-reduction` skill to
-   **those strings only**, not the rest of the app. Note in the PR any wider casing or term
-   inconsistencies it finds, as follow-ups.
+   **those strings only**, not the rest of the app. Wider casing or term inconsistencies it
+   finds become a follow-up issue (step 5).
 4. Re-run step 2 if anything changed.
 
 ## 4. Docs
@@ -62,7 +62,11 @@ only once that run is green.
 - Title: a Conventional Commit, `type(scope): outcome-first summary`, with type one of `feat fix
   docs refactor perf test build ci chore revert`. Add `!` for a breaking change to data or an
   external interface. The title becomes the commit on `main`.
-- Body: the repo's PR template. **Verification** lists what you actually ran and saw.
+- Body: the repo's PR template. **Verification** lists what you actually ran and saw. If the work
+  came from an issue, the body says `Closes #n`.
+- Anything you found and didn't fix (a review finding, an inconsistency, a gap outside this
+  change) becomes an issue: `gh issue create --label agent-found`, with what you saw, where, and
+  why it matters. Link them from the PR.
 - Add the `automerge` label, **unless**:
   - John asked to see it first;
   - a migration drops or rewrites data;
@@ -86,10 +90,12 @@ new commit gets its own run.
 If every job fails within seconds and the annotation says "The job was not started because
 recent account payments have failed" or mentions a spending limit, that is **GitHub billing**,
 not the code. Don't push fixes, re-run, or add the label: tell John, and stop until he says it's
-cleared. When `merge-on-green` has merged, say so. Then follow the
+cleared.
+
+When `merge-on-green` has merged, say so. Then follow the
 dispatched `main` run (`gh run list --branch main --limit 1`, `gh run watch`) and report the
 deploy result. The work isn't done until the PR has merged or John knows why it hasn't. If
-the session must end first, say where things stand; the label will still merge the PR when
-CI passes.
+the session must end first, say where things stand, and comment the same on the issue the work
+came from; the label will still merge the PR when CI passes.
 
 After the merge, any further work in this session goes on a new branch (step 1).

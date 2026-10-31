@@ -185,7 +185,7 @@ watches its deploy, as for Phase 2.
 
 ## Close out
 
-- [ ] Run `conform` again. Each remaining gap is either an issue or a recorded, accepted
+- [ ] Run `conform` again. Each remaining gap is either an `agent-found` issue or a recorded, accepted
   exception in `docs/DECISIONS.md`.
 - [ ] Update the sweep tracker. It names private repos, so it is not in this public repo: it is
   `private/sweep-tracker.md` in John's local clone (gitignored). A session without it reports

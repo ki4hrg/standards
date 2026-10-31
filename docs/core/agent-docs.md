@@ -23,7 +23,7 @@ It does **not** hold:
 - **Domain specs, data models, feature descriptions:** use `docs/SPEC.md` or `docs/ARCHITECTURE.md`.
 - **Incident stories:** put the lesson in a code comment where the trap is, with the commit or
   issue number. Write "why" comments generously in infra files (Dockerfile, compose, workflows).
-- **Change logs and status:** git history and `docs/HANDOFF.md`.
+- **Change logs and status:** git history, issues, and `docs/HANDOFF.md` for multi-issue efforts.
 - **Claims about other repos** ("fleet-wide", "like every project"). Only this repo speaks for
   every project.
 
@@ -35,9 +35,9 @@ It does **not** hold:
 | `docs/ARCHITECTURE.md` | How it is built: modules, data flow, auth and route-guard table, jobs, integrations. |
 | `docs/DECISIONS.md` | Dated project decisions with the reason and the options rejected. One entry per decision, newest last. |
 | `docs/DEPLOYMENT.md` | Env vars, secrets, backups, the deploy mode, the host's architecture. |
-| `docs/HANDOFF.md` | Where unfinished work stands (see `workflow.md`). |
+| `docs/HANDOFF.md` | Where a multi-issue effort stands, such as a migration sweep. A single issue's handoff is a comment on the issue (see `workflow.md`). |
 | `docs/claude-candidates.md` | Rules an agent proposes. Not binding. |
-| `docs/plans/` | Plans for multi-session work. |
+| `docs/plans/` | Plans for work that needs more than one PR or session, linked from its issue. |
 
 Create a file when there is something to put in it; an empty skeleton is noise.
 

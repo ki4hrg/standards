@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Apply the standard GitHub settings to a repo (docs/core/workflow.md):
 # squash merge only, PR title as the commit subject, branches deleted on merge,
-# and the `automerge` label that merge-on-green looks for.
+# the `automerge` label that merge-on-green looks for, and the `agent-found` label
+# for follow-ups agents file (docs/core/workflow.md).
 #
 #   scripts/repo-settings.sh owner/repo
 #
@@ -21,6 +22,8 @@ gh api -X PATCH "repos/$repo" --silent \
 
 gh label create automerge --repo "$repo" --force \
   --color 0E8A16 --description "Squash-merge when CI is green (merge-on-green)"
+gh label create agent-found --repo "$repo" --force \
+  --color C5DEF5 --description "Follow-up an agent found and didn't fix; needs triage"
 
 # GitHub's own secret scanning: free on public repos; on private repos it needs
 # GitHub Advanced Security. Not required by the standard: the GitGuardian app is

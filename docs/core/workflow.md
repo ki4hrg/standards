@@ -62,14 +62,20 @@ There is no human review before merging, so review happens in the session:
   encryption or tokens; file uploads.
 - CI adds a dependency audit, and the GitGuardian app scans for secrets (`security.md`).
 
-## Plans and handoffs
+## Issues, plans and handoffs
 
-- A plan for work larger than one session goes in `docs/` in the repo (`docs/plans/<topic>.md` or
-  `docs/SPEC.md`), never only in `~/.claude/plans/`, which is local to one machine and gets
-  cleaned up.
-- A session that stops partway writes `docs/HANDOFF.md`: dated, with what was done, what was
-  verified, what was not, and where to resume.
-- Work items live in GitHub issues.
+- **An issue is the unit of work:** what and why, short enough to read on a phone. A session
+  works from an issue, and its PR says `Closes #n`.
+- **A plan is the how**, and only exists when the work needs more than one PR or session: a design,
+  migration steps, a phased rollout. It goes in `docs/plans/<topic>.md`, linked from the issue,
+  never only in `~/.claude/plans/` (local to one machine, and cleaned up). When the work is done
+  the plan stays as a record, marked done at the top.
+- **Follow-ups become issues**, opened by the agent with the `agent-found` label: review findings
+  left unfixed, inconsistencies noticed in passing, conformance gaps. Not a note in a PR that
+  nobody reads again. John triages the label.
+- **Handoffs:** a session that stops partway through an issue comments on the issue: what was
+  done, what was verified and what wasn't, where to resume, and the branch. `docs/HANDOFF.md`
+  is only for efforts that span several issues, such as a migration sweep.
 
 ## Versions and releases
 
