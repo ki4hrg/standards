@@ -77,6 +77,16 @@ There is no human review before merging, so review happens in the session:
   done, what was verified and what wasn't, where to resume, and the branch. `docs/HANDOFF.md`
   is only for efforts that span several issues, such as a migration sweep.
 
+## Sessions and subagents
+
+- **Work on a repo from a session started in that repo.** Subagents start in the dispatching
+  session's directory and can't change it, and `/security-review` and `/code-review` review the
+  repo they run in. A coordinating session (a migration sweep) hands each repo's work to a session
+  started in that repo, not to its own subagents.
+- **Agents may open `agent-found` issues** without asking: John's settings allow exactly
+  `gh issue create --label agent-found …`, with the label first. Any other issue, comment or
+  external write still asks.
+
 ## Dev machine
 
 What a machine needs to run every check locally. Missing pieces aren't blockers: a check that
@@ -87,6 +97,9 @@ can't run here runs in CI instead (`ship`).
   with it.
 - **Docker** (user in the `docker` group) for database checks and Testcontainers. Recommended,
   not required.
+- **Browsers for smoke tests:** if Playwright can't launch on the host (missing system
+  libraries, no sudo), run it in the `mcr.microsoft.com/playwright` image matching the installed
+  Playwright version.
 - **Memory:** `next build` and `tsc` on a large generated client (Prisma) want about 3 GB of heap.
   On a smaller machine, set `NODE_OPTIONS=--max-old-space-size=…` or let CI run them.
 

@@ -44,7 +44,9 @@ after the merge: follow it and report.
 
 Run both reviews from the repo's root: they diff against the default branch, and fail when the
 working directory is another repo or `origin/HEAD` isn't set. If it isn't, run
-`git remote set-head origin -a` first.
+`git remote set-head origin -a` first. A subagent can't change its working directory: if this
+session didn't start in the target repo, say so and hand the work to a session started there
+(`workflow.md`, Sessions and subagents).
 
 1. Invoke the `code-review` skill on the branch's diff against `main`. Fix real findings. For a
    finding you don't fix, note in the PR why.
@@ -78,7 +80,8 @@ working directory is another repo or `origin/HEAD` isn't set. If it isn't, run
 - Body: the repo's PR template. **Verification** lists what you actually ran and saw. If the work
   came from an issue, the body says `Closes #n`.
 - Anything you found and didn't fix (a review finding, an inconsistency, a gap outside this
-  change) becomes an issue: `gh issue create --label agent-found`, with what you saw, where, and
+  change) becomes an issue: `gh issue create --label agent-found --repo <owner/repo> --title … --body …` (label first:
+that exact prefix is what John's permissions allow), with what you saw, where, and
   why it matters. Link them from the PR.
 - Add the `automerge` label, **unless**:
   - John asked to see it first;

@@ -136,6 +136,9 @@ running.*
   authorizes per call. Nothing relies on the layout guard alone.
 - [ ] A route-guard table in `docs/ARCHITECTURE.md`.
 - [ ] Webhooks verify a signature or secret. Secrets never appear in logs, errors or MCP output.
+- [ ] Refusals reach the person: user-facing errors from server actions are returned as
+  `AppError` messages, not thrown (a thrown message shows as "Minified React error" in
+  production). Forms keep what was typed on refusal (`keepFormValues`, per the profile).
 - [ ] Tests cover the refusals: bad input, wrong user, wrong tenant.
 - [ ] `/security-review` on the whole phase.
 

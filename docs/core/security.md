@@ -44,6 +44,9 @@ workflows triggered by Dependabot get a read-only token.)
   `docs/ARCHITECTURE.md`.
 - **Authorize per call**, including in MCP tools: check the scope and the user's access to the
   specific record.
+- **Size limits are per route, after auth.** A large request-body limit belongs only on the
+  routes that need it (uploads), checked after the request authenticates. Never raise a global
+  limit that unauthenticated requests also get. (Next.js specifics in its profile.)
 - **Never log or return secrets**: not in audit rows, logs, error messages or MCP output.
 - **Encrypt stored third-party tokens** with a key that is separate from the session secret, so
   rotating sessions does not destroy them.

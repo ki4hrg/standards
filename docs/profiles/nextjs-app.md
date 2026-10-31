@@ -77,7 +77,18 @@ instrumentation.ts  validates env at boot; starts jobs
 - **Server actions are public endpoints.** Wrap them in `act()`: authenticate, parse with zod, turn
   an `AppError` into a message for the form, revalidate.
 - **Errors meant for a person** are `AppError` subclasses (`ValidationError`, `ForbiddenError`,
-  `NotFoundError`) in plain words. Anything else is a bug and is logged, not shown.
+  `NotFoundError`) in plain words, **returned** to the form by `act()`, never thrown to the client.
+  Anything else is a bug and is logged, not shown. (In production, React replaces the message of
+  anything thrown from a server action with "Minified React error", so a thrown message never
+  reaches the person.)
+- **Forms keep what was typed when the server refuses.** React 19 resets a `<form action>` after
+  every action. Every form that stays on screen gets `onReset={keepFormValues}`
+  (`lib/keep-form-values.ts` in the template); a form that should clear after a success cancels
+  the reset only on refusal.
+- **Request body size:** keep Next's proxy body limit (`proxyClientMaxBodySize`) at its default or
+  lower. It applies to every route the proxy matches, signed in or not, so raising it for uploads
+  lets anonymous requests buffer large bodies anywhere. Exclude upload routes from the proxy
+  matcher instead, and have each one authenticate first and enforce its own size limit.
 - **Dates** shown to the user are computed in the user's time zone, through one date helper module.
 - **Background jobs** start from `instrumentation.ts` and take a Postgres advisory lock, so two
   instances never run the same job at once.
