@@ -11,6 +11,8 @@ name: dockhand-deploy
 # two merges land minutes apart, the first deploy can sync the second commit while
 # `:main` is still the first image; the second deploy then gets "No changes
 # detected" and the new image is never pulled, with `success: true`. So:
+# The stack's "Force redeploy" and "Re-pull images" settings in Dockhand prevent
+# this (docs/core/deploy.md); the checks below catch a stack that lacks them.
 # - with APP_HEALTH_URL set (a Variable: the app's public /api/health URL), the job
 #   waits until the app reports this commit, or a later one, as its revision;
 # - without it, "No changes detected" fails the job, because nothing proves the new
@@ -85,7 +87,8 @@ jobs:
             echo "::error::Dockhand accepted the request but the deploy did not succeed — see the response above."
             exit 1
           fi
-          if printf '%s' "$body" | grep -q 'No changes detected'; then
+          if printf '%s' "$body" | jq -e '.skipped == true' >/dev/null 2>&1 \
+            || printf '%s' "$body" | grep -q 'No changes detected'; then
             echo "skipped=true" >> "$GITHUB_OUTPUT"
           fi
           echo "triggered=true" >> "$GITHUB_OUTPUT"

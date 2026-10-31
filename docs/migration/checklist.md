@@ -72,7 +72,8 @@ dependencies.*
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
   compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
-  is documented.
+  is documented. The Dockhand stack has **Force redeploy** and **Re-pull images** on, and the
+  `APP_HEALTH_URL` variable is set if `/api/health` is reachable from GitHub (`deploy.md`).
 - [ ] **Verify:**
   - this PR's own run is green on the PR;
   - labelling it `automerge` merges it;

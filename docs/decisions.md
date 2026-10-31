@@ -63,6 +63,7 @@ Provenance key:
 | `pull_policy: always` on every service with a mutable tag. | Established | `docker compose up` does not re-pull a tag it already has, so redeploys kept running old code. |
 | Images are tagged `:main` and `:sha-<sha>` and labelled with `org.opencontainers.image.revision`; `/api/health` reports the running revision. | Established | To check what is actually running, not what the tag claims. |
 | Dockhand git-stack webhook in a `deploy` job: a GET with `?secret=`, and the job fails unless Dockhand's JSON body says `success: true`. | Established, hardened | Dockhand answers 200 even when the stack fails to start. |
+| Dockhand git stacks have Force redeploy and Re-pull images on; the deploy job checks `/api/health` reports the deployed commit (`APP_HEALTH_URL`), and fails on a skipped redeploy. | Default | Dockhand redeploys a webhook only when the git commit changed and doesn't re-pull a tag, so two quick merges left the second image unpulled with `success: true` (first migration pilot). |
 | Two deploy modes: Dockhand git stack (webhook), or a service embedded in another stack (no webhook; release-driven tag with auto-update). | Established | The webhook does not apply to a service that lives in someone else's stack. |
 | Container healthchecks on `/api/health` (no auth, no database call); the app waits for the database with `service_healthy`. | Established | Rolled out to every app on the same day. |
 | Node 24, PostgreSQL 18 (data volume mounted at `/var/lib/postgresql`). | Established | PG18 stores data in a versioned subdirectory. |

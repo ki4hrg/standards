@@ -95,7 +95,7 @@ unless he says otherwise), and wait for a yes. Then:
      what's serving;
    - the GitGuardian app's repository access, if it isn't set to all repos;
    - the GHCR package visibility after the first image push;
-   - the Dockhand stack itself.
+   - the Dockhand stack itself, with **Force redeploy** and **Re-pull images** on.
 
 ## 5. Summary
 

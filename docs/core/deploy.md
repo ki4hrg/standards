@@ -81,8 +81,11 @@ how (Drizzle: `templates/nextjs-app/docker-entrypoint.sh`).
 
 ## Deploy modes
 
-**A. Dockhand git stack (default).** Dockhand tracks the repo's `compose.yaml`. The `deploy` job
-calls the stack's webhook after the image is pushed:
+**A. Dockhand git stack (default).** Dockhand tracks the repo's `compose.yaml`. In the stack's
+settings, turn on **Force redeploy** and **Re-pull images**. Without them a webhook redeploys only
+when the git commit changed, and doesn't pull a newer image for the same tag, so two merges
+minutes apart leave the second image unpulled. (The webhook itself takes no force option.) The
+`deploy` job calls the stack's webhook after the image is pushed:
 
 - a plain `GET`; the secret goes in the `?secret=` query parameter, not a header;
 - `DOCKHAND_WEBHOOK_URL` and optional `DOCKHAND_WEBHOOK_TOKEN` read from Secrets or Variables;
@@ -92,8 +95,8 @@ calls the stack's webhook after the image is pushed:
 - **checks the running revision** when the `APP_HEALTH_URL` variable is set (the app's
   `/api/health`, reachable from GitHub's runners): it waits up to 5 minutes for this commit, or a
   later one, to be serving. Dockhand decides whether to redeploy by the git commit, not the image,
-  so two merges minutes apart can leave the second image unpulled while Dockhand answers
-  `success: true`, "No changes detected". Without `APP_HEALTH_URL`, that reply fails the job.
+  so a stack without the settings above answers `success: true`, "No changes detected" without
+  pulling. Without `APP_HEALTH_URL`, that reply fails the job.
 
 The reusable `dockhand-deploy.yml` does all of this.
 
