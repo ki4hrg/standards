@@ -15,6 +15,12 @@ profiles: question it when it does not fit.
 
 - On every PR: Pest against a real database service container, Pint `--test`, Larastan, and
   `security.yml` (composer audit, npm audit); GitGuardian for secrets.
+- The reusable `php-check.yml` runs the composer scripts, then the front-end build so a broken
+  Vite build fails the PR. The caller is `templates/laravel-app/.github/workflows/ci.yml`, with
+  `merge-on-green` and `close-linked-issues` as in every profile; there is no image job.
+- The test database matches production's engine and major (`database-image`: `mysql:8.4`,
+  `mariadb:11.4`, …): MySQL and MariaDB differ in JSON, collations and DDL. SQLite `:memory:`
+  may stay in `phpunit.xml` for quick local runs; the job's environment overrides it in CI.
 - Runner images pinned (`ubuntu-24.04`), bumped deliberately on a quiet week.
 
 ## Deploy (RunCloud)

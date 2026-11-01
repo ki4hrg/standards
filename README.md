@@ -23,7 +23,7 @@ separate effort.
 | `docs/design.md`, `docs/mcp.md` | Design language and the MCP server conventions. |
 | `docs/open-questions.md` | Undecided items. Nothing there is a standard yet. |
 | `docs/migration/checklist.md` | Phase-by-phase checklist for bringing an existing repo up to standard, with a handoff block. |
-| `.github/workflows/` | Reusable workflows: `node-check`, `python-check`, `security`, `image`, `merge-on-green`, `close-linked-issues`, `dockhand-deploy`. |
+| `.github/workflows/` | Reusable workflows: `node-check`, `python-check`, `php-check`, `security`, `image`, `merge-on-green`, `close-linked-issues`, `dockhand-deploy`. |
 | `templates/` | Starting files per profile, copied by the `new-project` skill. |
 | `skills/` | The plugin's skills: `new-project`, `ship`, `conform`, `ui-verbosity-reduction`. |
 | `scripts/repo-settings.sh` | Applies the standard GitHub repo settings and labels. |

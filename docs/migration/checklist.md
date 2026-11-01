@@ -236,7 +236,8 @@ new build.
 - **WordPress plugin:** phase 1 means the plugin CI and tag-release workflow from its profile,
   plus `security.yml` with `composer npm`. Skip phase 2. Phase 3 means nonces, capabilities,
   sanitize/escape and REST `permission_callback`.
-- **Laravel app:** phase 1 per its profile. Phase 2 for whatever the host runs. Phase 3 uses
+- **Laravel app:** phase 1 per its profile, from `templates/laravel-app/` (no `image` or Dockhand
+  items; `scripts` lists the composer scripts the repo has now). Phase 2 for whatever the host runs. Phase 3 uses
   Laravel's validation and policies.
 - **Infra/ops repo:** phase 0 and phase 4 only. Direct pushes to `main` are allowed.
 

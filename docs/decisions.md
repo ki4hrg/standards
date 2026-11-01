@@ -42,6 +42,7 @@ Provenance key:
 | Runtime validation (zod) at every trust boundary: server actions, route handlers, MCP tools, inbound email and webhooks, public forms. | Decided | Earlier "no validation" decisions assumed a single trusted user, which stopped being true once apps took OAuth clients and email. |
 | Tests run against a real Postgres (Testcontainers), not mocks. | Decided | Most bugs worth catching live in queries, constraints and transactions. |
 | Browser (Playwright) e2e is opt-in per project and never sits in the deploy path. | Decided | It added minutes to every deploy for little extra catch. |
+| Laravel apps test against a service database matching production's engine and major (reusable `php-check.yml`); SQLite `:memory:` may stay for local runs, with CI as the gate. | Default | MySQL and MariaDB differ in JSON, collations and DDL, so SQLite passes hide real failures. Added 2026-11-01 for the first Laravel migration, whose dev host has no PHP. |
 
 ## Security
 

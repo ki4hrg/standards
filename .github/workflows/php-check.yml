@@ -1,0 +1,158 @@
+name: php-check
+
+# Laravel app checks (docs/profiles/laravel-app.md): composer scripts (Pint,
+# Larastan, Pest) against a real MySQL/MariaDB service container, then the
+# front-end build, so a broken Vite build fails the PR instead of the deploy.
+#
+#   check:
+#     uses: ki4hrg/standards/.github/workflows/php-check.yml@v1
+#     with:
+#       php-version: '8.4'
+#       database-image: mysql:8.4      # match production's engine and major
+#       scripts: check                 # composer scripts, run in order
+
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        description: Match `config.platform.php` in composer.json.
+        type: string
+        default: '8.4'
+      php-extensions:
+        type: string
+        default: mbstring, intl, bcmath, gd, exif, zip, pcntl, pdo_mysql, pdo_sqlite
+      scripts:
+        description: >-
+          composer.json scripts to run in order, space-separated. Each must exist.
+          The profile's `check` runs Pint --test, Larastan and Pest; a repo in
+          migration Phase 1 lists the ones it has.
+        type: string
+        default: check
+      database-image:
+        description: >-
+          MySQL or MariaDB image for the tests, matching production's engine and
+          major (they differ in JSON, collations and DDL). Empty runs no database.
+        type: string
+        default: mysql:8.4
+      redis-image:
+        description: Redis image for tests that need one (port 6379). Empty runs none.
+        type: string
+        default: ''
+      node-build:
+        description: Run `ci` and `build` with the front-end package manager after the checks.
+        type: boolean
+        default: true
+      package-manager:
+        description: Front-end package manager, npm or pnpm.
+        type: string
+        default: npm
+      node-version:
+        type: string
+        default: '24'
+      working-directory:
+        type: string
+        default: '.'
+      runs-on:
+        type: string
+        # Pinned rather than ubuntu-latest so an image change never lands unannounced.
+        default: ubuntu-24.04
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ${{ inputs.runs-on }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    services:
+      # An empty image skips the service, which is how both are optional.
+      db:
+        image: ${{ inputs.database-image }}
+        env:
+          # The MariaDB image accepts the MYSQL_* names too.
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        # MariaDB 11 images dropped `mysqladmin`; they ship healthcheck.sh instead.
+        options: >-
+          --health-cmd="${{ startsWith(inputs.database-image, 'mariadb') && 'healthcheck.sh --connect --innodb_initialized' || 'mysqladmin ping -h127.0.0.1 -uroot -proot' }}"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+      redis:
+        image: ${{ inputs.redis-image }}
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate inputs
+        env:
+          PM: ${{ inputs.package-manager }}
+        run: |
+          case "$PM" in npm|pnpm) ;; *) echo "::error::package-manager must be npm or pnpm, got '$PM'"; exit 1 ;; esac
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+          extensions: ${{ inputs.php-extensions }}
+          coverage: none
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles(format('{0}/composer.lock', inputs.working-directory)) }}
+          restore-keys: ${{ runner.os }}-composer-
+      # Installs exactly the lockfile; fails if composer.json and the lock disagree.
+      - run: composer install --prefer-dist --no-progress --no-interaction
+      # Set only when a database runs: an empty DB_CONNECTION would still count as
+      # "set" and silently skip phpunit.xml's own <env> value. Real environment
+      # variables win over phpunit.xml's <env> entries (unless force="true"), so a
+      # repo whose phpunit.xml uses SQLite :memory: for local runs tests against
+      # the service database here.
+      - name: Point tests at the service containers
+        env:
+          DB_IMAGE: ${{ inputs.database-image }}
+          REDIS_IMAGE: ${{ inputs.redis-image }}
+        run: |
+          if [ -n "$DB_IMAGE" ]; then
+            # Laravel has a separate `mariadb` connection; use it for MariaDB images.
+            case "$DB_IMAGE" in mariadb*) conn=mariadb ;; *) conn=mysql ;; esac
+            printf '%s\n' "DB_CONNECTION=$conn" DB_HOST=127.0.0.1 DB_PORT=3306 \
+              DB_DATABASE=testing DB_USERNAME=root DB_PASSWORD=root >> "$GITHUB_ENV"
+          fi
+          if [ -n "$REDIS_IMAGE" ]; then
+            printf '%s\n' REDIS_HOST=127.0.0.1 REDIS_PORT=6379 >> "$GITHUB_ENV"
+          fi
+      # Laravel boots from .env; the example plus a fresh key is enough for tests.
+      - name: Prepare .env
+        run: |
+          [ -f .env ] || cp .env.example .env
+          php artisan key:generate --force
+      - name: Run checks
+        env:
+          SCRIPTS: ${{ inputs.scripts }}
+        run: |
+          for s in $SCRIPTS; do
+            echo "::group::composer run-script $s"
+            composer run-script --timeout=0 "$s"
+            echo "::endgroup::"
+          done
+
+      - if: inputs.node-build && inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+      - if: inputs.node-build
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.package-manager }}
+          cache-dependency-path: ${{ inputs.working-directory }}/${{ inputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json' }}
+      # The same build the deploy runs, so a broken asset build fails here first.
+      - if: inputs.node-build && inputs.package-manager == 'pnpm'
+        run: pnpm install --frozen-lockfile && pnpm run build
+      - if: inputs.node-build && inputs.package-manager == 'npm'
+        run: npm ci && npm run build

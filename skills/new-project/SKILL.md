@@ -65,8 +65,12 @@ copied file.
 **Python service**: `uv init --package <name>`, then add `ruff` and `pytest` as dev dependencies,
 `pydantic-settings`, a `Dockerfile` per the profile, and `templates/python-service/`.
 
-**WordPress plugin / Laravel app**: follow the profile. Copy the release workflow, bump script
-and updater from the reference plugin it names; ask John for its path.
+**WordPress plugin**: follow the profile. Copy the release workflow, bump script and updater
+from the reference plugin it names; ask John for its path.
+
+**Laravel app**: follow the profile, and copy `templates/laravel-app/` (CI caller, Dependabot,
+PR template, plugin settings). Add a `check` composer script running Pint `--test`, Larastan and
+Pest.
 
 Every profile gets:
 - `.github/dependabot.yml` for its ecosystems;
