@@ -146,6 +146,7 @@ running.*
   production). Domain functions throw `AppError`, not a plain `Error`, for everything a person can
   fix; existing apps usually have many plain ones to convert. Catches let `redirect()` through
   (`unstable_rethrow`). Forms keep what was typed on refusal (`keepFormValues`, per the profile).
+  Once the kit's `ActionForm` exists, forms use it instead of their own copy of this logic.
 - [ ] Tests cover the refusals: bad input, wrong user, wrong tenant.
 - [ ] `/security-review` on the whole phase.
 
