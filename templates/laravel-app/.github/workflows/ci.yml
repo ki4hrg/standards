@@ -1,12 +1,12 @@
 name: ci
 
 # PR:   check + security → merge-on-green (if labelled `automerge`)
-# main: check + security (merge-on-green dispatches this run after merging)
+# main: check + security → deploy (assets built here, published on deploy-production)
 # Standards: https://github.com/ki4hrg/standards/blob/main/docs/profiles/laravel-app.md
 #
-# No image or Dockhand jobs: Laravel apps deploy to RunCloud, which pulls git.
-# The deploy job (CI builds assets and merges them into a deploy branch, never
-# force-pushed) is added per the profile's Deploy section.
+# No image or Dockhand jobs: Laravel apps deploy to RunCloud, which pulls the
+# deploy branch. A repo in migration Phase 1 leaves `deploy` out until Phase 2,
+# while RunCloud still deploys main.
 
 on:
   push:
@@ -59,3 +59,12 @@ jobs:
       issues: write
       pull-requests: read
     uses: ki4hrg/standards/.github/workflows/close-linked-issues.yml@v1
+
+  # Merging to main is the release (docs/decisions.md). Set the APP_HEALTH_URL
+  # variable so this waits for the new revision to be serving.
+  deploy:
+    needs: [check, security]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write   # pushes the deploy branch
+    uses: ki4hrg/standards/.github/workflows/runcloud-deploy.yml@v1

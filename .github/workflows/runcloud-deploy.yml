@@ -1,0 +1,168 @@
+name: runcloud-deploy
+
+# Publish a release for a host that pulls git (RunCloud; docs/profiles/laravel-app.md):
+# build the front-end assets in CI, commit them with a REVISION file on a deploy
+# branch, and wait until the app reports that revision.
+#
+# The deploy branch is APPENDED to, never rewritten: RunCloud pulls into a shallow
+# clone, and a force-pushed branch fails that pull ("refusing to merge unrelated
+# histories"). Each deploy commit has the previous deploy tip as its first parent,
+# so every pull is a fast-forward, and the released commit as its second, so the
+# history shows what was deployed. Its tree is exactly that commit plus the built
+# assets and REVISION, so nothing from an earlier deploy (a deleted file, stale
+# assets) survives the way it could through a merge.
+#
+# The push to the deploy branch fires RunCloud's GitHub webhook (repo webhooks fire
+# for GITHUB_TOKEN pushes; only Actions triggers are suppressed). RunCloud then pulls,
+# installs and runs its deploy script (migrations).
+#
+# With the APP_HEALTH_URL variable set (the app's public URL for the route that
+# returns `{ "ok": true, "revision": "<sha>" }` from REVISION), the job waits until
+# this commit, or a later one, is serving. RunCloud's own status doesn't say which
+# commit is live.
+#
+#   deploy:
+#     needs: [check, security]
+#     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+#     permissions:
+#       contents: write   # pushes the deploy branch
+#     uses: ki4hrg/standards/.github/workflows/runcloud-deploy.yml@v1
+
+on:
+  workflow_call:
+    inputs:
+      deploy-branch:
+        description: The branch RunCloud deploys from.
+        type: string
+        default: deploy-production
+      package-manager:
+        description: Front-end package manager, npm or pnpm.
+        type: string
+        default: npm
+      build-script:
+        description: package.json script that builds the assets.
+        type: string
+        default: build
+      assets-path:
+        description: Built output to commit (usually gitignored on main).
+        type: string
+        default: public/build
+      node-version:
+        type: string
+        default: '24'
+      wait-minutes:
+        description: How long to wait for the app to report this revision.
+        type: number
+        default: 10
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    # Releases queue rather than cancel, so they reach the branch in order.
+    concurrency:
+      group: runcloud-deploy-${{ github.repository }}-${{ inputs.deploy-branch }}
+      cancel-in-progress: false
+    env:
+      BRANCH: ${{ inputs.deploy-branch }}
+      SHA: ${{ github.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate inputs
+        env:
+          PM: ${{ inputs.package-manager }}
+        run: |
+          case "$PM" in npm|pnpm) ;; *) echo "::error::package-manager must be npm or pnpm, got '$PM'"; exit 1 ;; esac
+
+      # A queued older run must not publish over a newer release.
+      - name: Read the current deploy tip
+        id: tip
+        run: |
+          if git fetch --depth=1 origin "refs/heads/$BRANCH"; then
+            tip=$(git rev-parse FETCH_HEAD)
+            echo "tip=$tip" >> "$GITHUB_OUTPUT"
+            current=$(git show "$tip:REVISION" 2>/dev/null | tr -d '[:space:]' || true)
+            if [ -n "$current" ] && [ "$current" != "$SHA" ]; then
+              cmp=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SHA...$current" --jq .status 2>/dev/null || true)
+              if [ "$cmp" = "ahead" ]; then
+                echo "$BRANCH already has $current, which is ahead of $SHA. Nothing to publish."
+                echo "stale=true" >> "$GITHUB_OUTPUT"
+              fi
+            fi
+          else
+            echo "$BRANCH doesn't exist yet; this run creates it."
+          fi
+
+      - if: steps.tip.outputs.stale != 'true' && inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+      - if: steps.tip.outputs.stale != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.package-manager }}
+      - name: Build assets
+        if: steps.tip.outputs.stale != 'true'
+        env:
+          PM: ${{ inputs.package-manager }}
+          SCRIPT: ${{ inputs.build-script }}
+        run: |
+          if [ "$PM" = pnpm ]; then pnpm install --frozen-lockfile; else npm ci; fi
+          "$PM" run "$SCRIPT"
+
+      - name: Publish to the deploy branch
+        if: steps.tip.outputs.stale != 'true'
+        env:
+          ASSETS: ${{ inputs.assets-path }}
+          TIP: ${{ steps.tip.outputs.tip }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          printf '%s\n' "$SHA" > REVISION
+          # -f: the built assets are gitignored on main.
+          git add -f "$ASSETS" REVISION
+          tree=$(git write-tree)
+          if [ -n "$TIP" ]; then
+            commit=$(git commit-tree "$tree" -p "$TIP" -p "$SHA" -m "Deploy ${SHA::7}")
+          else
+            commit=$(git commit-tree "$tree" -p "$SHA" -m "Deploy ${SHA::7}")
+          fi
+          # Not forced: if the branch moved since it was read, this fails rather than
+          # rewriting history; re-run the workflow.
+          git push origin "$commit:refs/heads/$BRANCH"
+          echo "Published $SHA to $BRANCH as $commit."
+
+      - name: Check the running revision
+        if: steps.tip.outputs.stale != 'true'
+        env:
+          HEALTH_URL: ${{ vars.APP_HEALTH_URL }}
+          WAIT: ${{ inputs.wait-minutes }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "::warning::APP_HEALTH_URL is not set; not checking that RunCloud deployed $SHA."
+            exit 0
+          fi
+          # RunCloud pulls, installs and migrates before switching releases.
+          rev=""
+          for i in $(seq 1 $((WAIT * 6))); do
+            rev=$(curl -sS --max-time 10 "$HEALTH_URL" | jq -r '.revision // empty' 2>/dev/null || true)
+            if [ "$rev" = "$SHA" ]; then
+              echo "Serving $SHA."; exit 0
+            fi
+            # A later commit already deployed includes this one.
+            if [ -n "$rev" ]; then
+              cmp=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SHA...$rev" --jq .status 2>/dev/null || true)
+              if [ "$cmp" = "ahead" ]; then
+                echo "Serving $rev, which is ahead of $SHA."; exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "::error::After $WAIT minutes the app reports revision '${rev:-none}', not $SHA. Check RunCloud's deployment log for $BRANCH."
+          exit 1

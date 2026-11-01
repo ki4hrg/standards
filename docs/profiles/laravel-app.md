@@ -37,7 +37,20 @@ RunCloud pulls a git branch. CI builds the front-end assets and publishes them o
   repo that wants a manual production gate records it in its `docs/DECISIONS.md`.
 - **Revision check:** the publish job writes the commit into the deploy branch (a `REVISION`
   file), a no-auth route returns `{ ok, revision }` from it (Laravel's `/up` stays as it is), and
-  the job waits up to 5 minutes for the deployed commit, or a later one, to be serving. It fails
-  otherwise: RunCloud's own status doesn't say which commit is live.
+  the job waits for the deployed commit, or a later one, to be serving. It fails otherwise:
+  RunCloud's own status doesn't say which commit is live. The route, in `routes/web.php`:
+
+  ```php
+  // No auth, no database: says which commit this release is (REVISION is written by CI).
+  Route::get('/api/health', fn () => response()->json([
+      'ok' => true,
+      'revision' => is_file(base_path('REVISION')) ? trim(file_get_contents(base_path('REVISION'))) : null,
+  ]));
+  ```
+
+- The reusable `runcloud-deploy.yml` does all of this (the template's `deploy` job). Set the
+  `APP_HEALTH_URL` variable to that route's public URL, and point RunCloud's Git deployment at
+  `deploy-production` with its GitHub webhook on push. RunCloud's deploy script drops any
+  `npm` build step: the assets arrive built.
 - Migrations and seeders run in RunCloud's deploy script (`php artisan migrate --force`), after
   the pull.
