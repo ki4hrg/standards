@@ -158,7 +158,8 @@ running.*
 - [ ] Every path and command CLAUDE.md names exists. Stale facts are fixed or removed.
 - [ ] **Fact-check:** a reviewer that didn't write the new CLAUDE.md and `docs/ARCHITECTURE.md`
   (a fresh session, or a read-only subagent: `workflow.md`, Sessions and subagents) checks
-  every rule, path and behaviour they describe against the code. A rule described backwards gets an agent to rebuild the bug it prevents.
+  every rule, path and behaviour they describe against the code. A rule described backwards
+  gets an agent to rebuild the bug it prevents.
 - [ ] A rule the triage marks as replaced by a later phase (for example, "replaced by
   `lib/env.ts`" before that file exists) stays, as a project fact, until that phase lands.
   Otherwise the detail it carries is lost.
