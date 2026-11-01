@@ -94,6 +94,14 @@ There is no human review before merging, so review happens in the session:
   session's directory and can't change it, and `/security-review` and `/code-review` review the
   repo they run in. A coordinating session (a migration sweep) hands each repo's work to a session
   started in that repo, not to its own subagents.
+- **Agents that share a checkout never move its HEAD.** A subagent works in the dispatching
+  session's working tree, so its `git checkout` or `git switch` moves the branch out from under
+  that session, and the session's next commit lands on whatever HEAD was left (once, a detached
+  one, on no branch). Brief review and research agents as read-only: read other revisions with
+  `git show <ref>:<path>`, `git diff` and `git log`, never check out, switch, stash or reset. An
+  agent that needs another tree or makes commits of its own gets one: `isolation: "worktree"`
+  on the Agent call, or `git worktree add`. Before committing after a subagent ran, check
+  `git branch --show-current` is the branch you expect.
 - **Agents may open `agent-found` issues and add the `automerge` label** without asking. John's
   settings allow exactly `gh issue create --label agent-found …` (label first) and
   `gh pr edit <n> --add-label automerge` (nothing after it). Any other issue, comment, label or

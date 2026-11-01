@@ -47,6 +47,10 @@ working directory is another repo or `origin/HEAD` isn't set. If it isn't, run
 `git remote set-head origin -a` first. A subagent can't change its working directory: if this
 session didn't start in the target repo, say so and hand the work to a session started there
 (`workflow.md`, Sessions and subagents).
+A review or research subagent is read-only: tell it to read other revisions with `git show
+<ref>:<path>` and `git diff`, never to check out or switch, since it shares your working tree. One
+that needs its own tree gets `isolation: "worktree"`. After any subagent, confirm
+`git branch --show-current` before you commit.
 
 1. Invoke the `code-review` skill on the branch's diff against `main`. Fix real findings. For a
    finding you don't fix, note in the PR why.
