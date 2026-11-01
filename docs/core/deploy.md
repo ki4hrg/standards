@@ -1,7 +1,8 @@
 # Deploy
 
 Applies to anything that runs as a container. WordPress plugins and Laravel apps deploy
-differently (see their profiles).
+differently (see their profiles). The goal of the revision check below holds for them too: a
+deploy isn't done until the app reports the commit that was deployed.
 
 ## Pipeline
 

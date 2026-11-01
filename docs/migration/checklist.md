@@ -179,6 +179,10 @@ running.*
 *Done when the app follows the shared token names and dark mode, and its copy passes the
 verbosity rules.*
 
+An app still on Tailwind 3 does this phase only after its Tailwind 4 upgrade (Phase 6, brought
+forward with John's yes): the token file and contrast check assume Tailwind 4's `@theme`, and
+converting every view twice is waste.
+
 - [ ] Token names from `design.md` are defined in the app's CSS. Components use them, not raw
   palette classes. This can be done screen by screen across several PRs.
 - [ ] Dark mode: system default, a light/dark/system toggle, no flash on load.
@@ -237,7 +241,8 @@ new build.
   plus `security.yml` with `composer npm`. Skip phase 2. Phase 3 means nonces, capabilities,
   sanitize/escape and REST `permission_callback`.
 - **Laravel app:** phase 1 per its profile, from `templates/laravel-app/` (no `image` or Dockhand
-  items; `scripts` lists the composer scripts the repo has now). Phase 2 for whatever the host runs. Phase 3 uses
+  items; `scripts` lists the composer scripts the repo has now). Phase 2 is the deploy branch with
+  assets built in CI, and the revision route (both in its profile). Phase 2 for whatever the host runs. Phase 3 uses
   Laravel's validation and policies.
 - **Infra/ops repo:** phase 0 and phase 4 only. Direct pushes to `main` are allowed.
 

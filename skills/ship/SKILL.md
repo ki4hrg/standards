@@ -63,7 +63,9 @@ that needs its own tree gets `isolation: "worktree"`. After any subagent, confir
    - public routes or forms;
    - inbound email or webhooks;
    - secrets, tokens or encryption;
-   - file uploads.
+   - file uploads;
+   - health, children's or other sensitive personal data (models, queries, exports);
+   - anything the repo's CLAUDE.md lists as sensitive.
    Fix what it finds.
 3. If the diff adds or changes user-facing text, apply the `ui-verbosity-reduction` skill to
    **those strings only**, not the rest of the app. Wider casing or term inconsistencies it

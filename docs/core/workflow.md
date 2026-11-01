@@ -70,7 +70,8 @@ There is no human review before merging, so review happens in the session:
 - **When the diff touches a sensitive path:** `/security-review` as well. Sensitive means:
   authentication, sessions or OIDC; the OAuth server or MCP endpoint; permission or tenancy
   checks; public (unauthenticated) routes and forms; inbound email or webhooks; secrets,
-  encryption or tokens; file uploads.
+  encryption or tokens; file uploads; models, queries or exports holding health, children's or
+  other sensitive personal data. A repo's CLAUDE.md may name its own paths on top of these.
 - CI adds a dependency audit, and the GitGuardian app scans for secrets (`security.md`).
 
 ## Issues, plans and handoffs

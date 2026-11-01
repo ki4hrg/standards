@@ -18,7 +18,7 @@ Closes #
 
 - [ ] `pnpm typecheck && pnpm lint && pnpm test`
 - [ ] `/code-review` run; findings fixed or answered below
-- [ ] `/security-review` run (required if this touches auth, OAuth/MCP, permissions, public routes, inbound email/webhooks, secrets or uploads)
+- [ ] `/security-review` run (required if this touches auth, OAuth/MCP, permissions, public routes, inbound email/webhooks, secrets, uploads or sensitive personal data)
 - [ ] Checked in light and dark, and at phone width (UI changes)
 
 ## Docs
