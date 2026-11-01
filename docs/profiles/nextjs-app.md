@@ -79,9 +79,16 @@ instrumentation.ts  validates env at boot; starts jobs
   the scope and every query filters by it. A soft-deleted row is filtered the same way.
 - **Server actions are public endpoints.** Wrap them in `act()`: authenticate, parse with zod, turn
   an `AppError` into a message for the form, revalidate.
+- **Let `redirect()` and `notFound()` through.** They work by throwing, and Next 16 rejects the
+  action's promise with that error. Any `catch` around an action or its result (in `act()` and in
+  the client code that awaits it) calls `unstable_rethrow(err)` from `next/navigation` first.
+  Otherwise a save that redirects is reported as a failure.
 - **Errors meant for a person** are `AppError` subclasses (`ValidationError`, `ForbiddenError`,
   `NotFoundError`) in plain words, **returned** to the form by `act()`, never thrown to the client.
-  Anything else is a bug and is logged, not shown. (In production, React replaces the message of
+  Anything else is a bug and is logged, not shown, so `act()` only helps if the domain function
+  throws an `AppError` for **everything a person can fix** (a missing field, a clash, a state that
+  doesn't allow the change). A plain `Error` for one of those reaches the person as a generic
+  failure; review each new `throw` in `lib/` for this. (In production, React replaces the message of
   anything thrown from a server action with "Minified React error", so a thrown message never
   reaches the person.)
 - **Forms keep what was typed when the server refuses.** React 19 resets a `<form action>` after

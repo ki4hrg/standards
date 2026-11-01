@@ -25,6 +25,8 @@ merges, so this skill is the review.
 
 Run the commands CLAUDE.md says must pass (for a Next.js app: `pnpm typecheck && pnpm lint &&
 pnpm test`; also `pnpm db:drift` if the schema changed). Fix failures. Don't open a PR on red.
+Judge each check by its own exit code. Piping it (`pnpm test | grep …`, `| tail`) reports the
+last command's status, so failing tests look green; run it unpiped, or with `set -o pipefail`.
 
 If a check **can't run** here (out of memory, no Docker for Testcontainers, missing toolchain),
 that is not the same as passing: say which check didn't run and why in the PR's Verification

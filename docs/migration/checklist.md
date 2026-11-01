@@ -143,7 +143,9 @@ running.*
 - [ ] Webhooks verify a signature or secret. Secrets never appear in logs, errors or MCP output.
 - [ ] Refusals reach the person: user-facing errors from server actions are returned as
   `AppError` messages, not thrown (a thrown message shows as "Minified React error" in
-  production). Forms keep what was typed on refusal (`keepFormValues`, per the profile).
+  production). Domain functions throw `AppError`, not a plain `Error`, for everything a person can
+  fix; existing apps usually have many plain ones to convert. Catches let `redirect()` through
+  (`unstable_rethrow`). Forms keep what was typed on refusal (`keepFormValues`, per the profile).
 - [ ] Tests cover the refusals: bad input, wrong user, wrong tenant.
 - [ ] `/security-review` on the whole phase.
 
