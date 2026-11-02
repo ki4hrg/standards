@@ -50,7 +50,7 @@ jobs:
           case "$PM" in pnpm|npm) ;; *) echo "::error::package-manager must be pnpm or npm, got '$PM'"; exit 1 ;; esac
       # Reads the version from `packageManager` in package.json.
       - if: inputs.package-manager == 'pnpm'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: ${{ inputs.working-directory }}/package.json
       - uses: actions/setup-node@v7

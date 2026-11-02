@@ -48,7 +48,7 @@ jobs:
           done
 
       - if: steps.pm.outputs.pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: ${{ inputs.working-directory }}/package.json
       - if: steps.pm.outputs.pnpm || steps.pm.outputs.npm
