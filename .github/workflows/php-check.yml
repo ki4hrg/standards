@@ -1,8 +1,9 @@
 name: php-check
 
-# Laravel app checks (docs/profiles/laravel-app.md): composer scripts (Pint,
-# Larastan, Pest) against a real MySQL/MariaDB service container, then the
-# front-end build, so a broken Vite build fails the PR instead of the deploy.
+# Laravel app checks (docs/profiles/laravel-app.md): the front-end build (so a
+# broken Vite build fails the PR, and feature tests find the Vite manifest), then
+# composer scripts (Pint, Larastan, Pest) against a real MySQL/MariaDB service
+# container.
 #
 #   check:
 #     uses: ki4hrg/standards/.github/workflows/php-check.yml@v1
@@ -39,7 +40,7 @@ on:
         type: string
         default: ''
       node-build:
-        description: Run `ci` and `build` with the front-end package manager after the checks.
+        description: Run `ci` and `build` with the front-end package manager before the checks.
         type: boolean
         default: true
       package-manager:
@@ -131,16 +132,6 @@ jobs:
         run: |
           [ -f .env ] || cp .env.example .env
           php artisan key:generate --force
-      - name: Run checks
-        env:
-          SCRIPTS: ${{ inputs.scripts }}
-        run: |
-          for s in $SCRIPTS; do
-            echo "::group::composer run-script $s"
-            composer run-script --timeout=0 "$s"
-            echo "::endgroup::"
-          done
-
       - if: inputs.node-build && inputs.package-manager == 'pnpm'
         uses: pnpm/action-setup@v4
         with:
@@ -151,8 +142,20 @@ jobs:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.package-manager }}
           cache-dependency-path: ${{ inputs.working-directory }}/${{ inputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json' }}
-      # The same build the deploy runs, so a broken asset build fails here first.
+      # Before the tests: pages that use @vite need public/build/manifest.json, or
+      # every feature test that renders one fails with ViteManifestNotFoundException.
+      # It's also the build the deploy runs, so a broken asset build fails here first.
       - if: inputs.node-build && inputs.package-manager == 'pnpm'
         run: pnpm install --frozen-lockfile && pnpm run build
       - if: inputs.node-build && inputs.package-manager == 'npm'
         run: npm ci && npm run build
+
+      - name: Run checks
+        env:
+          SCRIPTS: ${{ inputs.scripts }}
+        run: |
+          for s in $SCRIPTS; do
+            echo "::group::composer run-script $s"
+            composer run-script --timeout=0 "$s"
+            echo "::endgroup::"
+          done
