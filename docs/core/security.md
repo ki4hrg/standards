@@ -52,7 +52,8 @@ workflows triggered by Dependabot get a read-only token.)
   point: a Next.js layout or middleware guard doesn't cover server actions or `app/api/` routes,
   and a global hook that only resolves who is calling isn't a permission check. Each entry point
   authenticates and authorizes itself. Keep a route-guard table in
-  `docs/ARCHITECTURE.md`.
+  `docs/ARCHITECTURE.md`, one row per route group: | Routes | Authentication | Authorization and
+  scope | Input parsing |.
 - **Routes called by `fetch` refuse with a status, not a redirect.** An API route, webhook or
   anything a client calls with `fetch` answers 401 or 403 with a JSON body. A redirect to the
   sign-in page is followed by `fetch` to a 200 HTML page, and the client reports success. Only

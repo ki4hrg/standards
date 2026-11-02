@@ -30,7 +30,10 @@ conflicts) and evidence (a file and line, or a command and its output). Cover at
   - typecheck, lint and test in CI, and whether they gate the image;
   - tests run against a real database;
   - validation at trust boundaries: find server actions, route handlers, MCP tools and webhooks
-    that read input without parsing it.
+    that read input without parsing it;
+  - what a 500 returns: a Fastify app without `setErrorHandler` echoes raw error messages
+    (database driver text included), and a Next.js action that throws shows "Minified React
+    error". Report either as a Phase 3 gap.
 - **Security:**
   - Dependabot;
   - dependency audit in CI; GitGuardian app covers the repo;

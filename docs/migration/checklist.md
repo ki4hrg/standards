@@ -156,7 +156,7 @@ running.*
   - file uploads.
 - [ ] Each one parses its input with zod (or the stack's equivalent) and authenticates and
   authorizes per call. Nothing relies on the layout guard alone.
-- [ ] A route-guard table in `docs/ARCHITECTURE.md`.
+- [ ] A route-guard table in `docs/ARCHITECTURE.md` (columns in `security.md`).
 - [ ] Webhooks verify a signature or secret. Secrets never appear in logs, errors or MCP output.
 - [ ] Refusals reach the person. Domain functions throw a typed, person-readable error (`AppError`
   or its subclasses) for everything a person can fix, not a plain `Error`; existing apps usually

@@ -56,13 +56,20 @@ In place of the Next-specific rules:
   non-zero on a missing or malformed value, before `listen`. (The Next.js profile does this in
   `instrumentation.ts`.)
 - **Every route authenticates itself.** A global `onRequest` hook may resolve who is calling, but
-  that isn't a check: each route calls a guard (`requireActor`, `requireAdmin`) that answers 401 or
-  403 JSON. `/mcp` takes a bearer token; WebDAV routes take per-device tokens. The route-guard
-  table in `docs/ARCHITECTURE.md` covers every prefix.
+  that isn't a check. Either each route plugin has a `preHandler` guard, or each handler calls one
+  (`requireActor`, `requireAdmin`) that answers 401 or 403 JSON. `/mcp` takes a bearer token;
+  WebDAV routes take per-device tokens. The route-guard table in `docs/ARCHITECTURE.md` covers
+  every prefix.
+- **A test proves no route was missed.** An `onRoute` hook records every registered route; the
+  test calls each one signed out and expects 401, except a public list with a reason per entry.
+  An entry for a route that no longer exists fails too. Required with per-handler guards, where
+  one forgotten call is easy; worth having either way.
 - **CSRF:** with cookie sessions, every non-GET `/api` request checks `Origin`.
 - **One error handler.** `setErrorHandler` maps an `AppError` to its 4xx with
-  `{ "error": "<plain message>" }`, a zod failure to 400, and anything else to a 500 with a
-  generic message, logged with detail and never echoed. Routes don't each map errors; that's what
+  `{ "error": "<plain message>" }`, a failure to parse the **request** to 400, and anything else
+  to a 500 with a generic message, logged with detail and never echoed. A zod error from parsing
+  a stored row or an upstream response is a server fault: 500, not 400. Without a handler,
+  Fastify's default echoes the error's message on a 500, database driver text included. Routes don't each map errors; that's what
   `act()` does for Next.js.
 - **Body limits are per route.** Keep Fastify's global `bodyLimit` at its default. A route that
   takes large bodies (uploads, imports) raises its own limit and authenticates first
