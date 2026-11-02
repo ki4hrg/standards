@@ -22,8 +22,8 @@ summary. Don't add conventions of your own to the new project's CLAUDE.md; propo
 Ask only for what the request doesn't already say, in one AskUserQuestion call:
 
 - Name (the repo name; lowercase, hyphenated) and a one-line purpose.
-- Profile: Next.js app (default for anything with a UI and a database), Python service,
-  WordPress plugin, Laravel app.
+- Profile: Next.js app (default for anything with a UI and a database), Node service (only when
+  Next.js can't do the job), Python service, WordPress plugin, Laravel app.
 - Owner: `ki4hrg` (personal) or a Foundry org/account.
 - Deploy host architecture (amd64 or arm64) and exposure (published port, or the proxy's external
   network). Containers only.
