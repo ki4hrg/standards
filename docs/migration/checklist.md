@@ -118,7 +118,9 @@ running.*
   `pg_isready`; `depends_on: service_healthy`. An existing health route under another name
   (`/healthz`, `/health`, `/status`): point the compose and Dockerfile healthchecks at
   `/api/health` instead. Keep the old route only if something outside the repo polls it (an uptime
-  monitor; ask John), and then say so in `docs/DEPLOYMENT.md`; otherwise remove it. A healthcheck
+  monitor; ask John), and then say so in `docs/DEPLOYMENT.md`; otherwise remove it, and check the
+  old path now answers 404: in an app with a client-side router it falls through to the SPA and
+  answers 200, which a forgotten monitor reads as up (add it to the server's reserved 404s). A healthcheck
   that queries the database restarts the app when the database blips, which `depends_on` and
   `pg_isready` already cover.
 - [ ] Once `/api/health` is deployed and reachable from GitHub, set the `APP_HEALTH_URL`

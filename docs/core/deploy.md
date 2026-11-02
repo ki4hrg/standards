@@ -40,7 +40,10 @@ File name `compose.yaml`. For the app service:
   automatically.
 - Required secrets as `${VAR:?set VAR}`; optional values as `${VAR:-default}`. Compose checks
   every guard in the file even when starting only `db`, so for local runs copy `.env.example` to
-  `.env` (its placeholders satisfy the guards); never weaken a guard for dev.
+  `.env` (its placeholders satisfy the guards). When the app's dev mode depends on a secret being
+  *absent* (no mail key → a log mailer) and reads the same `.env`, give the placeholders to
+  compose only instead: inline in the script that starts the dev database, or a separate
+  `--env-file`. Never weaken a guard for dev.
 - Healthcheck with Node's `fetch` against `http://127.0.0.1:3000/api/health` (alpine images have
   no curl). Give it a `start_period` long enough for migrations.
 - `depends_on: db: condition: service_healthy`.
@@ -72,7 +75,12 @@ For Postgres:
 
 Network exposure is per host: either publish a port bound for the reverse proxy, or join the
 proxy's external network with no published port. When the app trusts a proxy header, it must not
-be reachable except through the proxy. Record which one in `docs/DEPLOYMENT.md`.
+be reachable except through the proxy: bind the published port to the interface the proxy
+connects on (`127.0.0.1:${APP_PORT}:3000` when the proxy is on the same host, never a bare
+`${APP_PORT}:3000`, which listens on every interface), or join the proxy's network, and trust
+only the proxy's address (Fastify `trustProxy: '<proxy ip>'`, not `true`). Otherwise anyone who
+reaches the port directly sets their own `X-Forwarded-For`. Record which one in
+`docs/DEPLOYMENT.md`.
 
 ## Health endpoint
 
@@ -110,6 +118,13 @@ The reusable `dockhand-deploy.yml` does all of this.
 own, there is no webhook. Publish on version tags (`:latest` plus `:X.Y.Z`) and let the host's
 auto-update (Dockhand auto-update or Diun) pull, or redeploy by hand. Say which in
 `docs/DEPLOYMENT.md`.
+
+## Rolling back
+
+Revert the commit (a `revert:` PR) so the image and `compose.yaml` go back together. Pointing
+`APP_IMAGE` at an older `:sha-` tag under the current compose fails when the compose has moved on:
+a healthcheck changed to `/api/health` fails against an image from before that route existed.
+If you must pin an image by hand, use the compose from the same commit.
 
 ## Checking what's running
 
