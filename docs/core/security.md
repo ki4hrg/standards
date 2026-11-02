@@ -19,6 +19,11 @@ The reusable `security.yml` workflow runs:
      **npm has no per-advisory ignore.** An npm repo that needs one moves to pnpm for it (the
      Phase 6 item, brought forward).
 
+  A release-age gate (pnpm's `minimumReleaseAge`, where a repo uses one) never holds back a
+  security fix: exclude just the patched package (`minimumReleaseAgeExclude`), record it in
+  `docs/DECISIONS.md` with the advisory, and remove the exclusion once that version is older
+  than the gate.
+
   Never lower the audit level for everything.
 - **Secrets:** the GitGuardian GitHub app checks every PR. A new repo must be inside its
   repository access. A real leak is fixed by rotating the secret, not by rewriting history.

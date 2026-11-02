@@ -51,6 +51,7 @@ Provenance key:
 
 | Standard | Provenance | Why |
 |---|---|---|
+| A release-age gate (pnpm `minimumReleaseAge`) never blocks a security fix: a scoped `minimumReleaseAgeExclude` for the patched package, recorded with the advisory and removed once the version passes the gate. | Decided | The audit gate demanded a same-day patch that the age gate held back. Decided 2026-11-01. |
 | Dependabot (weekly, minor/patch grouped) for the package manager, Docker and GitHub Actions. | Decided | No repo had automated dependency updates. |
 | Dependabot ignores Node and Postgres image majors, and `@types/node` majors. | Decided | The runtime and database majors are stack decisions, and a Postgres major needs a dump and restore. Raised in the first migration pilot (a Node 25 PR). |
 | CI runs a dependency audit on every PR; high and above fails. | Decided | No repo scanned for vulnerable dependencies. |
