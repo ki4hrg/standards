@@ -38,15 +38,29 @@ RunCloud pulls a git branch. CI builds the front-end assets and publishes them o
 - **Revision check:** the publish job writes the commit into the deploy branch (a `REVISION`
   file), a no-auth route returns `{ ok, revision }` from it (Laravel's `/up` stays as it is), and
   the job waits for the deployed commit, or a later one, to be serving. It fails otherwise:
-  RunCloud's own status doesn't say which commit is live. The route, in `routes/web.php`:
+  RunCloud's own status doesn't say which commit is live. Register the route outside the
+  `web` group: `web` starts a session, and with the database session driver every health poll
+  writes a `sessions` row. Removing `StartSession` from one web route breaks
+  `ShareErrorsFromSession`, so don't. Either put it in `bootstrap/app.php`, where routes
+  added in `then:` get no group middleware:
 
   ```php
-  // No auth, no database: says which commit this release is (REVISION is written by CI).
-  Route::get('/api/health', fn () => response()->json([
-      'ok' => true,
-      'revision' => is_file(base_path('REVISION')) ? trim(file_get_contents(base_path('REVISION'))) : null,
-  ]));
+  use Illuminate\Support\Facades\Route;   // at the top of bootstrap/app.php
+
+  ->withRouting(
+      web: __DIR__.'/../routes/web.php',
+      health: '/up',
+      // No auth, no session, no database: says which commit this release is
+      // (REVISION is written by CI on the deploy branch).
+      then: fn () => Route::get('/api/health', fn () => response()->json([
+          'ok' => true,
+          'revision' => is_file(base_path('REVISION')) ? trim(file_get_contents(base_path('REVISION'))) : null,
+      ])),
+  )
   ```
+
+  or in `routes/api.php`, if the app registers it, after checking that the `api` group adds
+  nothing that touches the database (a `throttle` on a database cache store writes per request).
 
 - The reusable `runcloud-deploy.yml` does all of this (the template's `deploy` job). Set the
   `APP_HEALTH_URL` variable to that route's public URL, and point RunCloud's Git deployment at
