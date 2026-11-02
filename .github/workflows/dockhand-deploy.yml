@@ -33,8 +33,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-24.04
-    # Deploys queue rather than cancel: every image that was pushed gets rolled out
-    # in order, and the last one wins.
+    # Deploys queue rather than cancel, so a running deploy always finishes. GitHub
+    # keeps one pending run per group, so a queued deploy can be replaced by a newer
+    # one; the newest image wins either way.
     concurrency:
       group: dockhand-deploy-${{ github.repository }}
       cancel-in-progress: false

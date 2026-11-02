@@ -25,6 +25,10 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 
 ## Before each repo
 
+- [ ] Update the local standards clone: `cd ~/Projects/standards && git pull --ff-only`. (Run
+  it from inside the clone; `git -C <path>` on a directory outside the session's working tree
+  may be refused, notably from a worktree-isolated agent.)
+
 - [ ] A recent Actions run in the repo actually **started** (green or red, not "job was not
   started"). Billing or a spending limit blocks every job in seconds, and merge-on-green can't
   tell that from a real failure. If runs are blocked, stop and tell John.
@@ -56,7 +60,8 @@ dependencies.*
   `typecheck` script running `tsc --noEmit` if missing). Each later phase adds what it creates:
   `test` in Phase 3, `db:drift` once real migrations exist, `check:contrast` in Phase 5.
 - [ ] A repo still on npm passes `package-manager: npm` to `node-check` and
-  `package-managers: npm` to `security`. Moving to pnpm is Phase 6.
+  `package-managers: npm` to `security`. Moving to pnpm is Phase 6. A repo still on Node 22
+  passes `node-version: '22'` (both workflows default to 24) until its Node 24 PR.
 - [ ] CI runs on `pull_request`. `image` needs every check job.
 - [ ] **If the audit fails today**, the Phase 1 PR can't go green, and there's no PR CI yet for
   fix PRs to go through. So:

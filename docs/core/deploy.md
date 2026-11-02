@@ -27,6 +27,8 @@ no image means no deploy. `workflow_dispatch` on `main` rebuilds and redeploys b
 - Runs as a non-root user. Directories the app writes (data volumes) are created and handed to
   that user before `USER`.
 - Multi-stage build; the runtime stage carries only what runs.
+- Base images are literal tags in `FROM` (`node:24-alpine`), not built from an `ARG`, so
+  Dependabot can see and update them.
 - A new GHCR package starts **private**. Make it public, or give Dockhand registry credentials.
 
 ## Compose

@@ -21,6 +21,8 @@ name: merge-on-green
 #     if: github.event_name == 'pull_request'
 #     permissions: { contents: write, pull-requests: write, actions: write, checks: read }
 #     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
+#     with:
+#       skip-dispatch-paths: 'docs/* *.md'   # mirror the caller's paths-ignore
 
 on:
   workflow_call:
@@ -34,6 +36,14 @@ on:
           workflow_dispatch and build/deploy on main. Empty skips the dispatch.
         type: string
         default: ci.yml
+      skip-dispatch-paths:
+        description: >-
+          Space-separated shell globs (`*` matches across `/`). When every file the PR
+          changes matches one, the main pipeline isn't dispatched, so a docs-only merge
+          doesn't rebuild or redeploy. Mirror the caller's `paths-ignore`, which
+          doesn't apply to workflow_dispatch. Empty always dispatches.
+        type: string
+        default: ''
     outputs:
       merged:
         description: >-
@@ -136,6 +146,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WORKFLOW: ${{ inputs.workflow }}
           BASE: ${{ github.event.pull_request.base.ref }}
+          PR: ${{ github.event.pull_request.number }}
+          SKIP: ${{ inputs.skip-dispatch-paths }}
         run: |
+          if [ -n "$SKIP" ]; then
+            # Both names of a rename count. A failed call stops the step (bash -e), and
+            # an empty list dispatches: never skip a deploy on missing information.
+            files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+              --jq '.[] | .filename, (.previous_filename // empty)')
+            set -f   # the globs are patterns, not files to expand
+            all_skipped=$([ -n "$files" ] && echo true || echo false)
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              hit=false
+              for g in $SKIP; do
+                case "$f" in $g) hit=true; break ;; esac
+              done
+              if [ "$hit" = false ]; then all_skipped=false; break; fi
+            done <<< "$files"
+            set +f
+            if [ "$all_skipped" = true ]; then
+              echo "Every changed file matches skip-dispatch-paths; not dispatching $WORKFLOW."
+              exit 0
+            fi
+          fi
           gh workflow run "$WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$BASE"
           echo "Dispatched $WORKFLOW on $BASE."

@@ -15,8 +15,13 @@ on:
   # merge-on-green dispatches this after merging; also a manual redeploy.
   workflow_dispatch:
 
+# Superseded runs are cancelled on a PR, never on main. On main a running build always
+# finishes; a queued one can still be replaced by a newer commit's run (GitHub keeps one
+# pending run per group), which includes it, so not every main commit gets its own image.
+# A label other than `automerge` gets its own group, so its (skipped) run never cancels
+# the real one: Dependabot adds labels as it opens a PR.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event.action == 'labeled' && github.event.label.name != 'automerge' && '-other-label' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -24,9 +29,13 @@ permissions:
 
 jobs:
   check:
+    # Only `automerge` among labels starts a run; every job below needs this one.
+    if: github.event.action != 'labeled' || github.event.label.name == 'automerge'
     uses: ki4hrg/standards/.github/workflows/python-check.yml@v1
 
   security:
+    # Only `automerge` among labels starts a run; every job below needs this one.
+    if: github.event.action != 'labeled' || github.event.label.name == 'automerge'
     uses: ki4hrg/standards/.github/workflows/security.yml@v1
     with:
       package-managers: uv
@@ -50,6 +59,9 @@ jobs:
       actions: write   # dispatches this workflow on main after merging
       checks: read     # waits for app checks (GitGuardian); private repos need it
     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
+    with:
+      # paths-ignore above doesn't apply to the dispatch after a merge; this does.
+      skip-dispatch-paths: 'docs/* *.md'
 
   # GitHub doesn't close "Closes #n" issues when GITHUB_TOKEN merges, so this does.
   close-issues:
