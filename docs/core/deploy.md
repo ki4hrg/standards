@@ -70,8 +70,11 @@ For Postgres:
   ```
 
   `encodeURIComponent` is what keeps `/ @ : % # ?` in a password from breaking the URL.
-- A `backup` service (nightly `pg_dump -Fc`, kept N days) when the database holds anything that
-  can't be recreated. Back up the backup volume off the host.
+- Backups, when the database holds anything that can't be recreated: either a `backup` service
+  (nightly `pg_dump -Fc`, kept N days, with the backup volume copied off the host), or a
+  consistent snapshot of the whole VM taken off the host (Proxmox `vzdump` in snapshot mode with
+  the QEMU guest agent's filesystem freeze, or with the database stopped). A plain file copy of a
+  running database's volume is neither: it may not restore. Say which in `docs/DEPLOYMENT.md`.
 
 Network exposure is per host: either publish a port bound for the reverse proxy, or join the
 proxy's external network with no published port. When the app trusts a proxy header, it must not
@@ -79,8 +82,13 @@ be reachable except through the proxy: bind the published port to the interface 
 connects on (`127.0.0.1:${APP_PORT}:3000` when the proxy is on the same host, never a bare
 `${APP_PORT}:3000`, which listens on every interface), or join the proxy's network, and trust
 only the proxy's address (Fastify `trustProxy: '<proxy ip>'`, not `true`). Otherwise anyone who
-reaches the port directly sets their own `X-Forwarded-For`. Record which one in
-`docs/DEPLOYMENT.md`.
+reaches the port directly sets their own `X-Forwarded-For`.
+
+When the proxy runs on another machine (on the firewall, say), the port is published on the
+host's LAN interface. That is allowed with two guards: trust only the proxy's address, which
+stops a spoofed `X-Forwarded-For`, and have the host firewall admit the port only from the proxy,
+which stops requests that skip the proxy's TLS and limits. Record the exposure, and both guards
+when they apply, in `docs/DEPLOYMENT.md`.
 
 ## Health endpoint
 

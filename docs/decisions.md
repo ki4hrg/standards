@@ -76,6 +76,8 @@ Provenance key:
 | Container healthchecks on `/api/health` (no auth, no database call); the app waits for the database with `service_healthy`. | Established | Rolled out to every app on the same day. |
 | Node 24, PostgreSQL 18 (data volume mounted at `/var/lib/postgresql`). | Established | PG18 stores data in a versioned subdirectory. |
 | An existing Postgres stack may keep `PGDATA=/var/lib/postgresql/data` with the volume at `.../data`, recorded as a repo exception; move it only at a major-version upgrade. | Decided | Moving the mount means a dump and restore with no benefit; a major upgrade needs one anyway. Raised in the first migration pilot. |
+| Backups are a `pg_dump` service or a consistent off-host VM snapshot (snapshot mode with filesystem freeze, or the database stopped). Either is standard; no exception needed. | Decided | A hypervisor-level snapshot already covered one sweep's host; a plain file copy of a live volume may not restore, so it counts as neither. Decided 2026-11-02. |
+| A reverse proxy on another machine is allowed: the port is published on the LAN interface, the app trusts only the proxy's address, and the host firewall admits the port only from the proxy. | Decided | The proxy runs on the firewall for some hosts. Narrowing `trustProxy` stops spoofed client addresses; the firewall rule stops requests that skip the proxy. Decided 2026-11-02. |
 | The Postgres password travels in `PGPASSWORD`, beside a `DATABASE_URL` that has no password. | Established | A `/` in the password broke URL parsing and caused a restart loop. |
 
 ## Stack (Next.js app profile)
@@ -116,6 +118,7 @@ Provenance key:
 | An empty card collapses to its muted header and its add action; a full empty state only when a page's only list is empty. | Decided | "None added" cards filled pages with nothing. |
 | No count badges in card headers by default; only where the count isn't visible in the card (collapsed or paginated). | Decided | A badge repeating what's on screen is noise. |
 | Creating a record: inline form or modal, the app's choice; either way it stays on the page. | Decided | Both work; what matters is not navigating away and back. |
+| Templates get an optional manual (`workflow_dispatch`) job that uploads screenshots of the main screens in both themes, for design review. Not built yet. | Decided | CI uploads Playwright output only on failure, so a design review needed Playwright run locally. Decided 2026-11-02, low priority. |
 | Dark mode is required: system preference by default, with a light/dark/system toggle and no flash on load. | Decided | Support had been anywhere from missing to mandatory. |
 
 ## Agent docs
@@ -124,6 +127,7 @@ Provenance key:
 |---|---|---|
 | CLAUDE.md stays compact (about 150 lines or fewer): commands, rules that are easy to break, a layout map, links. Detail goes in `docs/`. | Decided | Files of 500 to 1,200 lines had become logs of per-PR lessons, several of them stale. |
 | Agents update facts they change in the same PR. New *rules* go to `docs/claude-candidates.md`; I promote or reject them. | Decided | Agent-written rules had been read as decisions and copied to other repos. |
+| Topic docs may sit beside SPEC.md and ARCHITECTURE.md when one of them links to them; an existing spec keeps its name if CLAUDE.md's layout map points to it. | Decided | Renaming breaks links for no gain, and one file per topic reads better than one long spec. Decided 2026-11-02. |
 | Rules shared by every project live here, not copied into each CLAUDE.md. | Decided | Copies drift. |
 | A long `docs/DECISIONS.md` opens with an index of decisions in force; replaced ones are marked superseded, not edited. | Decided | One log reached 4,640 lines that agents were told to read in full. Decided 2026-11-01. |
 | When an existing repo is migrated, its CLAUDE.md rules are sorted with me: contradicts a standard (drop), project fact (move to `docs/`), real candidate (parking lot for a yes or no). | Decided | |
