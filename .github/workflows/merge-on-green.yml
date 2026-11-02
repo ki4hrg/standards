@@ -84,7 +84,6 @@ jobs:
     if: >-
       github.event_name == 'pull_request'
       && !github.event.pull_request.draft
-      && contains(github.event.pull_request.labels.*.name, inputs.label)
       && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     outputs:
@@ -97,9 +96,28 @@ jobs:
       # read them; private ones answer 403 without this.
       checks: read
     steps:
+      # The label is read now, not from the event. A PR labelled as it opens fires
+      # `opened` and `labeled` seconds apart; the caller's concurrency group cancels
+      # one, and if the survivor is the `opened` run its payload has no label. Reading
+      # the current labels lets whichever run survives merge.
+      - name: Check for the label
+        id: label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          LABEL: ${{ inputs.label }}
+        run: |
+          if gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json labels \
+              --jq '.labels[].name' | grep -qxF "$LABEL"; then
+            echo "labelled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not labelled '$LABEL'; not merging."
+          fi
+
       # `needs` covers this workflow's own jobs. Checks from GitHub apps (GitGuardian)
       # run outside it, so wait for them too, on the same commit.
       - name: Wait for app checks
+        if: steps.label.outputs.labelled == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ github.event.pull_request.head.sha }}
@@ -122,6 +140,7 @@ jobs:
 
       - name: Squash-merge the tested commit
         id: merge
+        if: steps.label.outputs.labelled == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}

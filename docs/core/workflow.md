@@ -67,6 +67,10 @@ in parallel (migration phases, say) don't touch the same files; when one must fo
 merge `origin/main` into the later branch after the earlier one lands, before labelling. A PR
 that sits with no run: check `gh pr view <n> --json mergeable`.
 
+**A green PR labelled `automerge` that sits unmerged** means the merge didn't run on a run that
+saw the label. `merge-on-green` reads the label when it runs, so labelling at create time is safe;
+if one still sits, re-run the latest run (`gh run rerun <id>`) or remove and re-add the label.
+
 ## Review
 
 There is no human review before merging, so review happens in the session:
