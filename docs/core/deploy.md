@@ -85,10 +85,10 @@ only the proxy's address (Fastify `trustProxy: '<proxy ip>'`, not `true`). Other
 reaches the port directly sets their own `X-Forwarded-For`.
 
 When the proxy runs on another machine (on the firewall, say), the port is published on the
-host's LAN interface. That is allowed with two guards: trust only the proxy's address, which
-stops a spoofed `X-Forwarded-For`, and have the host firewall admit the port only from the proxy,
-which stops requests that skip the proxy's TLS and limits. Record the exposure, and both guards
-when they apply, in `docs/DEPLOYMENT.md`.
+host's LAN interface. That is allowed, and the LAN may reach it, with two guards: the app trusts
+only the proxy's address, which stops a spoofed `X-Forwarded-For`, and no app port is reachable
+from the internet. Only 80 and 443 are public, through the proxy. Record the exposure and both
+guards in `docs/DEPLOYMENT.md`.
 
 ## Health endpoint
 
