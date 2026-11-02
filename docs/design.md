@@ -86,7 +86,8 @@ Status colours come from one map in the app (the kit's `StatusBadge`). Don't inv
 colour inline.
 
 **Contrast:** every text/background token pair meets WCAG AA (4.5:1 for body text) in both
-themes, checked in CI by a script over the token file (`pnpm check:contrast`).
+themes, checked in CI over the token file: a `check:contrast` script, or a test inside `test`
+(either is fine, as long as CI runs it).
 
 ## Dark mode
 

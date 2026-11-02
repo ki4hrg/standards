@@ -27,7 +27,8 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 
 - [ ] Update the local standards clone: `cd ~/Projects/standards && git pull --ff-only`. (Run
   it from inside the clone; `git -C <path>` on a directory outside the session's working tree
-  may be refused, notably from a worktree-isolated agent.)
+  may be refused, notably from a worktree-isolated agent. Such an agent may not be able to read
+  the clone at all, by any path; the main session reads it and passes on what's needed.)
 
 - [ ] A recent Actions run in the repo actually **started** (green or red, not "job was not
   started"). Billing or a spending limit blocks every job in seconds, and merge-on-green can't
@@ -58,7 +59,8 @@ dependencies.*
   any e2e suite onto PRs only, or make it manual.
 - [ ] Set the check's `scripts` to the ones the repo **has now** (often just `typecheck lint`; add a
   `typecheck` script running `tsc --noEmit` if missing). Each later phase adds what it creates:
-  `test` in Phase 3, `db:drift` once real migrations exist, `check:contrast` in Phase 5.
+  `test` in Phase 3, `db:drift` once real migrations exist, `check:contrast` in Phase 5 (unless the
+  contrast check is a test that `test` already runs).
 - [ ] A repo still on npm passes `package-manager: npm` to `node-check` and
   `package-managers: npm` to `security`. Moving to pnpm is Phase 6. A repo still on Node 22
   passes `node-version: '22'` (both workflows default to 24) until its Node 24 PR.
@@ -211,7 +213,7 @@ converting every view twice is waste.
 - [ ] Token names from `design.md` are defined in the app's CSS. Components use them, not raw
   palette classes. This can be done screen by screen across several PRs.
 - [ ] Dark mode: system default, a light/dark/system toggle, no flash on load.
-- [ ] `check:contrast` in CI.
+- [ ] The contrast check runs in CI (`check:contrast`, or a test inside `test`).
 - [ ] A full `ui-verbosity-reduction` pass, including casing. Renamed terms are made consistent
   across the app.
 - [ ] Destructive actions confirm inline. One primary button per screen. Phone width works.
@@ -252,8 +254,12 @@ new build.
 
 ## Close out
 
-- [ ] Run `conform` again. Each remaining gap is either an `agent-found` issue or a recorded, accepted
-  exception in `docs/DECISIONS.md`.
+- [ ] Run `conform` again, against the audit plan (`docs/plans/standards-conformance.md`). Each
+  remaining gap is either an `agent-found` issue or a recorded, accepted exception in
+  `docs/DECISIONS.md`. A gap only John can settle (removing an old database volume, say) is an
+  `agent-found` issue that says it's waiting on his decision.
+- [ ] Write the close-out status into the audit plan (phases done with their PRs, exceptions,
+  open issues), then delete `docs/HANDOFF.md`: the sweep is over, and the plan keeps the record.
 - [ ] Update the sweep tracker. It names private repos, so it is not in this public repo: it is
   `private/sweep-tracker.md` in John's local clone (gitignored). A session without it reports
   the repo's phase status for John to record.

@@ -57,7 +57,10 @@ conflicts) and evidence (a file and line, or a command and its output). Cover at
   implementation). These are migration work, not defects.
 - **Design:**
   - tokens or raw palette classes;
-  - dark mode and its toggle;
+  - dark mode and its toggle. Check where the theme is applied: `index.html` (or the root
+    layout) must have a classic `<head>` script, inline or `src` without `defer`, `async` or
+    `type="module"`, that sets it before first paint. Applying it from the app bundle flashes
+    the wrong theme, and is easy to mistake for conforming;
   - contrast check;
   - the behavioural rules in `docs/design.md`, as far as the code shows them.
   - UI copy: sample a few screens against the `ui-verbosity-reduction` rules and casing. Report
@@ -96,3 +99,7 @@ list with rough effort. Lead the fix list with gaps that can ship a broken or un
 
 Offer to save the report as `docs/plans/standards-conformance.md` in the repo; don't write it
 without a yes.
+
+**At a sweep's close-out** (the plan already exists): report against that plan. List each of its
+gaps as fixed (with the PR), recorded as an exception, an open issue, or still open, plus any new
+gap the plan missed. The close-out step in `docs/migration/checklist.md` uses this.

@@ -85,8 +85,8 @@ In place of the Next-specific rules:
 
 ## Scripts
 
-`typecheck`, `lint`, `test`, `db:drift`, and `check:contrast` when there is an SPA, as in the
-Next.js profile. In a workspace, a `build` of the shared package runs first (list it first in
+`typecheck`, `lint`, `test`, `db:drift`, and, when there is an SPA, the contrast check
+(`check:contrast`, or a test inside `test`), as in the Next.js profile. In a workspace, a `build` of the shared package runs first (list it first in
 `node-check`'s `scripts`).
 
 ## Build and deploy
