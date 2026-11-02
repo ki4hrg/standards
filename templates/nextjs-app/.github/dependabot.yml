@@ -65,6 +65,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    # Action updates are low-risk and arrive together, majors included: one PR for all.
     groups:
-      minor-and-patch:
-        update-types: [minor, patch]
+      actions:
+        update-types: [major, minor, patch]

@@ -8,4 +8,4 @@ updates:
       interval: weekly
     groups:
       actions:
-        update-types: [minor, patch]
+        update-types: [major, minor, patch]
