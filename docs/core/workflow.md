@@ -70,6 +70,14 @@ that sits with no run: check `gh pr view <n> --json mergeable`.
 **A green PR labelled `automerge` that sits unmerged** means the merge didn't run on a run that
 saw the label. `merge-on-green` reads the label when it runs, so labelling at create time is safe;
 if one still sits, re-run the latest run (`gh run rerun <id>`) or remove and re-add the label.
+The exception is below.
+
+**A PR that changes `.github/workflows/` is merged by a person.** GitHub refuses a merge by the
+workflow token that changes a workflow file, and that token can't be given the permission it
+would need. `merge-on-green` checks for one, leaves the PR open with a warning in the run
+summary, and the merge job stays green. That covers Dependabot's GitHub Actions bumps and any CI
+change made in a migration sweep. The agent says in its report that the PR waits for John to
+merge it. His merge pushes to `main` as himself, so the `main` pipeline runs as usual.
 
 ## Review
 

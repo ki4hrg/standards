@@ -118,6 +118,10 @@ had run, is how broken builds used to reach `main`.
 Watch CI (`gh pr checks <n> --watch`). If a job fails, fix it on the same branch and push; the
 new commit gets its own run.
 
+A PR that changes `.github/workflows/` isn't merged by `merge-on-green`: the workflow token can't
+merge workflow files, so the merge job warns and leaves it open (`docs/core/workflow.md`). Tell
+John it's green and waiting for him to merge it.
+
 If every job fails within seconds and the annotation says "The job was not started because
 recent account payments have failed" or mentions a spending limit, that is **GitHub billing**,
 not the code. Don't push fixes, re-run, or add the label: tell John, and stop until he says it's

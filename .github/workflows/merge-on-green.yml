@@ -155,6 +155,21 @@ jobs:
             # Another run (or a person) merged it, and that path started its own deploy.
             echo "Already merged."; exit 0
           fi
+          # GITHUB_TOKEN can never be granted the `workflows` permission, and GitHub
+          # refuses a merge by it that changes .github/workflows/ (Dependabot's
+          # Actions bumps, or a CI change). Say so instead of failing at the merge:
+          # a person merges these by hand (docs/core/workflow.md). If the file list
+          # can't be read, the merge is attempted and fails visibly.
+          # Read into a variable first: `gh … | grep -q` can kill gh with SIGPIPE,
+          # and pipefail would then read a match as a failure.
+          files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' || true)
+          if grep -q '^\.github/workflows/' <<<"$files"; then
+            msg="This PR changes .github/workflows/, which GITHUB_TOKEN can't merge. Merge it by hand."
+            echo "::warning::$msg"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash \
             --match-head-commit "$SHA" --subject "$TITLE (#$PR)"
           echo "merged=true" >> "$GITHUB_OUTPUT"

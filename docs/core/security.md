@@ -38,7 +38,9 @@ database images (Node, Postgres), `@types/node`, and the frameworks (Next.js, Re
 Livewire, Tailwind, Vite and their plugins) are ignored: those versions are a stack decision
 (`decisions.md`), a Postgres major needs a dump and restore, and a framework major needs a plan
 for its runtime changes (migration Phase 6). Add a repo's own framework to its ignore list. (`merge-on-green` can't merge them:
-workflows triggered by Dependabot get a read-only token.)
+workflows triggered by Dependabot get a read-only token. Even when a person's label starts the
+run, a GitHub Actions bump changes `.github/workflows/`, which a person must merge; see
+`workflow.md`.)
 
 ## In the session
 
