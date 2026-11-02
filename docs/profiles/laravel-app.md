@@ -25,6 +25,16 @@ profiles: question it when it does not fit.
   may stay in `phpunit.xml` for quick local runs; the job's environment overrides it in CI.
 - Runner images pinned (`ubuntu-24.04`), bumped deliberately on a quiet week.
 
+## Rules
+
+- **Livewire actions skip custom route middleware.** `/livewire/update` re-applies only `auth`
+  and `can:` from the page's route, so any other middleware the page relies on (2FA enrolment,
+  a tenant or consent check) is skipped on actions from a page that is already open. Register it
+  with `Livewire::addPersistentMiddleware([...])`, and test an action posted without it. Check
+  this in migration Phase 3 for every Livewire app.
+- Policies and validation as in `../core/security.md`: Form Requests or `$request->validate`, and
+  a policy or gate for every action, in Livewire component methods too.
+
 ## Deploy (RunCloud)
 
 RunCloud pulls a git branch. CI builds the front-end assets and publishes them on a deploy branch

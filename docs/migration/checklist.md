@@ -261,7 +261,7 @@ new build.
 - **Laravel app:** phase 1 per its profile, from `templates/laravel-app/` (no `image` or Dockhand
   items; `scripts` lists the composer scripts the repo has now). Phase 2 is the deploy branch with
   assets built in CI, and the revision route (both in its profile). Phase 3 uses Laravel's
-  validation and policies.
+  validation and policies, and checks Livewire's persistent middleware (its profile).
 - **Node service:** phases as written, using the Next.js template's caller without the
   Next-specific scripts, `postgres-image` on `node-check` if its tests read a database URL, and a
   `build` script first in `scripts` when a workspace package must be built before typecheck.

@@ -61,6 +61,12 @@ it is (checks pass, reviews done, description final), mark it ready with `gh pr 
 when it's held for John without the label: a draft tells him there's nothing to look at yet.
 `merge-on-green` skips drafts.
 
+**A PR with a merge conflict gets no CI run at all.** GitHub silently skips `pull_request`
+workflows on a PR it can't merge, so nothing fails and `merge-on-green` never fires. PRs worked on
+in parallel (migration phases, say) don't touch the same files; when one must follow another,
+merge `origin/main` into the later branch after the earlier one lands, before labelling. A PR
+that sits with no run: check `gh pr view <n> --json mergeable`.
+
 ## Review
 
 There is no human review before merging, so review happens in the session:

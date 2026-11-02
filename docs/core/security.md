@@ -87,6 +87,11 @@ workflows triggered by Dependabot get a read-only token.)
 ## Secrets and config
 
 - Secrets are never committed. `.env.example` lists every variable with a placeholder.
+- Test credentials are generated or read from the environment, not written as literals.
+  GitGuardian scans every commit in a PR, so a literal in an early commit keeps the PR red after
+  a later commit removes it. When that happens, John resolves the incident in GitGuardian (as a
+  test credential, or by rotating a real one); then push a new commit, because the check can't be
+  re-requested with the repo's token.
 - In compose, a required secret is `${VAR:?set VAR}`, never a default. An optional one is
   `${VAR:-}`.
 - The app validates its environment at startup (`instrumentation.ts` for Next.js) and refuses to
