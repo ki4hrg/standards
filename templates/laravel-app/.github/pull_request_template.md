@@ -16,7 +16,7 @@ Closes #
 
 <!-- What was actually run and seen, not what should work. -->
 
-- [ ] `composer check` (or say it ran in CI only)
+- [ ] The repo's checks, as CLAUDE.md lists them (e.g. `composer check`), or which ran in CI only
 - [ ] `/code-review` run; findings fixed or answered below
 - [ ] `/security-review` run (required if this touches auth, OAuth/MCP, permissions, public routes, inbound email/webhooks, secrets, uploads or sensitive personal data)
 - [ ] Checked in light and dark, and at phone width (UI changes)
