@@ -41,7 +41,8 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
   profile's equivalent). Phase 1 makes it a gate, so whatever fails now will block Phase 1's
   own PR. Plan the fixes (see Phase 1).
 - [ ] Agree with John which phases are in scope for this sweep. Phase 6 (stack) is out unless he
-  says otherwise. Record the scope in the handoff.
+  says otherwise, except Node 24: a repo on an older Node moves to 24 in every sweep, as its own
+  PR alongside Phase 2 (John watches the deploy). Record the scope in the handoff.
 
 ## Phase 1: Pipeline and safety
 
@@ -150,13 +151,21 @@ running.*
   authorizes per call. Nothing relies on the layout guard alone.
 - [ ] A route-guard table in `docs/ARCHITECTURE.md`.
 - [ ] Webhooks verify a signature or secret. Secrets never appear in logs, errors or MCP output.
-- [ ] Refusals reach the person: user-facing errors from server actions are returned as
-  `AppError` messages, not thrown (a thrown message shows as "Minified React error" in
-  production). Domain functions throw `AppError`, not a plain `Error`, for everything a person can
-  fix; existing apps usually have many plain ones to convert. Catches let `redirect()` through
-  (`unstable_rethrow`). Forms keep what was typed on refusal (`keepFormValues`, per the profile).
-  Once the kit's `ActionForm` exists, forms use it instead of their own copy of this logic.
+- [ ] Refusals reach the person. Domain functions throw a typed, person-readable error (`AppError`
+  or its subclasses) for everything a person can fix, not a plain `Error`; existing apps usually
+  have many plain ones to convert. **One** place turns those into what the person sees, and
+  anything else into a logged, generic failure. The profile says where:
+  - Next.js: server actions return `AppError` messages through `act()`, never throw them (a
+    thrown message shows as "Minified React error" in production); catches let `redirect()`
+    through (`unstable_rethrow`); forms keep what was typed (`keepFormValues`), and use the kit's
+    `ActionForm` once it exists.
+  - Node service: one Fastify error handler maps them to a 4xx JSON `{ error }`; the SPA shows the
+    message in place and keeps what was typed.
+  - Laravel: validation errors and policies through Laravel's own handling.
 - [ ] Tests cover the refusals: bad input, wrong user, wrong tenant.
+- [ ] Database tests run in CI against a real database (Testcontainers, or `node-check`'s
+  `postgres-image`), and fail rather than skip when they have none. Check the CI log's skipped
+  count: a suite that skips without a database is green with most of it unrun.
 - [ ] `/security-review` on the whole phase.
 
 ## Phase 4: Agent docs
@@ -222,7 +231,7 @@ before building or smoke testing. A checkout that still has the old `node_module
 framework without complaint. Stop servers left running from before, so the smoke test reaches the
 new build.
 
-- [ ] Package manager pnpm, Node 24.
+- [ ] Package manager pnpm. (Node 24 is done in every sweep, alongside Phase 2.)
 - [ ] Prettier with defaults, in its own formatting-only PR (nothing else in the diff), with the
   commit added to `.git-blame-ignore-revs`.
 - [ ] Once the shared component kit exists, it replaces the app's own Button/Card/etc., screen by
@@ -251,8 +260,12 @@ new build.
   sanitize/escape and REST `permission_callback`.
 - **Laravel app:** phase 1 per its profile, from `templates/laravel-app/` (no `image` or Dockhand
   items; `scripts` lists the composer scripts the repo has now). Phase 2 is the deploy branch with
-  assets built in CI, and the revision route (both in its profile). Phase 2 for whatever the host runs. Phase 3 uses
-  Laravel's validation and policies.
+  assets built in CI, and the revision route (both in its profile). Phase 3 uses Laravel's
+  validation and policies.
+- **Node service:** phases as written, using the Next.js template's caller without the
+  Next-specific scripts, `postgres-image` on `node-check` if its tests read a database URL, and a
+  `build` script first in `scripts` when a workspace package must be built before typecheck.
+  Phase 3 per its profile (one error handler, per-route auth and body limits).
 - **Infra/ops repo:** phase 0 and phase 4 only. Direct pushes to `main` are allowed.
 
 ## Handoff block

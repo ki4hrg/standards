@@ -19,7 +19,7 @@ separate effort.
 |---|---|
 | `docs/decisions.md` | Every standard, the decision behind it, and where it came from. Start here. |
 | `docs/core/` | Cross-stack rules: `workflow.md` (branches, PRs, merging, review), `agent-docs.md` (CLAUDE.md and docs/), `security.md`, `deploy.md`. |
-| `docs/profiles/` | Per-stack rules: Next.js app, Python service, WordPress plugin, Laravel app. |
+| `docs/profiles/` | Per-stack rules: Next.js app, Node service, Python service, WordPress plugin, Laravel app. |
 | `docs/design.md`, `docs/mcp.md` | Design language and the MCP server conventions. |
 | `docs/open-questions.md` | Undecided items. Nothing there is a standard yet. |
 | `docs/migration/checklist.md` | Phase-by-phase checklist for bringing an existing repo up to standard, with a handoff block. |

@@ -68,6 +68,10 @@ copied file.
 **WordPress plugin**: follow the profile. Copy the release workflow, bump script and updater
 from the reference plugin it names; ask John for its path.
 
+**Node service** (only when Next.js can't do the job, or there's no UI): follow
+`docs/profiles/node-service.md`. There's no template yet: copy the Next.js template's CI caller,
+Dependabot, PR template and plugin settings, and drop the Next-specific files.
+
 **Laravel app**: follow the profile, and copy `templates/laravel-app/` (CI caller, Dependabot,
 PR template, plugin settings). Add a `check` composer script running Pint `--test`, Larastan and
 Pest.

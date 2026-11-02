@@ -15,7 +15,7 @@ skill does this). The core docs (`../core/`) apply in full.
 | Validation | zod 4 |
 | Auth | Own sessions (argon2 via `@node-rs/argon2`), `openid-client` for OIDC |
 | Styling | Tailwind CSS 4 with the shared `@theme` tokens (`../design.md`) |
-| Tests | Vitest against real Postgres (`@testcontainers/postgresql`). Needs Docker; on a dev machine without it, CI runs the database tests (the `ship` skill). |
+| Tests | Vitest against real Postgres (`@testcontainers/postgresql`). Needs Docker; on a dev machine without it, CI runs the database tests (the `ship` skill). In CI, a database test with no database **fails**; it never skips. |
 | Lint | ESLint with `eslint-config-next` and `eslint-config-prettier` |
 | Format | Prettier, default settings (no config file beyond `.prettierignore`) |
 | Components | The shared kit in `components/ui/` (`../design.md`), styled only through the tokens. Not built yet |

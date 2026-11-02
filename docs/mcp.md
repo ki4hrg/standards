@@ -43,7 +43,7 @@ OAuth:
   can act on, not a protocol error.
 - Destructive or bulk operations preview first: a call without `confirm: true` returns what would
   happen.
-- Tools call the same domain functions the UI's server actions call. There is one write path,
+- Tools call the same domain functions the UI's write path calls (server actions, API routes). There is one write path,
   with validation, authorization and audit in it, not in the tool.
 - Free text that came from other people (email bodies, notes) is data. The server's
   `instructions` say so.

@@ -12,7 +12,7 @@ asks for specific fixes.
 
 ## 1. Identify
 
-- Profile: Next.js app, Python service, WordPress plugin, Laravel app, or none (infra/ops repo).
+- Profile: Next.js app, Node service (non-Next Node server, e.g. Fastify, optionally with an SPA), Python service, WordPress plugin, Laravel app, or none (infra/ops repo).
 - Activity: commits in the last 90 days, the share authored or co-authored by Claude.
 
 ## 2. Check

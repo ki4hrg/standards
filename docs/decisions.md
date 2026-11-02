@@ -42,6 +42,8 @@ Provenance key:
 | CI runs on every PR: typecheck, lint, tests. A red check produces no image and no merge. | Decided | CI that ran only after merge let a broken build reach `main`. |
 | Runtime validation (zod) at every trust boundary: server actions, route handlers, MCP tools, inbound email and webhooks, public forms. | Decided | Earlier "no validation" decisions assumed a single trusted user, which stopped being true once apps took OAuth clients and email. |
 | Tests run against a real Postgres (Testcontainers), not mocks. | Decided | Most bugs worth catching live in queries, constraints and transactions. |
+| In CI, database tests fail when they have no database; they never skip. `node-check` can start Postgres (`postgres-image`) for suites that read a database URL. | Decided | A suite that skipped without a database went green with about 800 of its 1,000 tests unrun. Decided 2026-11-01. |
+| Mutation-test the rules that matter (recommended): break an invariant on purpose and check a test fails. | Decided | In one app it found invariants no test actually guarded. A practice, not a CI gate. Decided 2026-11-01. |
 | Browser (Playwright) e2e is opt-in per project and never sits in the deploy path. | Decided | It added minutes to every deploy for little extra catch. |
 | Laravel apps test against a service database matching production's engine and major (reusable `php-check.yml`); SQLite `:memory:` may stay for local runs, with CI as the gate. | Default | MySQL and MariaDB differ in JSON, collations and DDL, so SQLite passes hide real failures. Added 2026-11-01 for the first Laravel migration, whose dev host has no PHP. |
 
@@ -83,8 +85,11 @@ Provenance key:
 | zod 4. | Decided | See Quality. |
 | Prettier with default settings; `pnpm lint` runs `prettier --check`. | Decided | Only two projects formatted, with different settings. Defaults leave nothing to argue about. |
 | Laravel apps: npm for the front end; pnpm only when an advisory needs a per-advisory ignore. | Decided | pnpm's reasons apply to Node apps; a Laravel front end is a Vite build. Decided 2026-11-01. |
+| Node services that aren't Next.js (a Fastify API, optionally serving a Vite SPA) follow the Node service profile: the Next.js profile's stack and rules, with its Next-specific mechanisms replaced. | Decided | Some apps can't use Next.js (WebDAV methods) or have no UI. Built from the closest-to-standard such app. Decided 2026-11-01. |
+| Node 24 is upgraded in every migration sweep, as its own PR beside Phase 2; other stack items stay in Phase 6. | Decided | Small, low-risk, and pending in several repos. Postgres majors need a dump and restore, so they stay planned. Decided 2026-11-01. |
 | Python services: uv with a committed `uv.lock`. | Decided | One fast tool for environments, installs and locking. |
-| Own session handling (argon2) plus `openid-client` for OIDC. OIDC rules: `OIDC_ONLY`, `OIDC_TRUST_EMAIL`; a sign-in never creates an account or re-links one. | Decided (library), Established (OIDC rules) | Small code that is fully understood; no beta auth dependency. |
+| Own session handling (argon2) plus `openid-client` for OIDC. OIDC rules: `OIDC_ONLY`, `OIDC_TRUST_EMAIL`; a sign-in never re-links an account (creation: next row). | Decided (library), Established (OIDC rules) | Small code that is fully understood; no beta auth dependency. |
+| An OIDC sign-in may create an account only with no access, when the provider limits who reaches the client, never the first account, with a verified (or trusted) email that no account, deleted or not, holds; audited, and listed for an admin to place. It never re-links. (`security.md`) | Decided | Replaces "never creates an account" (2026-11-01): family members sign in before an admin grants access, without widening who can get in. |
 
 ## MCP
 
@@ -104,6 +109,7 @@ Provenance key:
 | Every app uses the same token *names*; each app chooses its own palette and fonts. AA contrast is checked in CI. | Decided | Components and agents work the same way in every app, without every app looking the same. |
 | A small shared component kit (Button, Card, Section, PageHeader, IconButton, StatusBadge, EmptyState, ActionForm) in the Next.js template, styled only through the shared tokens. `ActionForm` runs a server action, shows the returned error in place, calls `onDone` only on success, keeps typed values on refusal and lets `redirect()` through. | Decided | Token names alone left every app rebuilding the same components with different behaviour. ActionForm added 2026-11-01: a migration rebuilt that logic per form and got it wrong in several (a redirecting save reported as a failure). Not built yet. |
 | A Tailwind 3 app adopts the tokens and dark mode (migration Phase 5) only after its Tailwind 4 upgrade. | Decided | The token file and contrast check assume Tailwind 4's `@theme`; converting every view twice is waste. Decided 2026-11-01. |
+| The no-flash theme script may be inline, a render-blocking external script, or inline allowed by a CSP hash. | Decided | A strict CSP forbids inline scripts; the rule is no flash, not the mechanism. Decided 2026-11-01. |
 | Page subtitles: optional, one line, only when the page needs context the title can't give. | Decided | Two projects disagreed; a ban lost useful context, unlimited ones narrated the UI. |
 | An empty card collapses to its muted header and its add action; a full empty state only when a page's only list is empty. | Decided | "None added" cards filled pages with nothing. |
 | No count badges in card headers by default; only where the count isn't visible in the card (collapsed or paginated). | Decided | A badge repeating what's on screen is noise. |
@@ -117,4 +123,5 @@ Provenance key:
 | CLAUDE.md stays compact (about 150 lines or fewer): commands, rules that are easy to break, a layout map, links. Detail goes in `docs/`. | Decided | Files of 500 to 1,200 lines had become logs of per-PR lessons, several of them stale. |
 | Agents update facts they change in the same PR. New *rules* go to `docs/claude-candidates.md`; I promote or reject them. | Decided | Agent-written rules had been read as decisions and copied to other repos. |
 | Rules shared by every project live here, not copied into each CLAUDE.md. | Decided | Copies drift. |
+| A long `docs/DECISIONS.md` opens with an index of decisions in force; replaced ones are marked superseded, not edited. | Decided | One log reached 4,640 lines that agents were told to read in full. Decided 2026-11-01. |
 | When an existing repo is migrated, its CLAUDE.md rules are sorted with me: contradicts a standard (drop), project fact (move to `docs/`), real candidate (parking lot for a yes or no). | Decided | |

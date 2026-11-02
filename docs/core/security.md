@@ -40,9 +40,11 @@ workflows triggered by Dependabot get a read-only token.)
 ## Application rules
 
 - **Validate at every trust boundary** with zod (or the stack's equivalent): server actions,
-  route handlers, MCP tool input, inbound email and webhooks, public forms. Parse, don't cast.
-- **Authenticate where the request arrives.** A layout or middleware guard does not cover server
-  actions or `app/api/` routes; each authenticates itself. Keep a route-guard table in
+  route handlers and API routes, MCP tool input, inbound email and webhooks, public forms. Parse, don't cast.
+- **Authenticate where the request arrives.** A guard somewhere else doesn't cover an entry
+  point: a Next.js layout or middleware guard doesn't cover server actions or `app/api/` routes,
+  and a global hook that only resolves who is calling isn't a permission check. Each entry point
+  authenticates and authorizes itself. Keep a route-guard table in
   `docs/ARCHITECTURE.md`.
 - **Routes called by `fetch` refuse with a status, not a redirect.** An API route, webhook or
   anything a client calls with `fetch` answers 401 or 403 with a JSON body. A redirect to the
@@ -57,6 +59,18 @@ workflows triggered by Dependabot get a read-only token.)
   - A signed webhook can't authenticate before reading, because the signature covers the body.
     It requires a `Content-Length` (411 without one), refuses one over its cap (413), then reads
     the body and verifies the signature before parsing it.
+- **Sign-in with OIDC** (`openid-client`): `OIDC_ONLY` turns password sign-in off;
+  `OIDC_TRUST_EMAIL` accepts the provider's email without its
+  `email_verified`. A sign-in **never re-links** an existing account to a new subject. It may
+  **create** an account only when all of these hold:
+  - the provider limits who can reach this client (for example, groups per client);
+  - it is not the first account;
+  - the email is verified, or `OIDC_TRUST_EMAIL` is on;
+  - no account, including a soft-deleted one, holds that email or subject, so a deleted account
+    can't come back by signing in;
+  - the new account gets **no access** (no group, tenant or role) until an admin places it, and
+    admins have a view of accounts awaiting placement;
+  - the creation is audited.
 - **Never log or return secrets**: not in audit rows, logs, error messages or MCP output.
 - **Encrypt stored third-party tokens** with a key that is separate from the session secret, so
   rotating sessions does not destroy them.

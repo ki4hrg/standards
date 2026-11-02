@@ -18,7 +18,8 @@ no image means no deploy. `workflow_dispatch` on `main` rebuilds and redeploys b
 
 - Built by GitHub Actions, pushed to GHCR as `ghcr.io/<owner>/<repo>` (lowercased; GHCR rejects
   uppercase).
-- Tags: `:main` (mutable, what compose pulls) and `:sha-<sha>` (immutable, for rollback).
+- Tags: `:main` (mutable, what compose pulls) and `:sha-<short sha>` (immutable, for rollback;
+  `docker/metadata-action`'s `type=sha`, 7 characters). The full commit is in the revision label.
 - Labels: OCI labels from `docker/metadata-action`, including `org.opencontainers.image.revision`.
   `GIT_REVISION` is also passed as a build arg so the app can report it.
 - Platform matches the deploy host. Build arm64 natively on `ubuntu-24.04-arm`, not under QEMU,
@@ -35,7 +36,9 @@ File name `compose.yaml`. For the app service:
 - `image: ${APP_IMAGE:-ghcr.io/<owner>/<repo>:main}`, `pull_policy: always`, and **no `build:`**.
   Dev-only extras go in `compose.dev.yaml`, never `compose.override.yaml`, which compose loads
   automatically.
-- Required secrets as `${VAR:?set VAR}`; optional values as `${VAR:-default}`.
+- Required secrets as `${VAR:?set VAR}`; optional values as `${VAR:-default}`. Compose checks
+  every guard in the file even when starting only `db`, so for local runs copy `.env.example` to
+  `.env` (its placeholders satisfy the guards); never weaken a guard for dev.
 - Healthcheck with Node's `fetch` against `http://127.0.0.1:3000/api/health` (alpine images have
   no curl). Give it a `start_period` long enough for migrations.
 - `depends_on: db: condition: service_healthy`.
@@ -71,8 +74,8 @@ be reachable except through the proxy. Record which one in `docs/DEPLOYMENT.md`.
 
 ## Health endpoint
 
-`GET /api/health`: no auth, no database call, `dynamic = 'force-dynamic'`, returns
-`{ ok: true, revision }`. Its job is to tell whether the process is serving and which commit it
+`GET /api/health`: no auth, no database call, never cached (Next.js: `dynamic = 'force-dynamic'`),
+returns `{ ok: true, revision }`. Its job is to tell whether the process is serving and which commit it
 runs, not to test dependencies; the database has its own healthcheck.
 
 ## Migrations

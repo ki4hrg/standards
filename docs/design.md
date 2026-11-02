@@ -67,7 +67,7 @@ app now and then, and once when a repo is brought up to standard.
 ## Tokens
 
 Components use these names, never raw palette classes (`bg-white`, `text-gray-500`). Each app sets
-the values in `app/globals.css` (template: `templates/nextjs-app/app/globals.css`).
+the values in its global stylesheet (Next.js template: `templates/nextjs-app/app/globals.css`).
 
 | Token | Use |
 |---|---|
@@ -93,8 +93,10 @@ themes, checked in CI by a script over the token file (`pnpm check:contrast`).
 Required. The app follows the system setting by default and offers a light/dark/system toggle in
 settings or the user menu. The choice is stored in `localStorage` (the one per-user
 preference that belongs there rather than in the database: it must apply before first paint,
-with no request, and may reasonably differ per device) and applied by an inline script
-in `<head>` before first paint, so the page never flashes the wrong theme. Dark values are a
+with no request, and may reasonably differ per device) and applied by a script in `<head>`
+before first paint, so the page never flashes the wrong theme. Inline is simplest; an app with a
+strict Content-Security-Policy uses a render-blocking external `<script src>` (not `defer`,
+`async` or a module) or allows the inline one by its CSP hash. Dark values are a
 second set of the same tokens, so a component written with tokens needs no `dark:` classes. Check
 new screens in both themes and at phone width.
 
