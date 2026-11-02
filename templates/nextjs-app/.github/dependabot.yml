@@ -16,6 +16,17 @@ updates:
       # Node's major is a stack decision; @types/node follows the runtime, not npm.
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
+      # Framework majors change runtime behaviour; each is planned (migration Phase 6).
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: tailwindcss
+        update-types: [version-update:semver-major]
+      - dependency-name: "@tailwindcss/*"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
     directory: /

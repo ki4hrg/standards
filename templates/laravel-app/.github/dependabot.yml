@@ -11,6 +11,12 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Framework majors change runtime behaviour; each is planned (migration Phase 6).
+      - dependency-name: laravel/framework
+        update-types: [version-update:semver-major]
+      - dependency-name: livewire/livewire
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /
@@ -22,6 +28,16 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Framework and build-tool majors are planned with the app (migration Phase 6).
+      - dependency-name: tailwindcss
+        update-types: [version-update:semver-major]
+      - dependency-name: "@tailwindcss/*"
+        update-types: [version-update:semver-major]
+      - dependency-name: vite
+        update-types: [version-update:semver-major]
+      - dependency-name: laravel-vite-plugin
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
