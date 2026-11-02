@@ -77,7 +77,9 @@ dependencies.*
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
   is documented. John has confirmed the Dockhand stack has **Force redeploy** and **Re-pull
   images** on (Before each repo), and the `APP_HEALTH_URL` variable is set if `/api/health` is
-  reachable from GitHub (`deploy.md`).
+  reachable from GitHub (`deploy.md`). If the app has no `/api/health` yet (it often has a
+  `/healthz` or similar that queries the database and reports no revision), leave
+  `APP_HEALTH_URL` unset until Phase 2 adds the route: set now, every deploy check fails.
 - [ ] **Verify:**
   - this PR's own run is green on the PR;
   - labelling it `automerge` merges it;
@@ -107,7 +109,14 @@ running.*
     during a Postgres major-version upgrade, which needs the dump and restore anyway;
   - no published port unless something needs it.
 - [ ] Healthchecks: app on `/api/health` (no auth, no DB, reports `GIT_REVISION`); DB with
-  `pg_isready`; `depends_on: service_healthy`.
+  `pg_isready`; `depends_on: service_healthy`. An existing health route under another name
+  (`/healthz`, `/health`, `/status`): point the compose and Dockerfile healthchecks at
+  `/api/health` instead. Keep the old route only if something outside the repo polls it (an uptime
+  monitor; ask John), and then say so in `docs/DEPLOYMENT.md`; otherwise remove it. A healthcheck
+  that queries the database restarts the app when the database blips, which `depends_on` and
+  `pg_isready` already cover.
+- [ ] Once `/api/health` is deployed and reachable from GitHub, set the `APP_HEALTH_URL`
+  variable (if it wasn't set in Phase 1), so every deploy checks the running revision.
 - [ ] **Dockerfile:**
   - non-root user;
   - writable dirs `chown`ed before `USER`. **Existing volumes keep their old owner:** plan a

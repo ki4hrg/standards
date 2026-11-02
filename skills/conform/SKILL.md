@@ -44,7 +44,9 @@ conflicts) and evidence (a file and line, or a command and its output). Cover at
   - `pull_policy: always`;
   - tags and revision label;
   - webhook with the success check;
-  - healthcheck and `/api/health`;
+  - healthcheck and `/api/health` (no auth, no database, reports the revision). Look for an
+    existing health route under another name (`/healthz`, `/health`, `/status`) and what the
+    compose/Dockerfile healthchecks call; report it as a Phase 2 item, not as compliant;
   - Postgres 18 mount;
   - `PGPASSWORD`;
   - migrations, not `db push`.
