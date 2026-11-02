@@ -48,7 +48,7 @@ jobs:
           done
 
       - if: steps.pm.outputs.pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: ${{ inputs.working-directory }}/package.json
       - if: steps.pm.outputs.pnpm || steps.pm.outputs.npm
@@ -69,7 +69,7 @@ jobs:
         run: composer audit --locked --abandoned=report
 
       - if: steps.pm.outputs.uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
       - if: steps.pm.outputs.uv
         run: |
           uv export --locked --no-hashes --format requirements-txt > "$RUNNER_TEMP/requirements.txt"

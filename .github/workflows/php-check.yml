@@ -133,7 +133,7 @@ jobs:
           [ -f .env ] || cp .env.example .env
           php artisan key:generate --force
       - if: inputs.node-build && inputs.package-manager == 'pnpm'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: ${{ inputs.working-directory }}/package.json
       - if: inputs.node-build
