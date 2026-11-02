@@ -19,7 +19,7 @@ name: merge-on-green
 #   automerge:
 #     needs: [check, security, image]
 #     if: github.event_name == 'pull_request'
-#     permissions: { contents: write, pull-requests: write, actions: write }
+#     permissions: { contents: write, pull-requests: write, actions: write, checks: read }
 #     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
 
 on:
@@ -83,6 +83,9 @@ jobs:
       contents: write
       pull-requests: write
       actions: write
+      # Reads the commit's check runs (app checks below). Public repos let any token
+      # read them; private ones answer 403 without this.
+      checks: read
     steps:
       # `needs` covers this workflow's own jobs. Checks from GitHub apps (GitGuardian)
       # run outside it, so wait for them too, on the same commit.
