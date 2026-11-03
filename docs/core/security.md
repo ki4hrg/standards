@@ -34,7 +34,7 @@ Every repo has `.github/dependabot.yml` with weekly updates for its package ecos
 images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem, and `commit-message: { prefix: chore, include: scope }` so titles pass the Conventional Commit check (every ecosystem in the file, as in the
 template). Dependabot
 PRs go through CI like any other; merge them from the PR list. Majors of the runtime and
-database images (Node, Postgres), `@types/node`, and the frameworks (Next.js, React, Laravel,
+database images (Node, Postgres), `@types/node`, TypeScript, and the frameworks (Next.js, React, Laravel,
 Livewire, Tailwind, Vite and their plugins) are ignored: those versions are a stack decision
 (`decisions.md`), a Postgres major needs a dump and restore, and a framework major needs a plan
 for its runtime changes (migration Phase 6). Add a repo's own framework to its ignore list, and the majors of any stack item it keeps until its Phase 6 move (Prisma, an auth library): that major is replaced, not upgraded. (`merge-on-green` can't merge them:
