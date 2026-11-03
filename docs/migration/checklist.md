@@ -215,6 +215,8 @@ converting every view twice is waste.
 
 - [ ] Token names from `design.md` are defined in the app's CSS. Components use them, not raw
   palette classes. This can be done screen by screen across several PRs.
+  A shadcn/ui app renames its tokens to these, `components/ui` included, with no alias layer
+  (mapping in `design.md`).
 - [ ] Dark mode: system default, a light/dark/system toggle, no flash on load.
 - [ ] The contrast check runs in CI (`check:contrast`, or a test inside `test`).
 - [ ] A full `ui-verbosity-reduction` pass, including casing. Renamed terms are made consistent

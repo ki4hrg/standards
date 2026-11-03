@@ -34,6 +34,10 @@ OAuth:
 
 - Names are `snake_case` `verb_noun`: `list_expenses`, `get_expense`, `create_expense`,
   `update_expense`, `delete_expense`.
+- Renaming an existing server's tools is a hard cut, never both names at once (that doubles the
+  tool list the model chooses from). One PR with a `!` title and an old → new table in its
+  description, and John is told before it merges: instructions or skills that name the old tools,
+  and per-tool permissions in the client, need updating once it lands.
 - `list_` returns summaries and says in its description that `get_` returns the full record.
   Lists are paginated with a cursor and default to a sensible limit.
 - Every tool has a `title`, a description written for the model (what it is for, when to use it,

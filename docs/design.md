@@ -68,6 +68,12 @@ app now and then, and once when a repo is brought up to standard.
 
 Components use these names, never raw palette classes (`bg-white`, `text-gray-500`). Each app sets
 the values in its global stylesheet (Next.js template: `templates/nextjs-app/app/globals.css`).
+An app built on shadcn/ui renames its tokens to these, `components/ui` included (Phase 5), and
+edits any component added later with `shadcn add` to these names in the same PR. Map by meaning,
+not by name: shadcn's `background` is `page`, `foreground` is `ink`, `muted-foreground` is
+`ink-3`, `border`/`input` are `line`, `primary` is `accent`, `destructive` is `danger`, and its
+`accent` (a hover tint) and `muted` are usually `sunk`. `card` keeps its name and meaning, and
+`popover` becomes `card`. Map `secondary` and `ring` by how the app uses them.
 
 | Token | Use |
 |---|---|
