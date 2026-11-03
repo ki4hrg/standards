@@ -5,7 +5,8 @@
 Next.js + Drizzle + Postgres 18; pnpm; Node 24. Follows https://github.com/ki4hrg/standards
 (Next.js app profile). The `standards` plugin is enabled in `.claude/settings.json`; its `ship`
 skill is how work lands. Design: `docs/SPEC.md` · how it's built: `docs/ARCHITECTURE.md` ·
-deploy and env: `docs/DEPLOYMENT.md` · decisions: `docs/DECISIONS.md`.
+deploy and env: `docs/DEPLOYMENT.md` · decisions: `docs/DECISIONS.md`. This Next.js is newer
+than your training data: read the guide in `node_modules/next/dist/docs/` before using an API.
 
 ## Commands
 

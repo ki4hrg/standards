@@ -95,7 +95,7 @@ instrumentation.ts  validates env at boot; starts jobs
   every action. Every form that stays on screen gets `onReset={keepFormValues}`
   (`lib/keep-form-values.ts` in the template); a form that should clear after a success cancels
   the reset only on refusal.
-- **Request body size:** keep Next's proxy body limit (`proxyClientMaxBodySize`) at its default or
+- **Request body size:** keep Next's proxy body limit (`experimental.proxyClientMaxBodySize`, 10MB) at its default or
   lower. It applies to every route the proxy matches, signed in or not, so raising it for uploads
   lets anonymous requests buffer large bodies anywhere. Exclude routes that take large bodies
   (uploads, inbound email and other webhooks) from the proxy matcher instead, and have each
@@ -105,6 +105,13 @@ instrumentation.ts  validates env at boot; starts jobs
   The same goes for `experimental.serverActions.bodySizeLimit`: it covers every server action, and
   Next reads the body before the action's own auth check runs. Keep it at the default; an upload
   that needs more is a route handler that authenticates first, then enforces its own limit.
+  Past the proxy limit, Next doesn't refuse the request: it logs a warning and passes on only the
+  first 10MB. So an upload through a server action on a proxied page arrives truncated, whatever
+  `bodySizeLimit` says.
+- **`agentRules: false`** in `next.config.ts`. From Next 16.3, `next dev` otherwise writes a
+  managed block into `AGENTS.md`, a tracked file, and re-adds it when removed. With `false` it
+  removes the block instead. The one useful line, that this Next differs from training data and
+  its docs are in `node_modules/next/dist/docs/`, is in the template's CLAUDE.md.
 - **API routes refuse with JSON.** Routes outside the layout guard and anything a client calls with
   `fetch` return 401/403 JSON, never a redirect to sign-in (the auth library's or a
   `requirePermission`-style helper's): `fetch` follows the redirect to a 200 page and the client

@@ -46,7 +46,7 @@ copied file.
    - devDependencies: `drizzle-kit vitest @testcontainers/postgresql tsx esbuild`.
    Pin exact versions for Next, Drizzle and the auth libraries.
 4. `tsconfig.json`: add `"noUncheckedIndexedAccess": true`. `next.config.ts`:
-   `output: 'standalone'`.
+   `output: 'standalone'` and `agentRules: false` (`docs/profiles/nextjs-app.md`).
 5. Add:
    - `drizzle.config.ts` (schema `lib/db/schema.ts`, out `lib/db/migrations`);
    - `lib/db/client.ts`;

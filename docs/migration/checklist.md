@@ -199,7 +199,8 @@ running.*
 - [ ] `docs/claude-candidates.md` exists. Rules John deferred are listed there.
 - [ ] Plans referenced outside the repo (`~/.claude/plans/…`) are recovered into `docs/plans/` or
   the reference is removed.
-- [ ] `.claude/settings.json` enables the standards plugin. `AGENTS.md` is a one-line pointer.
+- [ ] `.claude/settings.json` enables the standards plugin. `AGENTS.md` is a one-line pointer
+  (Next.js: `agentRules: false` in `next.config.ts`, so `next dev` stops writing into it).
 - [ ] `.github/pull_request_template.md`. `.env.example` is complete and matches the README.
 - [ ] Any exception the repo relies on is stated in CLAUDE.md, for example direct pushes to
   `main` for an infra repo.

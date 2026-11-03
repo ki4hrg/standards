@@ -58,6 +58,8 @@ Create a file when there is something to put in it; an empty skeleton is noise.
 
 ## Tool-generated blocks
 
-Some tools inject their own agent instructions (for example, a block written into `AGENTS.md` by
-`next dev`). Keep `AGENTS.md` as a one-line pointer to CLAUDE.md and gitignore any regenerated
-blocks rather than committing them.
+Some tools inject their own agent instructions. Keep `AGENTS.md` as a one-line pointer to
+CLAUDE.md. A tool that writes into a tracked file is turned off in its config (`next dev`:
+`agentRules: false`, in the Next.js profile), and anything useful in its block goes into CLAUDE.md
+in a line. A tool that writes its own untracked files has them gitignored. Committing a
+regenerated block means every upgrade rewrites a file agents read.
