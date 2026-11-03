@@ -87,7 +87,10 @@ dependencies.*
   images** on (Before each repo), and the `APP_HEALTH_URL` variable is set if `/api/health` is
   reachable from GitHub (`deploy.md`). If the app has no `/api/health` yet (it often has a
   `/healthz` or similar that queries the database and reports no revision), leave
-  `APP_HEALTH_URL` unset until Phase 2 adds the route: set now, every deploy check fails.
+  `APP_HEALTH_URL` unset until Phase 2 adds the route: set now, every deploy check fails. If it
+  is already set, bringing the Phase 2 route forward instead is fine: `/api/health` (no auth, no
+  DB) reporting `GIT_REVISION`, and the Dockerfile's `ARG`/`ENV GIT_REVISION`, as a small PR
+  merged before Phase 1 (`image.yml` passes the build arg).
 - [ ] **Verify:**
   - this PR's own run is green on the PR;
   - labelling it `automerge` merges it;

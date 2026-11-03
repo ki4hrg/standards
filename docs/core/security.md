@@ -37,7 +37,7 @@ PRs go through CI like any other; merge them from the PR list. Majors of the run
 database images (Node, Postgres), `@types/node`, and the frameworks (Next.js, React, Laravel,
 Livewire, Tailwind, Vite and their plugins) are ignored: those versions are a stack decision
 (`decisions.md`), a Postgres major needs a dump and restore, and a framework major needs a plan
-for its runtime changes (migration Phase 6). Add a repo's own framework to its ignore list. (`merge-on-green` can't merge them:
+for its runtime changes (migration Phase 6). Add a repo's own framework to its ignore list, and the majors of any stack item it keeps until its Phase 6 move (Prisma, an auth library): that major is replaced, not upgraded. (`merge-on-green` can't merge them:
 workflows triggered by Dependabot get a read-only token. Even when a person's label starts the
 run, a GitHub Actions bump changes `.github/workflows/`, which a person must merge; see
 `workflow.md`.)

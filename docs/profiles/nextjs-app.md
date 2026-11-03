@@ -102,6 +102,9 @@ instrumentation.ts  validates env at boot; starts jobs
   enforce its own limit (`security.md`: uploads authenticate first; signed webhooks cap
   `Content-Length`, then verify). Check every such route before lowering the limit: removing a
   raised one cuts their bodies at the default and breaks them.
+  The same goes for `experimental.serverActions.bodySizeLimit`: it covers every server action, and
+  Next reads the body before the action's own auth check runs. Keep it at the default; an upload
+  that needs more is a route handler that authenticates first, then enforces its own limit.
 - **API routes refuse with JSON.** Routes outside the layout guard and anything a client calls with
   `fetch` return 401/403 JSON, never a redirect to sign-in (the auth library's or a
   `requirePermission`-style helper's): `fetch` follows the redirect to a 200 page and the client
