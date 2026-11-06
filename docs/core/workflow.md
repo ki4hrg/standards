@@ -135,8 +135,9 @@ There is no human review before merging, so review happens in the session:
 ## Self-hosted PR runner
 
 A private repo's PR jobs (check, audit, the build-only PR image) can run on John's self-hosted
-runner, which costs no Actions minutes. The templates route them there when the repo variable
-`PR_RUNNER` holds the runner's label (`gh variable set PR_RUNNER --body <label>`), and only for a
+runner, which costs no Actions minutes. The runner serves John's GitHub organization: app repos
+move into it as they're swept (`docs/migration/checklist.md`). The templates route PR jobs there
+when the variable `PR_RUNNER` (set on the organization) holds the runner's label, and only for a
 private repo and a branch in the same repo. Unset, every job uses GitHub's runners.
 
 - **Only jobs that hold nothing.** PR jobs get a read-only token and no secrets. `merge-on-green`,
@@ -149,16 +150,20 @@ private repo and a branch in the same repo. Unset, every job uses GitHub's runne
 - **Isolated from the LAN.** The runner reaches the internet and nothing at home: not the app
   hosts, not the deploy tooling, not the reverse proxy. Its build and network setup lives with
   the lab's infrastructure, not here.
-- **Public repos can never reach it, and the runner's own registration enforces that, not the
-  templates.** A fork's PR runs the workflow as the fork wrote it, so it can name the runner's
-  label directly. Runners are registered only for private repos (or, in an organization, in a
-  runner group with "Allow public repositories" off). The templates' private-repo condition only
-  stops an honest workflow sending a job there by mistake.
-- **Enrolling a repo** is two steps: add it to the runner's list, then set `PR_RUNNER`. Unset the
-  variable to send its jobs back to GitHub's runners (the runner is down, or the repo is about to
-  go public; `docs/decisions.md`).
-- **If the runner is down,** PR jobs wait in the queue (GitHub drops them after 24 hours). Unset
-  `PR_RUNNER` for the repo and re-run, or wait. `main` builds and deploys don't depend on it.
+- **Public repos can never reach it, and the runner group enforces that, not the templates.** A
+  fork's PR runs the workflow as the fork wrote it, so it can name the runner's label directly.
+  The organization's runner group has "Allow public repositories" off; that setting is the
+  control. The templates' private-repo condition only stops an honest workflow sending a job there
+  by mistake.
+- **Its token can only register runners.** An organization-owned token with "Self-hosted runners"
+  permission and no repository access, readable only by the service that starts runners. A
+  repo-level runner would need a token that can also change a repo's settings or visibility.
+- **Enrolling a repo** means moving it into the organization. A repo that must use GitHub's
+  runners for a while sets its own `PR_RUNNER` variable to `ubuntu-24.04`, which overrides the
+  organization's (a variable can't be empty).
+- **If the runner is down (or its token expired),** PR jobs wait in the queue and never fall back
+  to GitHub's runners; GitHub fails them after 24 hours. Delete the organization's `PR_RUNNER`
+  variable and re-run the waiting jobs. `main` builds and deploys don't depend on the runner.
 
 ## Dev machine
 

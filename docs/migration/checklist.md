@@ -81,10 +81,15 @@ dependencies.*
 - [ ] `merge-on-green` job with `actions: write` and `checks: read`, and the `close-issues` job after it (as in the template). Run `scripts/repo-settings.sh owner/repo`
   (squash only, delete branch on merge, `automerge` label).
 - [ ] Workflow `permissions:` are least-privilege.
-- [ ] A private repo in John's account is enrolled on the self-hosted PR runner once the template
-  caller is in: ask John to add it to the runner's list, then
-  `gh variable set PR_RUNNER --body <label> --repo owner/repo` (`workflow.md`). Until then its PR
-  jobs use GitHub's runners.
+- [ ] **Move the repo into John's organization** (`workflow.md`, Self-hosted PR runner), as its own
+  step after the template caller is in. John does the transfer. In the same change:
+  - point compose `image:` at `ghcr.io/<org>/<repo>`. CI starts pushing there by itself, while
+    the old package stays where it was, so a compose file left alone keeps pulling the old image
+    and every deploy still reports success;
+  - re-create what doesn't move with the repo: Actions secrets and variables, environments, and
+    the GHCR package's access for the deploy host's registry login;
+  - after the first deploy, check `/api/health` reports the new revision.
+  Until it moves, its PR jobs use GitHub's runners.
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
   compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
