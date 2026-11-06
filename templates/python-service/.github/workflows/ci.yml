@@ -11,17 +11,24 @@ on:
     # A docs-only direct push doesn't rebuild or redeploy. PRs always run (merge-on-green).
     paths-ignore: ['docs/**', '**/*.md']
   pull_request:
+    # `labeled`: adding `automerge` to a PR whose checks already passed merges it.
     types: [opened, synchronize, reopened, labeled, ready_for_review]
   # merge-on-green dispatches this after merging; also a manual redeploy.
   workflow_dispatch:
+    inputs:
+      # Set by merge-on-green when the merged tree is the one the PR run tested; check
+      # and security skip if it's still main's head. Leave it empty by hand.
+      tested:
+        type: string
+        default: ''
 
 # Superseded runs are cancelled on a PR, never on main. On main a running build always
 # finishes; a queued one can still be replaced by a newer commit's run (GitHub keeps one
 # pending run per group), which includes it, so not every main commit gets its own image.
-# A label other than `automerge` gets its own group, so its (skipped) run never cancels
-# the real one: Dependabot adds labels as it opens a PR.
+# A `labeled` run gets its own group per label, so it never cancels the run testing
+# the commit (or another label's run): Dependabot adds labels as it opens a PR.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event.action == 'labeled' && github.event.label.name != 'automerge' && '-other-label' || '' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event.action == 'labeled' && format('-label-{0}', github.event.label.name) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -29,30 +36,47 @@ permissions:
 
 jobs:
   check:
-    # Only `automerge` among labels starts a run; every job below needs this one.
-    if: github.event.action != 'labeled' || github.event.label.name == 'automerge'
+    # Skipped on `labeled`: adding a label never re-tests a commit (merge-on-green
+    # checks these passed in another run), and on a main run merge-on-green
+    # dispatched for exactly the tree the PR tested.
+    if: github.event.action != 'labeled' && !(github.event_name == 'workflow_dispatch' && inputs.tested == github.sha)
     uses: ki4hrg/standards/.github/workflows/python-check.yml@v1
+    with:
+      # PR jobs run on the self-hosted runner when the repo variable PR_RUNNER names
+      # its label, for private repos and same-repo branches only; everything else,
+      # and every run on main, uses GitHub's runner (docs/core/workflow.md).
+      runs-on: ${{ github.event_name == 'pull_request' && github.event.repository.private && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || 'ubuntu-24.04' }}
 
   security:
-    # Only `automerge` among labels starts a run; every job below needs this one.
-    if: github.event.action != 'labeled' || github.event.label.name == 'automerge'
+    # Skipped on `labeled`: adding a label never re-tests a commit (merge-on-green
+    # checks these passed in another run), and on a main run merge-on-green
+    # dispatched for exactly the tree the PR tested.
+    if: github.event.action != 'labeled' && !(github.event_name == 'workflow_dispatch' && inputs.tested == github.sha)
     uses: ki4hrg/standards/.github/workflows/security.yml@v1
     with:
+      # Self-hosted for PRs when PR_RUNNER is set, as in check.
+      runs-on: ${{ github.event_name == 'pull_request' && github.event.repository.private && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || 'ubuntu-24.04' }}
       package-managers: uv
 
   image:
     needs: [check, security]
+    # Runs when check and security passed or were skipped for an already-tested
+    # tree; never on `labeled`. A skipped need would otherwise skip it.
+    if: ${{ !cancelled() && !failure() && github.event.action != 'labeled' }}
     permissions:
       contents: read
       packages: write
     uses: ki4hrg/standards/.github/workflows/image.yml@v1
     with:
+      # Self-hosted for PRs when PR_RUNNER is set, as in check.
+      runs-on: ${{ github.event_name == 'pull_request' && github.event.repository.private && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || 'ubuntu-24.04' }}
       push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
       platforms: linux/amd64
 
   automerge:
     needs: [check, security, image]
-    if: github.event_name == 'pull_request'
+    # Also on an `automerge` label run, where the jobs above are skipped.
+    if: ${{ !cancelled() && !failure() && github.event_name == 'pull_request' && (github.event.action != 'labeled' || github.event.label.name == 'automerge') }}
     permissions:
       contents: write
       pull-requests: write
@@ -62,11 +86,15 @@ jobs:
     with:
       # paths-ignore above doesn't apply to the dispatch after a merge; this does.
       skip-dispatch-paths: 'docs/* *.md'
+      # On `labeled`, merge only if these passed on this commit in another run.
+      require-jobs: check security image
+      # Let the main run skip checks for a tree the PR already tested (`tested` above).
+      pass-tested: true
 
   # GitHub doesn't close "Closes #n" issues when GITHUB_TOKEN merges, so this does.
   close-issues:
     needs: automerge
-    if: needs.automerge.outputs.merged == 'true'
+    if: ${{ !cancelled() && !failure() && needs.automerge.outputs.merged == 'true' }}
     permissions:
       contents: read
       issues: write
@@ -75,6 +103,6 @@ jobs:
 
   deploy:
     needs: image
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: ${{ !cancelled() && !failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     uses: ki4hrg/standards/.github/workflows/dockhand-deploy.yml@v1
     secrets: inherit

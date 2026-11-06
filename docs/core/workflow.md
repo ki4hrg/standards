@@ -45,7 +45,8 @@ PRs merge themselves when CI is green.
    they find.
 2. The agent opens the PR and adds the `automerge` label, unless the person asked to look first.
 3. CI runs. When every job passes, `merge-on-green` squash-merges the exact commit that was
-   tested and starts the `main` pipeline, which builds the image and deploys. `close-linked-issues`
+   tested and starts the `main` pipeline, which builds the image and deploys. When the merged
+   tree is exactly the tested one, that run skips check and audit (`pass-tested`). `close-linked-issues`
    then closes the issues the PR names with `Closes #n` (GitHub skips that for a merge made by
    the workflow token).
 4. The agent watches CI and reports the merge and the deploy. It does **not** merge the PR itself:
@@ -67,10 +68,14 @@ in parallel (migration phases, say) don't touch the same files; when one must fo
 merge `origin/main` into the later branch after the earlier one lands, before labelling. A PR
 that sits with no run: check `gh pr view <n> --json mergeable`.
 
-**A green PR labelled `automerge` that sits unmerged** means the merge didn't run on a run that
-saw the label. `merge-on-green` reads the label when it runs, so labelling at create time is safe;
-if one still sits, re-run the latest run (`gh run rerun <id>`) or remove and re-add the label.
-The exception is below.
+**Adding the label to a PR that's already green merges it without re-testing.** The label's own
+run skips the checks, and `merge-on-green` merges only if they passed on that commit in another
+run (`require-jobs`). If they're still running, that run reads the label when it finishes and
+merges. Labelling at create time is safe for the same reason.
+
+**A green PR labelled `automerge` that sits unmerged** means no run merged after the label went
+on. Remove and re-add the label, which is cheap: its run only checks and merges. The exception
+is below.
 
 **A PR that changes `.github/workflows/` is merged by a person.** GitHub refuses a merge by the
 workflow token that changes a workflow file, and that token can't be given the permission it
@@ -126,6 +131,34 @@ There is no human review before merging, so review happens in the session:
   `gh pr edit <n> --add-label automerge` (nothing after it). Any other issue, comment, label or
   external write still asks. In auto mode the classifier blocks labelling as a merge without
   review unless `autoMode.allow` also describes it; see Dev machine.
+
+## Self-hosted PR runner
+
+A private repo's PR jobs (check, audit, the build-only PR image) can run on John's self-hosted
+runner, which costs no Actions minutes. The templates route them there when the repo variable
+`PR_RUNNER` holds the runner's label (`gh variable set PR_RUNNER --body <label>`), and only for a
+private repo and a branch in the same repo. Unset, every job uses GitHub's runners.
+
+- **Only jobs that hold nothing.** PR jobs get a read-only token and no secrets. `merge-on-green`,
+  `close-linked-issues`, the image push on `main` and the deploy stay on GitHub's runners: PR code
+  includes dependency updates nobody has read, and it must not share a machine with a token that
+  can merge, push an image or deploy.
+- **Nothing carries over between jobs.** Each job gets a just-in-time runner registration and a
+  fresh rootless Docker daemon, with no build cache. PR builds run cold, which costs time, not
+  minutes.
+- **Isolated from the LAN.** The runner reaches the internet and nothing at home: not the app
+  hosts, not the deploy tooling, not the reverse proxy. Its build and network setup lives with
+  the lab's infrastructure, not here.
+- **Public repos can never reach it, and the runner's own registration enforces that, not the
+  templates.** A fork's PR runs the workflow as the fork wrote it, so it can name the runner's
+  label directly. Runners are registered only for private repos (or, in an organization, in a
+  runner group with "Allow public repositories" off). The templates' private-repo condition only
+  stops an honest workflow sending a job there by mistake.
+- **Enrolling a repo** is two steps: add it to the runner's list, then set `PR_RUNNER`. Unset the
+  variable to send its jobs back to GitHub's runners (the runner is down, or the repo is about to
+  go public; `docs/decisions.md`).
+- **If the runner is down,** PR jobs wait in the queue (GitHub drops them after 24 hours). Unset
+  `PR_RUNNER` for the repo and re-run, or wait. `main` builds and deploys don't depend on it.
 
 ## Dev machine
 

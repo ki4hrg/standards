@@ -18,11 +18,19 @@ name: merge-on-green
 #
 #   automerge:
 #     needs: [check, security, image]
-#     if: github.event_name == 'pull_request'
+#     if: ${{ !cancelled() && !failure() && github.event_name == 'pull_request' && (github.event.action != 'labeled' || github.event.label.name == 'automerge') }}
 #     permissions: { contents: write, pull-requests: write, actions: write, checks: read }
 #     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
 #     with:
 #       skip-dispatch-paths: 'docs/* *.md'   # mirror the caller's paths-ignore
+#       require-jobs: check security image  # the caller skips these on `labeled`
+#       pass-tested: true                    # the caller declares the `tested` input
+#
+# Adding the label to a PR whose checks already passed shouldn't build and test the
+# same commit again. A caller that skips its check jobs on `labeled` lists them in
+# `require-jobs`, and a `labeled` run then merges only when those jobs have passed on
+# this commit in another run. If they're still running, that run reads the label
+# when it finishes and merges.
 
 on:
   workflow_call:
@@ -44,6 +52,21 @@ on:
           doesn't apply to workflow_dispatch. Empty always dispatches.
         type: string
         default: ''
+      require-jobs:
+        description: >-
+          Space-separated caller job names the caller skips on `labeled` events. On
+          such an event this job merges only when each of them passed on this commit
+          in another run. Empty: every job this one `needs` ran in this run.
+        type: string
+        default: ''
+      pass-tested:
+        description: >-
+          When the merged commit's tree is exactly the tree that was tested, dispatch
+          with `-f tested=<merged sha>` so the main run can skip checks it would only
+          repeat. The dispatched workflow must declare a `tested` workflow_dispatch
+          input, or the dispatch fails.
+        type: boolean
+        default: false
     outputs:
       merged:
         description: >-
@@ -55,14 +78,21 @@ permissions:
   contents: read
 
 jobs:
-  title:
-    # Runs on every PR that reaches this point, labelled or not, so a bad title is
-    # red before anyone relies on the merge. The title becomes the commit on main.
+  # One job, not two: every job bills at least a whole minute, and the title check
+  # takes seconds. It runs on every PR that reaches this point, labelled or not,
+  # drafts and forks too, so a bad title is red before anyone relies on the merge.
+  merge:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    outputs:
+      merged: ${{ steps.merge.outputs.merged }}
     permissions:
-      contents: read
-      pull-requests: read
+      contents: write
+      pull-requests: write
+      actions: write
+      # Reads the commit's check runs (app checks below). Public repos let any token
+      # read them; private ones answer 403 without this.
+      checks: read
     steps:
       - name: Conventional Commit title
         env:
@@ -79,34 +109,21 @@ jobs:
             exit 1
           fi
 
-  merge:
-    needs: title
-    if: >-
-      github.event_name == 'pull_request'
-      && !github.event.pull_request.draft
-      && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
-    outputs:
-      merged: ${{ steps.merge.outputs.merged }}
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: write
-      # Reads the commit's check runs (app checks below). Public repos let any token
-      # read them; private ones answer 403 without this.
-      checks: read
-    steps:
       # The label is read now, not from the event. A PR labelled as it opens fires
-      # `opened` and `labeled` seconds apart; the caller's concurrency group cancels
-      # one, and if the survivor is the `opened` run its payload has no label. Reading
-      # the current labels lets whichever run survives merge.
+      # `opened` and `labeled` seconds apart, and the `opened` run's payload has no
+      # label. Reading the current labels lets the run that tested the commit merge.
       - name: Check for the label
         id: label
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           LABEL: ${{ inputs.label }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
+          # Drafts aren't finished; a fork's token can't merge.
+          if [ "$DRAFT" = true ]; then echo "Draft; not merging."; exit 0; fi
+          if [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then echo "From a fork; not merging."; exit 0; fi
           if gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json labels \
               --jq '.labels[].name' | grep -qxF "$LABEL"; then
             echo "labelled=true" >> "$GITHUB_OUTPUT"
@@ -114,10 +131,46 @@ jobs:
             echo "Not labelled '$LABEL'; not merging."
           fi
 
+      # A `labeled` run in a caller that skips its checks on that event: the checks
+      # must have passed on this commit in another run. Still running means that run
+      # merges when it finishes (it reads the label then); failed or missing means
+      # there's nothing to merge yet. Neither is this run's failure, so it stays green.
+      - name: Check the jobs passed in another run
+        id: prior
+        if: >-
+          steps.label.outputs.labelled == 'true'
+          && github.event.action == 'labeled' && inputs.require-jobs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REQUIRE: ${{ inputs.require-jobs }}
+        run: |
+          # filter=latest: the newest check run of each name. A called workflow's jobs
+          # are named "<caller job> / <job>"; a caller job skipped on this event shows
+          # as the bare caller job name, so the prefix never matches this run's own.
+          runs=$(gh api --paginate "repos/$GITHUB_REPOSITORY/commits/$SHA/check-runs?per_page=100&filter=latest" \
+            --jq '.check_runs[] | select(.app.slug == "github-actions") | [.name, .status, (.conclusion // "")] | @tsv')
+          for job in $REQUIRE; do
+            mine=$(awk -F'\t' -v p="$job / " 'index($1, p) == 1' <<<"$runs")
+            if [ -z "$mine" ]; then
+              echo "No '$job' run on $SHA yet; not merging. The run that tests it will."; exit 0
+            fi
+            # No `| grep -q`: with pipefail, grep exiting early can fail the pipeline.
+            pending=$(awk -F'\t' '$2 != "completed"' <<<"$mine")
+            if [ -n "$pending" ]; then
+              echo "'$job' is still running on $SHA; that run merges when it finishes."; exit 0
+            fi
+            bad=$(awk -F'\t' '$3 != "success" && $3 != "skipped" && $3 != "neutral" {print $1 " (" $3 ")"}' <<<"$mine")
+            if [ -n "$bad" ]; then
+              echo "Not merging: $bad on $SHA."; exit 0
+            fi
+          done
+          echo "passed=true" >> "$GITHUB_OUTPUT"
+
       # `needs` covers this workflow's own jobs. Checks from GitHub apps (GitGuardian)
       # run outside it, so wait for them too, on the same commit.
       - name: Wait for app checks
-        if: steps.label.outputs.labelled == 'true'
+        if: steps.label.outputs.labelled == 'true' && (steps.prior.conclusion == 'skipped' || steps.prior.outputs.passed == 'true')
         env:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ github.event.pull_request.head.sha }}
@@ -140,7 +193,7 @@ jobs:
 
       - name: Squash-merge the tested commit
         id: merge
-        if: steps.label.outputs.labelled == 'true'
+        if: steps.label.outputs.labelled == 'true' && (steps.prior.conclusion == 'skipped' || steps.prior.outputs.passed == 'true')
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
@@ -149,7 +202,7 @@ jobs:
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           state=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json state -q .state)
-          # The current title, which the title job just checked, not the event's.
+          # The current title, which the first step just checked, not the event's.
           TITLE=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json title -q .title)
           if [ "$state" = "MERGED" ]; then
             # Another run (or a person) merged it, and that path started its own deploy.
@@ -173,6 +226,15 @@ jobs:
           gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash \
             --match-head-commit "$SHA" --subject "$TITLE (#$PR)"
           echo "merged=true" >> "$GITHUB_OUTPUT"
+          # For pass-tested. Never fails the step (the merge is done, and a red step here
+          # would skip the dispatch): empty just means the main run checks everything.
+          commit=''
+          for i in 1 2 3 4 5; do
+            commit=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json mergeCommit -q '.mergeCommit.oid // empty' || true)
+            [ -n "$commit" ] && break
+            sleep 2
+          done
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
 
       - name: Start the main pipeline
         if: steps.merge.outputs.merged == 'true' && inputs.workflow != ''
@@ -182,6 +244,9 @@ jobs:
           BASE: ${{ github.event.pull_request.base.ref }}
           PR: ${{ github.event.pull_request.number }}
           SKIP: ${{ inputs.skip-dispatch-paths }}
+          PASS_TESTED: ${{ inputs.pass-tested }}
+          MERGED: ${{ steps.merge.outputs.commit }}
+          SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           if [ -n "$SKIP" ]; then
             # Both names of a rename count. A failed call stops the step (bash -e), and
@@ -204,5 +269,21 @@ jobs:
               exit 0
             fi
           fi
-          gh workflow run "$WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$BASE"
+          # The squash commit's tree equals the tested commit's when the branch already
+          # contained main's tip. Then the main run's checks would test the same files
+          # again. The main run skips them only if `tested` is still main's head when
+          # it starts (github.sha), so a merge landing in between gets checked.
+          args=()
+          if [ "$PASS_TESTED" = true ] && [ -n "$MERGED" ]; then
+            # A failed lookup must not stop the dispatch: it just means a full check.
+            merged_tree=$(gh api "repos/$GITHUB_REPOSITORY/commits/$MERGED" --jq .commit.tree.sha || true)
+            tested_tree=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA" --jq .commit.tree.sha || true)
+            if [ -n "$merged_tree" ] && [ "$merged_tree" = "$tested_tree" ]; then
+              args=(-f "tested=$MERGED")
+              echo "Merged tree is the tested tree; the main run may skip its checks."
+            else
+              echo "Merged tree differs from the tested one (main moved); the main run checks it."
+            fi
+          fi
+          gh workflow run "$WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$BASE" "${args[@]}"
           echo "Dispatched $WORKFLOW on $BASE."

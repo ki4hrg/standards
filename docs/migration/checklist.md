@@ -6,8 +6,9 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 
 ## Ground rules
 
-- **One repo at a time, one phase per PR** (or several PRs per phase). Never mix a safety fix
-  with a refactor.
+- **One repo at a time, one PR per phase** (a few if the phase is large), not one per fix:
+  every merge is a build and deploy on GitHub's paid minutes. Never mix a safety fix with a
+  refactor.
 - **Phases 2 and 6 never get the `automerge` label.** They change how the app boots or stores
   data. John watches the first deploy. Back up the database first (`pg_dump -Fc`).
 - Every PR still goes through `ship`: checks, `/code-review`, `/security-review` where it
@@ -80,6 +81,10 @@ dependencies.*
 - [ ] `merge-on-green` job with `actions: write` and `checks: read`, and the `close-issues` job after it (as in the template). Run `scripts/repo-settings.sh owner/repo`
   (squash only, delete branch on merge, `automerge` label).
 - [ ] Workflow `permissions:` are least-privilege.
+- [ ] A private repo in John's account is enrolled on the self-hosted PR runner once the template
+  caller is in: ask John to add it to the runner's list, then
+  `gh variable set PR_RUNNER --body <label> --repo owner/repo` (`workflow.md`). Until then its PR
+  jobs use GitHub's runners.
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
   compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
