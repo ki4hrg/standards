@@ -86,8 +86,13 @@ dependencies.*
   - point compose `image:` at `ghcr.io/<org>/<repo>`. CI starts pushing there by itself, while
     the old package stays where it was, so a compose file left alone keeps pulling the old image
     and every deploy still reports success;
-  - re-create what doesn't move with the repo: Actions secrets and variables, environments, and
-    the GHCR package's access for the deploy host's registry login;
+  - check Settings → Actions is enabled. A transferred repo can arrive with Actions disabled, and
+    then pushes and PRs start no runs at all, silently (a manual dispatch still works);
+  - point the caller's `image:` input there too, if it names the image;
+  - set every Actions secret again by value, even ones listed after the move: a secret can arrive
+    listed but empty (the first deploy then fails with an empty webhook token). Check variables
+    and environments arrived, and give the deploy host's registry login access to the new
+    package;
   - after the first deploy, check `/api/health` reports the new revision.
   Until it moves, its PR jobs use GitHub's runners.
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
