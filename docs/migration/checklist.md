@@ -96,8 +96,9 @@ dependencies.*
     listed but empty (the first deploy then fails with an empty webhook token). Check variables
     and environments arrived, and give the deploy host's registry login access to the new
     package;
-  - after the first deploy, check `/api/health` reports the new revision.
-  Until it moves, its PR jobs use GitHub's runners.
+  - after the first deploy, check `/api/health` reports the new revision;
+  - then set the repo variable `PR_RUNNER` to the runner's label (`workflow.md`). Until it moves
+    and has that variable, its PR jobs use GitHub's runners.
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
   compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B

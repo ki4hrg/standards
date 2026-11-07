@@ -137,8 +137,9 @@ There is no human review before merging, so review happens in the session:
 A private repo's PR jobs (check, audit, the build-only PR image) can run on John's self-hosted
 runner, which costs no Actions minutes. The runner serves John's GitHub organization: app repos
 move into it as they're swept (`docs/migration/checklist.md`). The templates route PR jobs there
-when the variable `PR_RUNNER` (set on the organization) holds the runner's label, and only for a
-private repo and a branch in the same repo. Unset, every job uses GitHub's runners.
+when the repo variable `PR_RUNNER` holds the runner's label, and only for a private repo and a
+branch in the same repo. Unset, every job uses GitHub's runners. It's set per repo because an
+organization's variables don't reach private repos on GitHub's free plan.
 
 - **Only jobs that hold nothing.** PR jobs get a read-only token and no secrets. `merge-on-green`,
   `close-linked-issues`, the image push on `main` and the deploy stay on GitHub's runners: PR code
@@ -158,11 +159,10 @@ private repo and a branch in the same repo. Unset, every job uses GitHub's runne
 - **Its token can only register runners.** An organization-owned token with "Self-hosted runners"
   permission and no repository access, readable only by the service that starts runners. A
   repo-level runner would need a token that can also change a repo's settings or visibility.
-- **Enrolling a repo** means moving it into the organization. A repo that must use GitHub's
-  runners for a while sets its own `PR_RUNNER` variable to `ubuntu-24.04`, which overrides the
-  organization's (a variable can't be empty).
+- **Enrolling a repo** means moving it into the organization and setting its `PR_RUNNER`
+  variable. To send a repo back to GitHub's runners, delete the variable.
 - **If the runner is down (or its token expired),** PR jobs wait in the queue and never fall back
-  to GitHub's runners; GitHub fails them after 24 hours. Delete the organization's `PR_RUNNER`
+  to GitHub's runners; GitHub fails them after 24 hours. Delete each enrolled repo's `PR_RUNNER`
   variable and re-run the waiting jobs. `main` builds and deploys don't depend on the runner.
 
 ## Dev machine
