@@ -92,10 +92,8 @@ dependencies.*
   - the deploy job passes `DOCKHAND_WEBHOOK_URL` and `DOCKHAND_WEBHOOK_TOKEN` by name, as the
     templates do. `secrets: inherit` passes nothing once the repo and the standards have different
     owners, and the deploy is refused;
-  - set every Actions secret again by value, even ones listed after the move: a secret can arrive
-    listed but empty (the first deploy then fails with an empty webhook token). Check variables
-    and environments arrived, and give the deploy host's registry login access to the new
-    package;
+  - check the Actions secrets, variables and environments arrived (they move with the repo), and
+    give the deploy host's registry login access to the new package;
   - after the first deploy, check `/api/health` reports the new revision;
   - then set the repo variable `PR_RUNNER` to the runner's label (`workflow.md`). Until it moves
     and has that variable, its PR jobs use GitHub's runners.
