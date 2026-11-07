@@ -89,6 +89,9 @@ dependencies.*
   - check Settings → Actions is enabled. A transferred repo can arrive with Actions disabled, and
     then pushes and PRs start no runs at all, silently (a manual dispatch still works);
   - point the caller's `image:` input there too, if it names the image;
+  - the deploy job passes `DOCKHAND_WEBHOOK_URL` and `DOCKHAND_WEBHOOK_TOKEN` by name, as the
+    templates do. `secrets: inherit` passes nothing once the repo and the standards have different
+    owners, and the deploy is refused;
   - set every Actions secret again by value, even ones listed after the move: a secret can arrive
     listed but empty (the first deploy then fails with an empty webhook token). Check variables
     and environments arrived, and give the deploy host's registry login access to the new

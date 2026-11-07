@@ -105,4 +105,7 @@ jobs:
     needs: image
     if: ${{ !cancelled() && !failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     uses: ki4hrg/standards/.github/workflows/dockhand-deploy.yml@v1
-    secrets: inherit
+    # By name: `secrets: inherit` passes nothing to a workflow in another account.
+    secrets:
+      DOCKHAND_WEBHOOK_URL: ${{ secrets.DOCKHAND_WEBHOOK_URL }}
+      DOCKHAND_WEBHOOK_TOKEN: ${{ secrets.DOCKHAND_WEBHOOK_TOKEN }}
