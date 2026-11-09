@@ -70,7 +70,10 @@ jobs:
 
       - if: steps.pm.outputs.uv
         uses: astral-sh/setup-uv@v7
+      # --no-emit-workspace leaves out the project itself (and any workspace members): a
+      # packaged project exports as `-e .`, which isn't on PyPI, and --strict turns pip-audit's
+      # skip into a failure. Every third-party dependency is still exported and audited.
       - if: steps.pm.outputs.uv
         run: |
-          uv export --locked --no-hashes --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
+          uv export --locked --no-hashes --no-emit-workspace --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
           uvx pip-audit --strict -r "$RUNNER_TEMP/requirements.txt"
