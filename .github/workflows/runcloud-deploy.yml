@@ -110,8 +110,9 @@ jobs:
         env:
           PM: ${{ inputs.package-manager }}
           SCRIPT: ${{ inputs.build-script }}
+        # npm ci fails fast on a stalled fetch and logs its URL (see node-check.yml).
         run: |
-          if [ "$PM" = pnpm ]; then pnpm install --frozen-lockfile; else npm ci; fi
+          if [ "$PM" = pnpm ]; then pnpm install --frozen-lockfile; else npm ci --fetch-timeout=60000 --fetch-retries=4 --loglevel=http; fi
           "$PM" run "$SCRIPT"
 
       - name: Publish to the deploy branch

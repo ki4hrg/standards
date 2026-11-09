@@ -148,7 +148,8 @@ jobs:
       - if: inputs.node-build && inputs.package-manager == 'pnpm'
         run: pnpm install --frozen-lockfile && pnpm run build
       - if: inputs.node-build && inputs.package-manager == 'npm'
-        run: npm ci && npm run build
+        # Fail fast on a stalled fetch and log its URL (see node-check.yml).
+        run: npm ci --fetch-timeout=60000 --fetch-retries=4 --loglevel=http && npm run build
 
       - name: Run checks
         env:

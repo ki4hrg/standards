@@ -109,8 +109,12 @@ jobs:
       # Both install exactly what the lockfile says and fail if it is out of date.
       - if: inputs.package-manager == 'pnpm'
         run: pnpm install --frozen-lockfile
+      # npm's default 300s fetch timeout, times its retries, let one stalled download
+      # hold a job for ~17 minutes (seen twice on the self-hosted runner, 2026-11-09).
+      # 60s fails fast and retries; `http` logs each fetch, so the one that stalls
+      # is named.
       - if: inputs.package-manager == 'npm'
-        run: npm ci
+        run: npm ci --fetch-timeout=60000 --fetch-retries=4 --loglevel=http
       - name: Run checks
         env:
           PM: ${{ inputs.package-manager }}
