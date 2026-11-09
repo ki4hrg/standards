@@ -3,10 +3,12 @@ name: dockhand-deploy
 # Tell Dockhand to pull and recreate a git stack (deploy mode A, docs/core/deploy.md).
 #
 # Reads DOCKHAND_WEBHOOK_URL and optional DOCKHAND_WEBHOOK_TOKEN from the caller's
-# Secrets or Variables, whichever tab they were set under. Callers pass the secrets
-# by name (example below): `secrets: inherit` passes nothing to a workflow in another
-# account, so it fails for every repo in John's organization. With no URL set, the
-# job is skipped successfully, so forks and brand-new repos stay green.
+# Secrets or Variables, whichever tab they were set under; a Secret wins over a
+# Variable of the same name. Callers pass the secrets by name (example below):
+# `secrets: inherit` passes nothing to a workflow in another account, so it fails for
+# every repo in John's organization. With no URL set, the job is skipped successfully,
+# so forks and brand-new repos stay green. Moving from older secret names
+# (DOCKHAND_WEBHOOK_SECRET, WEBHOOK_URL/WEBHOOK_TOKEN): docs/core/deploy.md.
 #
 # Dockhand decides whether to redeploy by the git commit, not the image digest. When
 # two merges land minutes apart, the first deploy can sync the second commit while

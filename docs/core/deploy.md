@@ -31,6 +31,33 @@ no image means no deploy. `workflow_dispatch` on `main` rebuilds and redeploys b
   Dependabot can see and update them.
 - A new GHCR package starts **private**. Make it public, or give Dockhand registry credentials.
 
+## Several images or lockfiles
+
+A repo that builds more than one image (an app and a worker) or has a second lockfile in a
+subdirectory (`worker/pnpm-lock.yaml`) repeats the template's jobs, once each. `image.yml` and
+`security.yml` already take the inputs this needs; only the caller grows.
+
+- **One `image` job per image**, e.g. `image` and `image-worker`. Every image after the first
+  passes an explicit `image:` (`ghcr.io/<owner>/<repo>-worker`) as well as `file:` (and
+  `context:` if it differs): the default name is the same for every job, so without one the
+  second push overwrites the first under the same tag. Compose pulls each by that name, with
+  `pull_policy: always`.
+- **One `security` job per lockfile directory**, e.g. `security-worker` with
+  `working-directory: worker`. One job covers several package managers in the same directory
+  (`package-managers: pnpm uv`), not several directories.
+- **Every repeated job is wired in like the original:** the same `if:` and `runs-on:` as the
+  job it copies; each `image` job `needs` every check and security job; `automerge` `needs`
+  all of them and lists all of them in `require-jobs` (a job missing there lets the label merge
+  without it on a `labeled` run); `deploy` `needs` every `image` job, so a stack never
+  redeploys with one image new and the other old.
+- `.github/dependabot.yml` gets an entry per directory for the package ecosystem.
+- The deploy's revision check (`APP_HEALTH_URL`) covers the app only. A worker without a health
+  route is checked by hand after the first deploy: its container's
+  `org.opencontainers.image.revision` label.
+
+The image jobs share the GitHub Actions build cache, so each evicts the other's layers and
+builds run colder. That costs minutes, not correctness.
+
 ## Compose
 
 File name `compose.yaml`. For the app service:
@@ -110,7 +137,8 @@ minutes apart leave the second image unpulled. (The webhook itself takes no forc
 `deploy` job calls the stack's webhook after the image is pushed:
 
 - a plain `GET`; the secret goes in the `?secret=` query parameter, not a header;
-- `DOCKHAND_WEBHOOK_URL` and optional `DOCKHAND_WEBHOOK_TOKEN` read from Secrets or Variables;
+- `DOCKHAND_WEBHOOK_URL` and optional `DOCKHAND_WEBHOOK_TOKEN` read from Secrets or Variables
+  (see below);
 - skipped cleanly when the URL is not set (forks, new repos);
 - **fails unless the JSON body says `success: true`**: Dockhand answers 200 even when the stack
   fails to come up;
@@ -121,6 +149,29 @@ minutes apart leave the second image unpulled. (The webhook itself takes no forc
   pulling. Without `APP_HEALTH_URL`, that reply fails the job.
 
 The reusable `dockhand-deploy.yml` does all of this.
+
+**Where the webhook settings live.** Either Actions tab works for either value. The template
+passes both by name from Secrets; when a Secret isn't set, the value passed is empty and
+`dockhand-deploy.yml` falls back to the repo Variable of the same name (Variables reach the
+called workflow without being passed). So set each one under Secrets or Variables, not both: a
+Secret wins, and a stale one hides the Variable you just changed. `DOCKHAND_WEBHOOK_URL` may
+carry the secret inline (`…?secret=…`) with no `DOCKHAND_WEBHOOK_TOKEN`; then the URL itself is
+the secret and belongs under Secrets.
+
+**Moving from older webhook settings.** Repos that predate the standards often have one secret
+holding the whole URL with `?secret=` inline (`DOCKHAND_WEBHOOK_SECRET`), or their own pair
+(`WEBHOOK_URL` / `WEBHOOK_TOKEN`). Nobody can read a secret's value back out of GitHub, so an
+agent can't copy it; John does the move:
+
+1. Set `DOCKHAND_WEBHOOK_URL`, and `DOCKHAND_WEBHOOK_TOKEN` if the token is kept separate, from
+   the stack's webhook in Dockhand. Copying an old inline URL unchanged into
+   `DOCKHAND_WEBHOOK_URL` alone works too.
+2. Merge the caller that passes the new names (the template's `deploy` job).
+3. After its first deploy succeeds, delete the old secrets, so nothing keeps a second copy of the
+   token.
+
+Until John has set the new names, the deploy job is skipped (no URL), which reads as a green
+run with nothing deployed. Say so in the PR, and don't treat the deploy as verified.
 
 **B. Service embedded in another stack.** When the service runs inside a stack this repo doesn't
 own, there is no webhook. Publish on version tags (`:latest` plus `:X.Y.Z`) and let the host's

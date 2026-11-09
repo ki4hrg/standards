@@ -66,6 +66,10 @@ dependencies.*
   `package-managers: npm` to `security`. Moving to pnpm is Phase 6. A repo still on Node 22
   passes `node-version: '22'` (both workflows default to 24) until its Node 24 PR.
 - [ ] CI runs on `pull_request`. `image` needs every check job.
+- [ ] A repo with more than one image (a worker built from `Dockerfile.worker`) or a lockfile
+  in a subdirectory gets one `image` or `security` job per image or directory, each listed in
+  the `needs` of every job downstream of it and in `require-jobs` (`deploy.md`, Several images or
+  lockfiles).
 - [ ] **If the audit fails today**, the Phase 1 PR can't go green, and there's no PR CI yet for
   fix PRs to go through. So:
   - small fixes (`npm audit fix` without `--force`, `overrides` per `security.md`) go **in the
@@ -74,6 +78,14 @@ dependencies.*
     locally (typecheck, lint, build, audit, and a run of the app), and merged by John by hand.
     That PR gets no CI run (there's no PR CI yet). Checks needing a database run locally if the
     machine has Docker; otherwise on the deploy John watches.
+  - **a hand merge still runs the repo's old push-to-main workflow.** If the repo has already
+    moved into John's organization, that workflow pushes to the old owner's GHCR path, or to
+    the new path while compose still pulls the old one, and fails or deploys nothing new. Before
+    John merges, either disable it (`gh workflow disable <file> -R <owner>/<repo>`; the fix
+    then deploys with Phase 1's first `main` run) or put the fix in the Phase 1 PR instead. If
+    the template caller replaces it under the **same file name**, re-enable it after Phase 1
+    merges (`gh workflow enable`): a workflow stays disabled when its file is replaced, and
+    `main` gets no runs at all.
   - non-breaking fixes for *other* advisories still go in the Phase 1 PR, even ones the bigger
     PR's upgrade didn't touch. The bigger PR stays one change.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
@@ -91,7 +103,9 @@ dependencies.*
   - point the caller's `image:` input there too, if it names the image;
   - the deploy job passes `DOCKHAND_WEBHOOK_URL` and `DOCKHAND_WEBHOOK_TOKEN` by name, as the
     templates do. `secrets: inherit` passes nothing once the repo and the standards have different
-    owners, and the deploy is refused;
+    owners, and the deploy is refused. A repo with older names (`DOCKHAND_WEBHOOK_SECRET`,
+    `WEBHOOK_URL` / `WEBHOOK_TOKEN`) needs John to set the new ones (`deploy.md`, Moving from
+    older webhook settings);
   - check the Actions secrets, variables and environments arrived (they move with the repo), and
     give the deploy host's registry login access to the new package;
   - after the first deploy, check `/api/health` reports the new revision;

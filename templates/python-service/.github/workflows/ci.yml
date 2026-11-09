@@ -73,6 +73,9 @@ jobs:
       push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
       platforms: linux/amd64
 
+  # A second image or lockfile (a worker): repeat `image` or `security` once each, and
+  # add every copy to the `needs` below, `require-jobs`, and deploy's `needs`
+  # (docs/core/deploy.md, Several images or lockfiles).
   automerge:
     needs: [check, security, image]
     # Also on an `automerge` label run, where the jobs above are skipped.
