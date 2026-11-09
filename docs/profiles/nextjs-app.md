@@ -108,9 +108,10 @@ instrumentation.ts  validates env at boot; starts jobs
   Past the proxy limit, Next doesn't refuse the request: it logs a warning and passes on only the
   first 10MB. So an upload through a server action on a proxied page arrives truncated, whatever
   `bodySizeLimit` says.
-- **`agentRules: false`** in `next.config.ts`. From Next 16.3, `next dev` otherwise writes a
-  managed block into `AGENTS.md`, a tracked file, and re-adds it when removed. With `false` it
-  removes the block instead. The one useful line, that this Next differs from training data and
+- **`agentRules: false`** in `next.config.ts`, on Next 16.3 or later. From 16.3, `next dev`
+  otherwise writes a managed block into `AGENTS.md`, a tracked file, and re-adds it when removed.
+  With `false` it removes the block instead. Older Next writes nothing there and doesn't know the
+  option, so a repo on it leaves the option out until it upgrades. The one useful line, that this Next differs from training data and
   its docs are in `node_modules/next/dist/docs/`, is in the template's CLAUDE.md.
 - **API routes refuse with JSON.** Routes outside the layout guard and anything a client calls with
   `fetch` return 401/403 JSON, never a redirect to sign-in (the auth library's or a
