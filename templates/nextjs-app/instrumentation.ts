@@ -1,7 +1,7 @@
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== 'nodejs') return;
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
   try {
-    const { env } = await import('./lib/env');
+    const { env } = await import("./lib/env");
     env();
   } catch (err) {
     // Next only logs a throw from register() ("Failed to prepare server") and keeps

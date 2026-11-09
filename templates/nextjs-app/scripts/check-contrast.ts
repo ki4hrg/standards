@@ -1,31 +1,37 @@
 // Checks that every text/background token pair in app/globals.css meets WCAG AA
 // in both themes. Run by CI (`pnpm check:contrast`). Add a pair here when a new
 // token carries text.
-import { readFileSync } from 'node:fs';
+import { readFileSync } from "node:fs";
 
 const PAIRS: Array<[text: string, background: string]> = [
-  ['ink', 'page'],
-  ['ink', 'card'],
-  ['ink', 'sunk'],
-  ['ink-2', 'card'],
-  ['ink-3', 'card'],
-  ['ink-3', 'page'],
-  ['accent', 'card'],
-  ['accent-ink', 'accent'],
-  ['accent', 'accent-soft'],
-  ['ok', 'ok-soft'],
-  ['warn', 'warn-soft'],
-  ['danger', 'danger-soft'],
-  ['danger', 'card'],
+  ["ink", "page"],
+  ["ink", "card"],
+  ["ink", "sunk"],
+  ["ink-2", "card"],
+  ["ink-3", "card"],
+  ["ink-3", "page"],
+  ["accent", "card"],
+  ["accent-ink", "accent"],
+  ["accent", "accent-soft"],
+  ["ok", "ok-soft"],
+  ["warn", "warn-soft"],
+  ["danger", "danger-soft"],
+  ["danger", "card"],
 ];
 const AA = 4.5;
 
-const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8');
+const css = readFileSync(
+  new URL("../app/globals.css", import.meta.url),
+  "utf8",
+);
 
 function block(selector: RegExp): Record<string, string> {
-  const body = css.match(selector)?.[1] ?? '';
+  const body = css.match(selector)?.[1] ?? "";
   return Object.fromEntries(
-    [...body.matchAll(/--color-([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1]!, m[2]!]),
+    [...body.matchAll(/--color-([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [
+      m[1]!,
+      m[2]!,
+    ]),
   );
 }
 
@@ -46,7 +52,10 @@ function ratio(a: string, b: string): number {
 }
 
 let failed = 0;
-for (const [name, tokens] of [['light', light], ['dark', dark]] as const) {
+for (const [name, tokens] of [
+  ["light", light],
+  ["dark", dark],
+] as const) {
   for (const [text, bg] of PAIRS) {
     const t = tokens[text];
     const b = tokens[bg];
@@ -57,7 +66,9 @@ for (const [name, tokens] of [['light', light], ['dark', dark]] as const) {
     }
     const r = ratio(t, b);
     if (r < AA) {
-      console.error(`${name}: ${text} on ${bg} is ${r.toFixed(2)}:1 (needs ${AA}:1)`);
+      console.error(
+        `${name}: ${text} on ${bg} is ${r.toFixed(2)}:1 (needs ${AA}:1)`,
+      );
       failed++;
     }
   }

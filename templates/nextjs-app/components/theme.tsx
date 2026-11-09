@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 // The saved choice ('light' | 'dark' | 'system') lives in localStorage under this
 // key. No entry means 'system'.
-const KEY = 'theme';
-type Choice = 'light' | 'dark' | 'system';
+const KEY = "theme";
+type Choice = "light" | "dark" | "system";
 
 // Runs inline in <head>, before first paint, so the page never flashes the wrong
 // theme. It also follows the system setting live while the choice is 'system'.
@@ -28,16 +28,16 @@ declare global {
 }
 
 export function ThemeToggle() {
-  const [choice, setChoice] = useState<Choice>('system');
+  const [choice, setChoice] = useState<Choice>("system");
 
   useEffect(() => {
     const saved = localStorage.getItem(KEY);
-    if (saved === 'light' || saved === 'dark') setChoice(saved);
+    if (saved === "light" || saved === "dark") setChoice(saved);
   }, []);
 
   function choose(next: Choice) {
     setChoice(next);
-    if (next === 'system') localStorage.removeItem(KEY);
+    if (next === "system") localStorage.removeItem(KEY);
     else localStorage.setItem(KEY, next);
     window.__applyTheme?.();
   }
