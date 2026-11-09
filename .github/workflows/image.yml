@@ -92,7 +92,9 @@ jobs:
           build-args: |
             GIT_REVISION=${{ github.sha }}
             ${{ inputs.build-args }}
-          cache-from: type=gha
+          # Scoped by image name, so a repo building several images (app and worker)
+          # keeps one cache per image instead of each evicting the other's layers.
+          cache-from: type=gha,scope=${{ steps.name.outputs.value }}
           # The cache is an optimisation and must never fail a good build. Only pushes
           # write it, so PR builds can't evict main's cache.
-          cache-to: ${{ inputs.push && 'type=gha,mode=max,ignore-error=true' || '' }}
+          cache-to: ${{ inputs.push && format('type=gha,mode=max,ignore-error=true,scope={0}', steps.name.outputs.value) || '' }}

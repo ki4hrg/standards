@@ -73,7 +73,9 @@ dependencies.*
 - [ ] **If the audit fails today**, the Phase 1 PR can't go green, and there's no PR CI yet for
   fix PRs to go through. So:
   - small fixes (`npm audit fix` without `--force`, `overrides` per `security.md`) go **in the
-    Phase 1 PR**, listed in its description;
+    Phase 1 PR**, listed in its description. Keep the `prisma` CLI and `@prisma/client` on the
+    same version: `npm audit fix` can bump one without the other, and `prisma generate` then
+    fails;
   - anything bigger (a framework major, a stack item) is its own PR **before** Phase 1, verified
     locally (typecheck, lint, build, audit, and a run of the app), and merged by John by hand.
     That PR gets no CI run (there's no PR CI yet). Checks needing a database run locally if the
@@ -90,6 +92,9 @@ dependencies.*
     PR's upgrade didn't touch. The bigger PR stays one change.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
   repo.
+- [ ] Add the PR template (`templates/<profile>/.github/pull_request_template.md`, where the
+  profile has one) and `docs/claude-candidates.md` if missing: the PR template's checklist and
+  `ship` both point new rules there from this PR on. Phase 4 sorts what it collects.
 - [ ] `merge-on-green` job with `actions: write` and `checks: read`, and the `close-issues` job after it (as in the template). Run `scripts/repo-settings.sh owner/repo`
   (squash only, delete branch on merge, `automerge` label).
 - [ ] Workflow `permissions:` are least-privilege.
@@ -98,6 +103,11 @@ dependencies.*
   - point compose `image:` at `ghcr.io/<org>/<repo>`. CI starts pushing there by itself, while
     the old package stays where it was, so a compose file left alone keeps pulling the old image
     and every deploy still reports success;
+  - check the GitGuardian app is installed on the organization, not only on John's personal
+    account (once per organization), with this repo in its access. A repo moved out of the
+    account's installation loses secret scanning with no warning. Then check the repo's next PR
+    shows a GitGuardian check; merge-on-green waits only for app checks that exist, so a missing
+    one doesn't fail anything;
   - check Settings → Actions is enabled. A transferred repo can arrive with Actions disabled, and
     then pushes and PRs start no runs at all, silently (a manual dispatch still works);
   - point the caller's `image:` input there too, if it names the image;

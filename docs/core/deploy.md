@@ -55,12 +55,14 @@ subdirectory (`worker/pnpm-lock.yaml`) repeats the template's jobs, once each. `
   route is checked by hand after the first deploy: its container's
   `org.opencontainers.image.revision` label.
 
-The image jobs share the GitHub Actions build cache, so each evicts the other's layers and
-builds run colder. That costs minutes, not correctness.
+`image.yml` keeps a separate build cache per image name, so the jobs don't evict each other.
 
 ## Compose
 
-File name `compose.yaml`. For the app service:
+File name `compose.yaml`. A repo whose Dockhand stack tracks another path (`docker-compose.yml`)
+keeps that name until John repoints the stack: renaming the file alone leaves Dockhand deploying
+the old file, which no longer changes. Rename it together with the stack's path, as its own
+change. For the app service:
 
 - `image: ${APP_IMAGE:-ghcr.io/<owner>/<repo>:main}`, `pull_policy: always`, and **no `build:`**.
   Dev-only extras go in `compose.dev.yaml`, never `compose.override.yaml`, which compose loads

@@ -48,7 +48,11 @@ Run both reviews from the repo's root: they diff against the default branch, and
 working directory is another repo or `origin/HEAD` isn't set. If it isn't, run
 `git remote set-head origin -a` first. A subagent can't change its working directory: if this
 session didn't start in the target repo, say so and hand the work to a session started there
-(`workflow.md`, Sessions and subagents).
+(`workflow.md`, Sessions and subagents). If there is none to hand it to (an orchestrated
+agent working in another repo's clone), review the diff by hand instead: `git diff
+origin/main...HEAD` in that clone, against `docs/core/security.md` for `security-review` and the
+same correctness focus for `code-review`. Say in the PR which review was done by hand and why;
+don't tick it as run.
 A review or research subagent is read-only: tell it to read other revisions with `git show
 <ref>:<path>` and `git diff`, never to check out or switch, since it shares your working tree. One
 that needs its own tree gets `isolation: "worktree"`. After any subagent, confirm

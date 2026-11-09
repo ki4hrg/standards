@@ -3,6 +3,9 @@ name: ci
 # PR: check + security → image (build only) → merge-on-green (if labelled `automerge`)
 # main: check + security → image (build + push to GHCR) → deploy (Dockhand webhook)
 # Standards: https://github.com/ki4hrg/standards/blob/main/docs/core/deploy.md
+# A second image or lockfile (a worker): copy the `image` or `security` job once per
+# image or directory, and add every copy to automerge's `needs` and `require-jobs` and
+# to deploy's `needs` (docs/core/deploy.md, Several images or lockfiles).
 
 on:
   push:
@@ -77,9 +80,6 @@ jobs:
       # ubuntu-24.04-arm in place of ubuntu-24.04 in runs-on above.
       platforms: linux/amd64
 
-  # A second image or lockfile (a worker): repeat `image` or `security` once each, and
-  # add every copy to the `needs` below, `require-jobs`, and deploy's `needs`
-  # (docs/core/deploy.md, Several images or lockfiles).
   automerge:
     needs: [check, security, image]
     # Also on an `automerge` label run, where the jobs above are skipped.
