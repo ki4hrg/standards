@@ -67,9 +67,11 @@ that needs its own tree gets `isolation: "worktree"`. After any subagent, confir
    - health, children's or other sensitive personal data (models, queries, exports);
    - anything the repo's CLAUDE.md lists as sensitive.
    Fix what it finds.
-3. If the diff adds or changes user-facing text, apply the `ui-verbosity-reduction` skill to
-   **those strings only**, not the rest of the app. Wider casing or term inconsistencies it
-   finds become a follow-up issue (step 5).
+3. If the diff adds or changes a screen or user-facing text, apply the `ui-verbosity-reduction`
+   skill to **every screen the PR touches**, not only the changed strings (wordiness builds up
+   across a screen), and check the screen against `docs/design.md`'s "usual answer takes one
+   tap". Leave other screens alone: casing or term inconsistencies found there become a
+   follow-up issue (step 5).
 4. Re-run step 2 if anything changed.
 
 ## 4. Docs

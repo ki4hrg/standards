@@ -56,6 +56,7 @@ copied file.
    - one test that proves the database round-trips.
 6. Root layout: render `<ThemeScript />` in `<head>`, put `suppressHydrationWarning` on `<html>`,
    and import `globals.css`. Replace the starter page with a minimal one that uses tokens.
+   In `app/manifest.ts`, set the name and colours, and add the two icons to `public/`.
 7. Sign-in and MCP: until the shared packages exist (`docs/mcp.md`), copy the implementation from
    the most recent of John's apps that has them. Ask which one if it isn't obvious. Record the
    source in `docs/ARCHITECTURE.md`.

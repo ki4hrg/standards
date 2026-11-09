@@ -53,7 +53,7 @@ Provenance key:
 | Tests run against a real Postgres (Testcontainers), not mocks. | Decided | Most bugs worth catching live in queries, constraints and transactions. |
 | In CI, database tests fail when they have no database; they never skip. `node-check` can start Postgres (`postgres-image`) for suites that read a database URL. | Decided | A suite that skipped without a database went green with about 800 of its 1,000 tests unrun. Decided 2026-11-01. |
 | Mutation-test the rules that matter (recommended): break an invariant on purpose and check a test fails. | Decided | In one app it found invariants no test actually guarded. A practice, not a CI gate. Decided 2026-11-01. |
-| Browser (Playwright) e2e is opt-in per project and never sits in the deploy path. | Decided | It added minutes to every deploy for little extra catch. |
+| Browser (Playwright) e2e is opt-in per project and never sits in the deploy path. A project that opts in includes a phone check: main screens in WebKit at 360px, failing on sideways scroll. | Decided | It added minutes to every deploy for little extra catch. Phone check added 2026-11-08: an iOS date field overflowed past a "checked at phone width" box that had been checked only in Chromium. |
 | Laravel apps test against a service database matching production's engine and major (reusable `php-check.yml`); SQLite `:memory:` may stay for local runs, with CI as the gate. | Default | MySQL and MariaDB differ in JSON, collations and DDL, so SQLite passes hide real failures. Added 2026-11-01 for the first Laravel migration, whose dev host has no PHP. |
 
 ## Security
@@ -67,6 +67,7 @@ Provenance key:
 | Secret scanning is the GitGuardian GitHub app, on every repo. No second scanner in CI. | Decided | It was already installed and checking every PR. |
 | Required secrets use `${VAR:?message}` in compose, so a missing secret fails the deploy instead of running with a default. | Established | A localhost default once shipped to production. |
 | Containers run as a non-root user. | Decided | Mixed across projects today. |
+| A token is hashed and shown once only when it grants more than the database gives its holder (sign-in, session, API tokens, links that write); a read-only link may be stored so its owner can copy it again. (`security.md`) | Decided | "Shown once" was copied from login tokens to read-only review links, which lost their owners a way to re-share them and protected nothing a database leak wouldn't already expose. 2026-11-08. |
 | Routes called by `fetch` (API routes, webhooks) refuse with 401/403 JSON, never a redirect to sign-in. | Decided | `fetch` follows the redirect to a 200 page and the client reports success. Raised in the first migration pilot. |
 
 ## Deploy
@@ -117,7 +118,11 @@ Provenance key:
 | Standard | Provenance | Why |
 |---|---|---|
 | Shared behavioural rules (see `design.md`). | Established, collected in the interview | These were already my most consistent explicit preferences. |
-| UI copy follows the `ui-verbosity-reduction` skill: written to it from the start, applied by `ship` to strings a PR changes, and run over a whole app occasionally. | Decided | Agent-built UIs over-explain. Preventing that costs nothing; cleaning it up later costs a full pass. |
+| UI copy follows the `ui-verbosity-reduction` skill: written to it from the start, applied by `ship` to every screen a PR touches, and run over the whole app when a repo is brought up to standard. | Decided | Agent-built UIs over-explain. Preventing that costs nothing; cleaning it up later costs a full pass. Revised 2026-11-08: trimming only the changed strings let wordiness build up across screens, and "occasionally" never happened. |
+| The usual answer takes one tap: the common choice is the default or primary, and rarer options sit behind a disclosure. | Decided | A reviewer page gave every option equal weight and came out dense; trimming its words didn't fix that. 2026-11-08. |
+| What a user creates, they can remove (delete, or archive with delete). Revoking or withdrawing isn't removing. A soft delete, or reassigning linked records first, is fine where a hard delete would reach further. | Decided | Review links could be withdrawn but never deleted, so the list only grew. 2026-11-08. |
+| Date and time inputs drop their native appearance (`appearance: none`, `min-width: 0`), set in the template's global stylesheet. | Decided | iOS Safari gives them a minimum width that ignores the container, and one overflowed a phone screen. 2026-11-08. |
+| Every web app has a manifest: `standalone`, scope and start URL `/`, served without sign-in. | Decided | Without one, an installed app showed browser bars on every page except the one it was added from. 2026-11-08. |
 | Casing: Title Case for labels, buttons, headings, tabs and badges; sentence case for descriptions, hints, empty states, confirms and errors. A project overrides this only by recording it. | Decided | Mixed casing across apps was agent output, not a decision. |
 | Every app uses the same token *names*; each app chooses its own palette and fonts. AA contrast is checked in CI. | Decided | Components and agents work the same way in every app, without every app looking the same. |
 | An app built on shadcn/ui renames its tokens to the standard names in Phase 5, `components/ui` included; no alias layer. A component added later with `shadcn add` is edited to the standard names in the same PR. | Decided | One vocabulary in every file, so an agent never has to know which set a file uses. Two sets also clash: `card` and `accent` mean different things in each. Decided 2026-11-02, from a migration sweep. |

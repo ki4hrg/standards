@@ -28,14 +28,25 @@ Sentence case, with no trailing period on fragments, for descriptions, hints, to
 states, confirms and errors. A project overrides this only with a recorded decision in its
 CLAUDE.md or design doc. A codebase that happens to use sentence case has not decided anything.
 
-**When it runs:** `ship` applies the skill to any string a PR adds or changes. Run it over a whole
-app now and then, and once when a repo is brought up to standard.
+**When it runs:** `ship` applies the skill to every screen a PR touches, not only the strings it
+changed: wordiness builds up across a screen, and a string-by-string trim never sees it. A full
+pass over the whole app is part of bringing a repo up to standard (migration Phase 5).
 
 ## Layout
 
 - **Phone first.** Every screen works at 360px wide. Tap targets are at least 44px. Form fields
   are at least 16px on touch devices (iOS zooms otherwise; enforce it in CSS, see the token file).
-  No `autoFocus` on a phone.
+  No `autoFocus` on a phone. Date and time fields drop their native appearance so iOS can't
+  widen them past their container (also in the token file).
+- **Phone checks in a browser suite.** Browser (Playwright) tests are opt-in. A project that opts
+  in includes a phone check: its main screens load in WebKit at 360px, and the test fails when
+  the page scrolls sideways (`scrollWidth > clientWidth`). Chromium alone misses Safari's
+  layout differences, such as native date fields overflowing.
+- **Installable.** Every web app has a manifest with `display: standalone`, `scope: "/"` and
+  `start_url: "/"` (Next.js template: `app/manifest.ts`; a Vite SPA links a
+  `manifest.webmanifest`). It is served without sign-in, because browsers fetch it without
+  cookies. Without one, an app added to a home screen shows browser bars on every page except the
+  one it was added from.
 - **The important thing is high on the screen.** Don't hide critical information behind a tab.
 - **Detail pages use two columns** on a wide screen: reference information that rarely changes in
   the narrow column (one third), the working content in the wide one (two thirds). One column on a
@@ -51,6 +62,14 @@ app now and then, and once when a repo is brought up to standard.
 
 ## Actions
 
+- **The usual answer takes one tap.** Where most people make the same choice, that choice is the
+  default or the primary button. Rarer options sit behind a disclosure ("More options", a menu),
+  not beside it with equal weight. Trimming words doesn't fix a screen that treats every option
+  as equally likely.
+- **What a user creates, they can remove.** Delete, or archive with a delete in the archive.
+  Revoking, withdrawing or closing something isn't removing it, because the row stays in the list.
+  Where a hard delete would reach further than the record (cascades, history other records
+  point to), a soft delete is fine, or the user reassigns the linked records first.
 - **At most one primary (accent-filled) button per screen**, for the thing the page is for. A card
   in a list never has one. Every other button with words is secondary.
 - **One shape per verb** across the app: edit is always the pencil, delete always the trash, and

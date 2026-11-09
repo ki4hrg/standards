@@ -70,6 +70,25 @@ body {
   }
 }
 
+/* iOS Safari gives date and time fields a native minimum width that ignores their container,
+   so they overflow at phone width. Dropping the native appearance lets them shrink; it also lets
+   an empty one collapse and centres the value, hence the height and alignment. */
+input:is(
+  [type="date"],
+  [type="time"],
+  [type="datetime-local"],
+  [type="month"],
+  [type="week"]
+) {
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+}
+input::-webkit-date-and-time-value {
+  text-align: start;
+}
+
 @media print {
   .no-print {
     display: none !important;

@@ -82,6 +82,12 @@ run, a GitHub Actions bump changes `.github/workflows/`, which a person must mer
     admins have a view of accounts awaiting placement;
   - the creation is audited.
 - **Never log or return secrets**: not in audit rows, logs, error messages or MCP output.
+- **Decide per token type whether it is shown once.** Store only a hash, and show the token
+  once at creation, when it grants more than the database already gives its holder: sign-in,
+  session and API tokens, and any link that can write. A link that can only read what is already
+  in the database (a read-only review or share link) may be stored as it is, so its owner can
+  copy it again: anyone who has the database already has what the link shows. Don't copy
+  "shown once" from login tokens to every token by default.
 - **Encrypt stored third-party tokens** with a key that is separate from the session secret, so
   rotating sessions does not destroy them.
 - **Client IP** comes from `X-Forwarded-For` counted from the right by the number of trusted proxy

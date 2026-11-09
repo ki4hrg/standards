@@ -62,7 +62,9 @@ conflicts) and evidence (a file and line, or a command and its output). Cover at
     `type="module"`, that sets it before first paint. Applying it from the app bundle flashes
     the wrong theme, and is easy to mistake for conforming;
   - contrast check;
-  - the behavioural rules in `docs/design.md`, as far as the code shows them.
+  - web app manifest: present, `standalone`, scope and start URL `/`, not behind sign-in;
+  - the behavioural rules in `docs/design.md`, as far as the code shows them, including records
+    a user creates but can't remove, and a Playwright suite (if any) without the WebKit phone check.
   - UI copy: sample a few screens against the `ui-verbosity-reduction` rules and casing. Report
     how much would change; don't rewrite it here.
 - **Agent docs:**
