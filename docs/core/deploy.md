@@ -128,7 +128,27 @@ runs, not to test dependencies; the database has its own healthcheck.
 ## Migrations
 
 Applied by the container entrypoint before the server starts. Never `db push`. Each profile says
-how (Drizzle: `templates/nextjs-app/docker-entrypoint.sh`).
+how (Drizzle: `templates/nextjs-app/docker-entrypoint.sh`). The migrations directory is committed:
+check `.gitignore` doesn't exclude it (`prisma/migrations/`, `drizzle/`), or the image ships none.
+
+**Moving an existing app off `db push`.** Its live database already has the schema but no
+migration history, so the first migration must be marked applied there, not run:
+
+1. Generate a baseline migration (`0_init`) from the current schema, and keep a frozen copy of
+   that schema beside it. Later migrations change the schema file, but the baseline copy never
+   changes.
+2. At boot, on a database that has tables but no migration table (`_prisma_migrations`, or
+   Drizzle's `__drizzle_migrations`), compare the database with the **frozen baseline** (Prisma:
+   `migrate diff` from the database to the baseline schema, with `--exit-code`). Empty: mark the
+   baseline applied (`migrate resolve --applied 0_init`). Any difference: refuse and exit 1, so a
+   database that drifted from what the baseline says is never marked as matching it. Comparing
+   with the current schema instead would fail as soon as a second migration exists.
+3. Then run the normal migrate step (`migrate deploy`).
+
+The migration CLI in the image comes from the lockfile (copied from the build stage's
+`node_modules`), never `npm install -g`: an unpinned CLI can be a different major from the
+client. Prisma's CLI and `@prisma/client` stay on the same version. An empty database (a new
+install) skips step 2 and runs every migration, the baseline included.
 
 ## Deploy modes
 

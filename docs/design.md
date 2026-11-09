@@ -102,16 +102,30 @@ not by name: shadcn's `background` is `page`, `foreground` is `ink`, `muted-fore
 | `line` | Borders and dividers |
 | `ink`, `ink-2`, `ink-3` | Text: primary, secondary, muted |
 | `accent`, `accent-ink`, `accent-soft` | Primary action fill, text on it, tinted background |
-| `ok`, `ok-soft` | Done, success |
-| `warn`, `warn-soft` | Needs attention, in progress |
-| `danger`, `danger-soft` | Destructive, failed, overdue |
+| `ok`, `ok-ink`, `ok-soft` | Done, success |
+| `warn`, `warn-ink`, `warn-soft` | Needs attention, in progress |
+| `danger`, `danger-ink`, `danger-soft` | Destructive, failed, overdue |
 | `radius-card`, `radius-control` | Corner radii |
+
+The `-ink` tokens are text on the solid fill (`text-danger-ink` on `bg-danger`, as `accent-ink`
+is on `accent`), for a destructive button or a solid badge. A status badge is usually the soft
+pair: `ok` text on `ok-soft`.
 
 Status colours come from one map in the app (the kit's `StatusBadge`). Don't invent a status
 colour inline.
 
+**App tokens.** An app may add a colour token for something the shared set can't say, such as a
+brand colour on a badge. Name it for what it means, set it in both themes, record it in the
+app's `docs/DECISIONS.md`, and add every text pair it's part of to the contrast check. It never
+becomes a second status colour or a stand-in for a shared token.
+
+**No alpha under text.** A fill that carries text is a solid token, in every state. Hover and
+pressed states move to another solid token (or add a ring or underline), not `bg-accent/80`: the
+contrast check measures token pairs, so a translucent fill over whatever lies beneath goes
+unchecked. Alpha is fine on fills with no text on them: overlays, scrims, decorative tints.
+
 **Contrast:** every text/background token pair meets WCAG AA (4.5:1 for body text) in both
-themes, checked in CI over the token file: a `check:contrast` script, or a test inside `test`
+themes, app tokens included, checked in CI over the token file: a `check:contrast` script, or a test inside `test`
 (either is fine, as long as CI runs it).
 
 ## Dark mode

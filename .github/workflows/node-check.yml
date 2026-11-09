@@ -7,7 +7,8 @@ name: node-check
 # pnpm yet (a migration Phase 6 item) can still adopt this check in Phase 1.
 #
 # A suite that reads a database URL instead of starting Testcontainers sets
-# `postgres-image`: a Postgres service starts and the URL is exported. Database
+# `postgres-image`: a Postgres service starts on a random host port and the URL is
+# exported; read the URL, never assume port 5432. Database
 # tests must fail, not skip, when they have no database (docs/decisions.md), or
 # the check goes green with most of the suite unrun.
 #
@@ -67,8 +68,11 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
+        # A random host port: two jobs on one machine (the self-hosted runner) or
+        # anything else holding 5432 would collide on a fixed one. The step below
+        # exports the port Docker picked.
         ports:
-          - 5432:5432
+          - 5432
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=5s
@@ -81,9 +85,10 @@ jobs:
         if: inputs.postgres-image != ''
         env:
           NAMES: ${{ inputs.database-url-env }}
+          PG_PORT: ${{ job.services.postgres.ports['5432'] }}
         run: |
           for n in $NAMES; do
-            echo "$n=postgres://postgres:postgres@127.0.0.1:5432/test" >> "$GITHUB_ENV"
+            echo "$n=postgres://postgres:postgres@127.0.0.1:$PG_PORT/test" >> "$GITHUB_ENV"
           done
           echo "PGPASSWORD=postgres" >> "$GITHUB_ENV"
       - name: Validate package-manager

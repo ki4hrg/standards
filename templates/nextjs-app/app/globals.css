@@ -21,10 +21,13 @@
   --color-accent-ink: #ffffff;
   --color-accent-soft: #e1f0ec;
   --color-ok: #1d6b33;
+  --color-ok-ink: #ffffff;
   --color-ok-soft: #e3f3e7;
   --color-warn: #8a4b00;
+  --color-warn-ink: #ffffff;
   --color-warn-soft: #fdf1df;
   --color-danger: #b42318;
+  --color-danger-ink: #ffffff;
   --color-danger-soft: #fdecea;
 
   --radius-card: 0.875rem;
@@ -44,10 +47,13 @@
   --color-accent-ink: #0b1c18;
   --color-accent-soft: #17332d;
   --color-ok: #7fd49a;
+  --color-ok-ink: #0b1c10;
   --color-ok-soft: #16301f;
   --color-warn: #f0b45c;
+  --color-warn-ink: #1f1504;
   --color-warn-soft: #33260f;
   --color-danger: #f28b82;
+  --color-danger-ink: #1f0a08;
   --color-danger-soft: #3a1714;
 }
 
@@ -72,7 +78,8 @@ body {
 
 /* iOS Safari gives date and time fields a native minimum width that ignores their container,
    so they overflow at phone width. Dropping the native appearance lets them shrink; it also lets
-   an empty one collapse and centres the value, hence the height and alignment. */
+   an empty one collapse on iOS and centres the value, hence the touch-only height and the
+   alignment. On desktop the height would make them taller than the inputs beside them. */
 input:is(
   [type="date"],
   [type="time"],
@@ -83,7 +90,17 @@ input:is(
   appearance: none;
   min-width: 0;
   max-width: 100%;
-  min-height: 2.75rem;
+}
+@media (pointer: coarse) {
+  input:is(
+    [type="date"],
+    [type="time"],
+    [type="datetime-local"],
+    [type="month"],
+    [type="week"]
+  ) {
+    min-height: 2.75rem;
+  }
 }
 input::-webkit-date-and-time-value {
   text-align: start;

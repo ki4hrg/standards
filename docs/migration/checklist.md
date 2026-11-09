@@ -177,7 +177,9 @@ running.*
     one-off `chown` on the host, or the app fails to write after deploy;
   - `GIT_REVISION` build arg.
 - [ ] Environment validated at boot (`instrumentation.ts` / settings class).
-- [ ] Migrations, not `db push`, if the ORM already supports them. Switching ORMs is Phase 6.
+- [ ] Migrations, not `db push`, if the ORM already supports them, baselined as in `deploy.md`
+  (Moving an existing app off `db push`). Check `.gitignore` doesn't exclude the migrations
+  directory. Switching ORMs is Phase 6.
 - [ ] `docs/DEPLOYMENT.md`: deploy mode, host architecture, exposure, backups.
 - [ ] **Verify after deploy:**
   - `/api/health` reports the merged commit;

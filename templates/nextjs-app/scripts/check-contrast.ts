@@ -1,6 +1,7 @@
 // Checks that every text/background token pair in app/globals.css meets WCAG AA
 // in both themes. Run by CI (`pnpm check:contrast`). Add a pair here when a new
-// token carries text.
+// token carries text, an app's own tokens included. Only solid tokens: a fill
+// under text never uses alpha (standards docs/design.md), so there's nothing to blend.
 import { readFileSync } from "node:fs";
 
 const PAIRS: Array<[text: string, background: string]> = [
@@ -16,6 +17,9 @@ const PAIRS: Array<[text: string, background: string]> = [
   ["ok", "ok-soft"],
   ["warn", "warn-soft"],
   ["danger", "danger-soft"],
+  ["ok-ink", "ok"],
+  ["warn-ink", "warn"],
+  ["danger-ink", "danger"],
   ["danger", "card"],
 ];
 const AA = 4.5;
