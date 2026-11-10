@@ -3,7 +3,7 @@
 - **Mode:** Dockhand git stack (webhook) — see standards `docs/core/deploy.md`.
 - **Host architecture:** <!-- amd64 | arm64; must match `platforms` in .github/workflows/ci.yml -->
 - **Exposure:** <!-- published port for the proxy, or the proxy's external network -->
-- **Backups:** <!-- what holds data that can't be recreated, and where it is backed up -->
+- **Backups:** <!-- the host's nightly VM snapshot (docs/core/deploy.md), or the per-app backup if it has one -->
 
 ## GitHub settings
 

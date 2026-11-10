@@ -10,7 +10,7 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
   every merge is a build and deploy on GitHub's paid minutes. Never mix a safety fix with a
   refactor.
 - **Phases 2 and 6 never get the `automerge` label.** They change how the app boots or stores
-  data. John watches the first deploy. Back up the database first (`pg_dump -Fc`).
+  data. John watches the first deploy. Back up the database by hand first (`pg_dump -Fc`, or `sqlite3 .backup`): the nightly snapshot can be a day old.
 - Every PR still goes through `ship`: checks, `/code-review`, `/security-review` where it
   applies.
 - Don't change behaviour the standards don't ask for. If something looks wrong but isn't covered,

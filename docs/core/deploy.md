@@ -99,11 +99,15 @@ For Postgres:
   ```
 
   `encodeURIComponent` is what keeps `/ @ : % # ?` in a password from breaking the URL.
-- Backups, when the database holds anything that can't be recreated: either a `backup` service
-  (nightly `pg_dump -Fc`, kept N days, with the backup volume copied off the host), or a
-  consistent snapshot of the whole VM taken off the host (Proxmox `vzdump` in snapshot mode with
-  the QEMU guest agent's filesystem freeze, or with the database stopped). A plain file copy of a
-  running database's volume is neither: it may not restore. Say which in `docs/DEPLOYMENT.md`.
+- Backups: apps rely on the host's nightly whole-VM snapshot, kept off the host (the homelab's
+  backup server, which allows file-level restore). That covers every app's data, Postgres and
+  SQLite alike, so no per-app `pg_dump` or `sqlite3 .backup` job is needed. The snapshot must be
+  consistent: snapshot mode with the guest agent's filesystem freeze, or the database stopped. A
+  plain file copy of a running database's volume may not restore. Setting up and checking the
+  snapshots belongs to the homelab, not to the app. Before a risky deploy (a migration baseline,
+  a destructive migration), still take a one-off `pg_dump -Fc` (SQLite: `sqlite3 .backup`) by
+  hand. `docs/DEPLOYMENT.md`
+  says the app relies on the VM snapshot, or which per-app backup it has if it was given one.
 
 Network exposure is per host: either publish a port bound for the reverse proxy, or join the
 proxy's external network with no published port. When the app trusts a proxy header, it must not
