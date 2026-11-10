@@ -106,8 +106,8 @@ For Postgres:
   plain file copy of a running database's volume may not restore. Setting up and checking the
   snapshots belongs to the homelab, not to the app. Before a risky deploy (a migration baseline,
   a destructive migration), still take a one-off `pg_dump -Fc` (SQLite: `sqlite3 .backup`) by
-  hand. `docs/DEPLOYMENT.md`
-  says the app relies on the VM snapshot, or which per-app backup it has if it was given one.
+  hand. `docs/DEPLOYMENT.md` says the app relies on the VM snapshot, or which per-app backup it
+  has if it was given one.
 
 Network exposure is per host: either publish a port bound for the reverse proxy, or join the
 proxy's external network with no published port. When the app trusts a proxy header, it must not
