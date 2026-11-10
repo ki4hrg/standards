@@ -170,6 +170,14 @@ minutes apart leave the second image unpulled. (The webhook itself takes no forc
   so a stack without the settings above answers `success: true`, "No changes detected" without
   pulling. Without `APP_HEALTH_URL`, that reply fails the job.
 
+**An app reachable only on the LAN.** GitHub's runners can't reach its `/api/health`, so
+`APP_HEALTH_URL` stays unset, and no public route is added just for the check. What stands in
+for it: Force redeploy and Re-pull images on (above), so `success: true` means the stack really
+was redeployed with a fresh pull, and a "No changes detected" reply still fails the job. After a
+deploy, check the revision by hand from the LAN (`/api/health` or the image label, see
+[Checking what's running](#checking-whats-running)) against the merged commit. Record in
+`docs/DEPLOYMENT.md` that the app is LAN-only and its deploys are checked by hand.
+
 The reusable `dockhand-deploy.yml` does all of this.
 
 **Where the webhook settings live.** Either Actions tab works for either value. The template

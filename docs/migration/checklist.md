@@ -36,7 +36,8 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
   tell that from a real failure. If runs are blocked, stop and tell John.
 - [ ] **Ask John to confirm** the repo's Dockhand stack has **Force redeploy** and **Re-pull
   images** on, and whether its `/api/health` is reachable from GitHub (then `APP_HEALTH_URL` is
-  set). Agents can't see Dockhand, so this is his answer, recorded in the sweep tracker.
+  set; a LAN-only app leaves it unset and is checked by hand, `deploy.md`). Agents can't see
+  Dockhand, so this is his answer, recorded in the sweep tracker.
 
 ## Phase 0: Audit and triage (no code changes)
 
@@ -170,7 +171,8 @@ running.*
   that queries the database restarts the app when the database blips, which `depends_on` and
   `pg_isready` already cover.
 - [ ] Once `/api/health` is deployed and reachable from GitHub, set the `APP_HEALTH_URL`
-  variable (if it wasn't set in Phase 1), so every deploy checks the running revision.
+  variable (if it wasn't set in Phase 1), so every deploy checks the running revision. A
+  LAN-only app leaves it unset: check `/api/health` from the LAN after the deploy instead.
 - [ ] **Dockerfile:**
   - non-root user;
   - writable dirs `chown`ed before `USER`. **Existing volumes keep their old owner:** plan a
