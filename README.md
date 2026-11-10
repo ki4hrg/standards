@@ -47,13 +47,22 @@ Claude Code on the web:
 ```json
 {
   "extraKnownMarketplaces": {
-    "ki4hrg-standards": { "source": { "source": "github", "repo": "ki4hrg/standards" } }
+    "ki4hrg-standards": {
+      "source": { "source": "github", "repo": "ki4hrg/standards" },
+      "autoUpdate": true
+    }
   },
   "enabledPlugins": { "standards@ki4hrg-standards": true }
 }
 ```
 
 Locally: `/plugin marketplace add ki4hrg/standards`, then `/plugin install standards@ki4hrg-standards`.
+
+The plugin has no `version`: Claude Code then versions it by commit, so every push to `main` is
+an update. `autoUpdate` fetches it about ten minutes into a session; `/reload-plugins` applies it
+without a restart. By hand: `claude plugin marketplace update ki4hrg-standards`, then
+`claude plugin update standards@ki4hrg-standards` (add `--scope project` in a repo that installed
+it per project).
 
 ## Changing a standard
 

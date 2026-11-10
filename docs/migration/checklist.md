@@ -242,7 +242,8 @@ running.*
 - [ ] `docs/claude-candidates.md` exists. Rules John deferred are listed there.
 - [ ] Plans referenced outside the repo (`~/.claude/plans/…`) are recovered into `docs/plans/` or
   the reference is removed.
-- [ ] `.claude/settings.json` enables the standards plugin. `AGENTS.md` is a one-line pointer
+- [ ] `.claude/settings.json` enables the standards plugin, with `autoUpdate` on its marketplace
+  (as in the template). `AGENTS.md` is a one-line pointer
   (Next.js 16.3 or later: `agentRules: false` in `next.config.ts`, so `next dev` stops writing
   into it. Older Next doesn't write `AGENTS.md` and has no such option; add it when the repo
   reaches 16.3).
