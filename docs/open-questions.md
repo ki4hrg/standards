@@ -10,3 +10,12 @@ check, defaulting to `ubuntu-24.04` (a compatible `v1` change). The check would 
 own job holding no secrets (only a read-only token for the commit comparison): `workflow.md`
 keeps the deploy and anything with a secret off that runner, because unreviewed PR code runs
 there. Also against it: the deploy result then depends on that runner being up. Undecided.
+
+## Field errors in `ActionForm`
+
+The decided `ActionForm` (`decisions.md`, not built yet) shows the action's returned error in
+place. It doesn't say whether it also shows per-field errors next to their inputs, or what shape
+an action returns them in. Swept apps already return zod's `fieldErrors` alongside the message
+and show only the message until the kit's `ActionForm` exists; John chose (2026-11-10) to wait
+for it rather than build one per app. Building it means settling that shape first, and those
+apps adopt it first.
