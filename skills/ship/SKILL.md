@@ -145,6 +145,10 @@ came from; the label will still merge the PR when CI passes.
 
 After the merge, any further work in this session goes on a new branch (step 1).
 
-When the task is finished, clean up what it left on the machine: the containers and images it
-created, then `docker builder prune -af` (`docs/core/workflow.md`, Dev machine). The dev VMs'
-disks are small, and a full one crashes the machine.
+When the task is finished, clean up what it left on the machine (`docs/core/workflow.md`, Dev
+machine):
+- the containers and images it created, then `docker builder prune -af`. The dev VMs' disks are
+  small, and a full one crashes the machine;
+- its branches: back to `main` and pull, remove its worktrees, `git fetch --prune`, and delete
+  each branch whose PR merged (`git branch -D`: a squash merge looks unmerged to git), on the
+  remote too if GitHub didn't. Never a branch with an open PR.

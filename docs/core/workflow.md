@@ -204,6 +204,22 @@ can't run here runs in CI instead (`ship`).
   this: other sessions' installs read it while they run, and clearing it under them can fail
   them. Clear it by hand when the disk is low and no install is running.
 
+  It also cleans up the task's branches:
+  - switches the checkout back to `main` and pulls (`git switch main && git pull --ff-only`), so
+    the next session doesn't start on a finished branch;
+  - removes worktrees the task added (`git worktree remove <path>`, then `git worktree prune`);
+  - `git fetch --prune`, which drops remote-tracking refs for branches GitHub already deleted on
+    merge;
+  - deletes each local branch whose PR has merged: `gh pr list --state merged --head <branch>`
+    finds the PR, then `git branch -D <branch>`. `-D`, because a squash merge leaves the branch
+    looking unmerged to git, so `git branch -d` refuses and `git branch --merged` misses it;
+  - deletes the remote branch only when its PR has merged or been closed and GitHub didn't
+    delete it (a repo without "delete branch on merge" yet): `git push origin --delete <branch>`.
+
+  Never a branch with an open PR, and never one that isn't the task's own unless its PR has
+  merged: another session may be working on it. Git refuses to delete a branch checked out in
+  another worktree; leave it.
+
 ## Versions and releases
 
 - Apps are unversioned: merging to `main` is the release.

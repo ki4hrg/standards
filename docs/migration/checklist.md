@@ -319,6 +319,10 @@ new build.
   open issues), then delete `docs/HANDOFF.md`: the sweep is over, and the plan keeps the record.
 - [ ] Clean up the machine: remove the containers and images the sweep created, then
   `docker builder prune -af` (`docs/core/workflow.md`, Dev machine). Not the npm cache.
+- [ ] Clean up branches the same way: checkout on `main` and pulled, the sweep's worktrees
+  removed, `git fetch --prune`, and every branch whose PR merged deleted locally and, if GitHub
+  didn't, on the remote. A leftover branch with no PR is listed in the close-out status for
+  John, not deleted.
 - [ ] Update the sweep tracker. It names private repos, so it is not in this public repo: it is
   `private/sweep-tracker.md` in John's local clone (gitignored). A session without it reports
   the repo's phase status for John to record.
