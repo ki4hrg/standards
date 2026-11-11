@@ -58,6 +58,13 @@ pass over the whole app is part of bringing a repo up to standard (migration Pha
 - **No count badges in card headers**, unless the count isn't visible in the card itself (it's
   collapsed or paginated).
 - Lists: clicking a row opens it; no separate "view" link.
+- **Names wrap, never truncate.** Anything a person typed (an item's or record's name, a label
+  they gave) wraps onto further lines in lists, cards, tables and at 360px. No ellipsis, no
+  `truncate` or `line-clamp`: a name is often what tells two similar rows apart, and an ellipsis
+  hides exactly the part that differs. Give it `overflow-wrap: anywhere` (Tailwind 4.1+
+  `wrap-anywhere`), so one long unbroken word breaks instead of scrolling the page sideways, and
+  `min-w-0` on its flex or grid item, which otherwise won't shrink below its content. Text the
+  app itself writes is kept short enough to fit, so it doesn't need truncating either.
 - Reports and anything printable get a print stylesheet or a print route.
 
 ## Actions
