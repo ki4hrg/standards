@@ -184,6 +184,18 @@ can't run here runs in CI instead (`ship`).
   other labels). Without them every PR waits on a prompt to label it.
 - **Memory:** `next build` and `tsc` on a large generated client (Prisma) want about 3 GB of heap.
   On a smaller machine, set `NODE_OPTIONS=--max-old-space-size=…` or let CI run them.
+- **Clean up when a task ends.** The dev VMs sit on small thin-provisioned disks, and a full
+  thin pool crashes the machine; downloading again later is the cheaper failure. So when a task
+  is finished (after `ship`, or when it's abandoned), the agent:
+  - removes the containers it started and the images it built or pulled for the task
+    (`docker compose down` for a stack it brought up, adding `-v` only for volumes it created;
+    `docker rm` and `docker rmi` for the rest). Never another session's or John's;
+  - runs `docker builder prune -af`: all build cache, not just dangling. BuildKit keeps cache a
+    running build is using, so another session's build isn't broken, only slower next time.
+
+  The package manager's cache (`npm cache clean --force`, `pnpm store prune`) is **not** part of
+  this: other sessions' installs read it while they run, and clearing it under them can fail
+  them. Clear it by hand when the disk is low and no install is running.
 
 ## Versions and releases
 

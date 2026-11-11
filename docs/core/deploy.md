@@ -99,15 +99,17 @@ For Postgres:
   ```
 
   `encodeURIComponent` is what keeps `/ @ : % # ?` in a password from breaking the URL.
-- Backups: apps rely on the host's nightly whole-VM snapshot, kept off the host (the homelab's
-  backup server, which allows file-level restore). That covers every app's data, Postgres and
-  SQLite alike, so no per-app `pg_dump` or `sqlite3 .backup` job is needed. The snapshot must be
-  consistent: snapshot mode with the guest agent's filesystem freeze, or the database stopped. A
-  plain file copy of a running database's volume may not restore. Setting up and checking the
-  snapshots belongs to the homelab, not to the app. Before a risky deploy (a migration baseline,
-  a destructive migration), still take a one-off `pg_dump -Fc` (SQLite: `sqlite3 .backup`) by
-  hand. `docs/DEPLOYMENT.md` says the app relies on the VM snapshot, or which per-app backup it
-  has if it was given one.
+- Backups: apps rely on their host's nightly whole-machine snapshot, kept off the host (a backup
+  server for the homelab's VMs, provider block-storage snapshots for a cloud host), with several
+  restore points, not just the last one. That covers every app's data, Postgres and SQLite
+  alike, so no per-app `pg_dump` or `sqlite3 .backup` job is needed; an app may still keep its
+  own. The snapshot must be atomic per disk: a filesystem-frozen snapshot, or a crash-consistent
+  one of the disk holding the database, which Postgres and SQLite recover from as from a power
+  cut. A file copy of a running database's volume is neither and may not restore. Setting up and
+  checking the snapshots belongs to the homelab, not to the app. Before a risky deploy (a
+  migration baseline, a destructive migration), still take a one-off `pg_dump -Fc` (SQLite:
+  `sqlite3 .backup`) by hand. `docs/DEPLOYMENT.md` says which snapshot covers the app, and any
+  per-app backup it has.
 
 Network exposure is per host: either publish a port bound for the reverse proxy, or join the
 proxy's external network with no published port. When the app trusts a proxy header, it must not

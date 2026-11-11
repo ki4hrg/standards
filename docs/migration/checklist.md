@@ -317,6 +317,8 @@ new build.
   `agent-found` issue that says it's waiting on his decision.
 - [ ] Write the close-out status into the audit plan (phases done with their PRs, exceptions,
   open issues), then delete `docs/HANDOFF.md`: the sweep is over, and the plan keeps the record.
+- [ ] Clean up the machine: remove the containers and images the sweep created, then
+  `docker builder prune -af` (`docs/core/workflow.md`, Dev machine). Not the npm cache.
 - [ ] Update the sweep tracker. It names private repos, so it is not in this public repo: it is
   `private/sweep-tracker.md` in John's local clone (gitignored). A session without it reports
   the repo's phase status for John to record.

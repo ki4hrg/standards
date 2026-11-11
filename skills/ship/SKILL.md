@@ -142,3 +142,7 @@ the session must end first, say where things stand, and comment the same on the 
 came from; the label will still merge the PR when CI passes.
 
 After the merge, any further work in this session goes on a new branch (step 1).
+
+When the task is finished, clean up what it left on the machine: the containers and images it
+created, then `docker builder prune -af` (`docs/core/workflow.md`, Dev machine). The dev VMs'
+disks are small, and a full one crashes the machine.
