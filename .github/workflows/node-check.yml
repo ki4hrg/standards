@@ -68,9 +68,11 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
-        # A random host port: two jobs on one machine (the self-hosted runner) or
-        # anything else holding 5432 would collide on a fixed one. The step below
-        # exports the port Docker picked.
+        # A random host port, so anything else holding 5432 doesn't collide. The
+        # step below exports the port Docker picked. Not yet enough on the
+        # self-hosted runner: each job gets a fresh Docker daemon whose first pick
+        # is the same port, so two overlapping jobs can still collide (a rerun
+        # passes). The fix belongs on the runner (a port range per slot).
         ports:
           - 5432
         options: >-
