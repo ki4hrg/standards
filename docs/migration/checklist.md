@@ -271,6 +271,8 @@ converting every view twice is waste.
 - [ ] A full `ui-verbosity-reduction` pass, including casing. Renamed terms are made consistent
   across the app.
 - [ ] Destructive actions confirm inline. One primary button per screen. Phone width works.
+- [ ] Names a person typed wrap and are never truncated: remove `truncate`, `line-clamp` and
+  `text-ellipsis` on them, and add `wrap-anywhere` (`design.md`, Layout).
 - [ ] A web app manifest (`standalone`, scope and start URL `/`), served without sign-in.
 - [ ] Everything a user can create can also be removed (delete, archive, or a soft delete).
 - [ ] If the repo has a Playwright suite, it includes the WebKit phone check (`design.md`).

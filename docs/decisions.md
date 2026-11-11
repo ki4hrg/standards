@@ -143,7 +143,7 @@ Provenance key:
 | Creating a record: inline form or modal, the app's choice; either way it stays on the page. | Decided | Both work; what matters is not navigating away and back. |
 | Templates get an optional manual (`workflow_dispatch`) job that uploads screenshots of the main screens in both themes, for design review. Not built yet. | Decided | CI uploads Playwright output only on failure, so a design review needed Playwright run locally. Decided 2026-11-02, low priority. |
 | Dark mode is required: system preference by default, with a light/dark/system toggle and no flash on load. | Decided | Support had been anywhere from missing to mandatory. |
-| User-entered names wrap onto further lines and are never truncated (no ellipsis, `truncate` or `line-clamp`), in lists, cards, tables and at phone width. | Decided 2026-11-11 | A name is often what tells two similar rows apart, and an ellipsis hides exactly the part that differs, worst at 360px. A per-repo agent rule that a migration triage flagged as worth making a standard. |
+| User-entered names wrap onto further lines and are never truncated (no ellipsis, `truncate` or `line-clamp`), in lists, cards, tables and at phone width. Text the app writes is kept short enough to fit, so it isn't truncated either. | Decided 2026-11-11 | A name is often what tells two similar rows apart, and an ellipsis hides exactly the part that differs, worst at 360px. A per-repo agent rule that a migration triage flagged as worth making a standard. |
 
 ## Agent docs
 
