@@ -132,6 +132,13 @@ There is no human review before merging, so review happens in the session:
   external write still asks. In auto mode the classifier blocks labelling as a merge without
   review unless `autoMode.allow` also describes it; see Dev machine.
 
+  Each of the two runs **as its own Bash call, with nothing chained**. Joined to anything else
+  (`&&`, `;`, a heredoc writing the body, a file append, the other command) it no longer matches
+  the allowed form and gets blocked; alone it passes. So write the issue body to a file in an
+  earlier step (in the session's scratchpad), then run
+  `gh issue create --label agent-found --repo <owner/repo> --title "…" --body-file <file>` by
+  itself.
+
 ## Self-hosted PR runner
 
 A private repo's PR jobs (check, audit, the build-only PR image) can run on John's self-hosted

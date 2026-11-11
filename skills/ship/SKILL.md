@@ -96,11 +96,13 @@ that needs its own tree gets `isolation: "worktree"`. After any subagent, confir
 - Body: the repo's PR template. **Verification** lists what you actually ran and saw. If the work
   came from an issue, the body says `Closes #n`.
 - Anything you found and didn't fix (a review finding, an inconsistency, a gap outside this
-  change) becomes an issue: `gh issue create --label agent-found --repo <owner/repo> --title … --body …` (label first:
-that exact prefix is what John's permissions allow), with what you saw, where, and
-  why it matters. Link them from the PR.
-- Add the `automerge` label with exactly `gh pr edit <n> --add-label automerge` (the form John's
-  permissions allow; `workflow.md`, Dev machine), **unless**:
+  change) becomes an issue, with what you saw, where, and why it matters. Write the body to a
+  file first, in its own step, then run
+  `gh issue create --label agent-found --repo <owner/repo> --title … --body-file <file>` as a
+  Bash call of its own: label first and nothing chained (no `&&`, `;` or heredoc), which is the
+  only form John's permissions allow (`workflow.md`). Link the issues from the PR.
+- Add the `automerge` label with exactly `gh pr edit <n> --add-label automerge`, alone in its
+  Bash call (the form John's permissions allow; `workflow.md`, Dev machine), **unless**:
   - John asked to see it first;
   - a migration drops or rewrites data;
   - a security-review finding is left open;
