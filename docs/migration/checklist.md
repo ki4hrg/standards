@@ -94,7 +94,9 @@ dependencies.*
   - non-breaking fixes for *other* advisories still go in the Phase 1 PR, even ones the bigger
     PR's upgrade didn't touch. The bigger PR stays one change.
 - [ ] `security` job; `.github/dependabot.yml` for each ecosystem; the GitGuardian app covers the
-  repo.
+  repo; Dependabot alerts and security updates on (`scripts/repo-settings.sh` sets them; check
+  with `gh api repos/<owner>/<repo>/vulnerability-alerts`, which answers 204 when on and 404
+  when off).
 - [ ] Add the PR template (`templates/<profile>/.github/pull_request_template.md`, where the
   profile has one) and `docs/claude-candidates.md` if missing: the PR template's checklist and
   `ship` both point new rules there from this PR on. Phase 4 sorts what it collects.

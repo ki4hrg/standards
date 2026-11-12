@@ -42,6 +42,12 @@ workflows triggered by Dependabot get a read-only token. Even when a person's la
 run, a GitHub Actions bump changes `.github/workflows/`, which a person must merge; see
 `workflow.md`.)
 
+**Dependabot alerts and security updates are on** in every repo (`scripts/repo-settings.sh`).
+The `security` job only runs on a push or PR, so an advisory published for a dependency nobody
+is changing would otherwise go unseen until the next one. Security updates open the fix PR
+straight away instead of waiting for the weekly run; they follow `dependabot.yml`'s
+`commit-message` and `ignore` settings and are merged by hand like any other Dependabot PR.
+
 ## In the session
 
 `/security-review` before opening a PR that touches a sensitive path (listed in `workflow.md`).

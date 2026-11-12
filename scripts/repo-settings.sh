@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Apply the standard GitHub settings to a repo (docs/core/workflow.md):
 # squash merge only, PR title as the commit subject, branches deleted on merge,
-# the `automerge` label that merge-on-green looks for, and the `agent-found` label
-# for follow-ups agents file (docs/core/workflow.md).
+# the `automerge` label that merge-on-green looks for, the `agent-found` label
+# for follow-ups agents file (docs/core/workflow.md), and Dependabot alerts and
+# security updates (docs/core/security.md).
 #
 #   scripts/repo-settings.sh owner/repo
 #
@@ -32,6 +33,13 @@ gh api -X PATCH "repos/$repo" --silent --input - <<'JSON' 2>/dev/null \
   || echo "GitHub secret scanning isn't available on this plan (fine: GitGuardian is the scanner)."
 {"security_and_analysis":{"secret_scanning":{"status":"enabled"},"secret_scanning_push_protection":{"status":"enabled"}}}
 JSON
+
+# Dependabot alerts, then security updates (which need alerts on first). Free on
+# private repos too. The `security` job only runs on a push or PR, so an advisory for a
+# dependency nobody touches would otherwise go unseen; security updates open its fix PR
+# at once instead of waiting for the weekly run (docs/core/security.md).
+gh api -X PUT "repos/$repo/vulnerability-alerts" --silent
+gh api -X PUT "repos/$repo/automated-security-fixes" --silent
 
 echo "Applied standard settings to $repo."
 echo "Still to do by hand:"
