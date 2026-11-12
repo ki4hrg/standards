@@ -44,10 +44,10 @@ Every app has these, which CI calls:
 ```
 
 `db:drift` (`scripts/db-drift.sh` in the template) fails if `schema.ts` has changes with no
-migration. It generates a throwaway `drift-check` migration to find out, and puts
-`lib/db/migrations` back as committed whether it passes or fails. It refuses to run while that
-directory has uncommitted changes, which the restore would otherwise delete: commit a new
-migration before running it.
+migration. It copies `lib/db/migrations` as it stands, uncommitted migrations included,
+generates a throwaway `drift-check` migration, compares, and puts the copy back whether it
+passes, fails or is interrupted. So it runs in the pre-commit check chain while a new migration
+is still uncommitted.
 
 ## Layout
 
