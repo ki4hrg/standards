@@ -56,7 +56,10 @@ on:
         description: >-
           Space-separated caller job names the caller skips on `labeled` events. On
           such an event this job merges only when each of them passed on this commit
-          in another run. Empty: every job this one `needs` ran in this run.
+          in another run. Each must be a job that calls a workflow (`uses:`), whose
+          checks are named "<job> / ..."; a plain steps job never matches, so put a
+          repo's own job in a local called workflow. Empty: every job this one
+          `needs` ran in this run.
         type: string
         default: ''
       pass-tested:

@@ -79,6 +79,9 @@ jobs:
       # paths-ignore above doesn't apply to the dispatch after a merge; this does.
       skip-dispatch-paths: 'docs/* *.md'
       # On `labeled`, merge only if these passed on this commit in another run.
+      # Names must be jobs that call a workflow: a repo's own job (e2e) goes in
+      # a local `.github/workflows/<name>.yml` called with `uses: ./...`
+      # (docs/core/workflow.md, Merging).
       require-jobs: check security
       # Let the main run skip checks for a tree the PR already tested (`tested` above).
       pass-tested: true

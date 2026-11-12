@@ -71,6 +71,8 @@ dependencies.*
   in a subdirectory gets one `image` or `security` job per image or directory, each listed in
   the `needs` of every job downstream of it and in `require-jobs` (`deploy.md`, Several images or
   lockfiles).
+- [ ] A repo job of its own that gates the merge (e2e) is a local called workflow, not a plain
+  steps job, and is listed in automerge's `needs` and `require-jobs` (`workflow.md`, Merging).
 - [ ] **If the audit fails today**, the Phase 1 PR can't go green, and there's no PR CI yet for
   fix PRs to go through. So:
   - small fixes (`npm audit fix` without `--force`, `overrides` per `security.md`) go **in the

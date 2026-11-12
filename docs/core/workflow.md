@@ -73,6 +73,16 @@ run skips the checks, and `merge-on-green` merges only if they passed on that co
 run (`require-jobs`). If they're still running, that run reads the label when it finishes and
 merges. Labelling at create time is safe for the same reason.
 
+**A repo's own merge-gating job goes in a local called workflow.** `require-jobs` matches only
+check runs named `<caller job> / <job>`, which only a called workflow produces. A plain job
+(`e2e:` with its own `steps:`) shows as bare `e2e`, and the label's run, where it is skipped,
+reports a bare `e2e` too, so it can't be told apart and is never matched: a label added after
+the checks passed then never merges. So put the job's steps in `.github/workflows/e2e.yml`
+(`on: workflow_call`) and call it from `ci.yml` (`e2e: uses: ./.github/workflows/e2e.yml`), with
+the same `if:` as `check` so the label's run skips it, and add it to automerge's `needs` and
+`require-jobs`. A PR-only gate (e2e that blocks the merge but not the build) stays out of
+`image`'s `needs` and runs only on `pull_request`.
+
 **A green PR labelled `automerge` that sits unmerged** means no run merged after the label went
 on. Remove and re-add the label, which is cheap: its run only checks and merges. The exception
 is below.
