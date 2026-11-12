@@ -220,9 +220,12 @@ can't run here runs in CI instead (`ship`).
   - removes worktrees the task added (`git worktree remove <path>`, then `git worktree prune`);
   - `git fetch --prune`, which drops remote-tracking refs for branches GitHub already deleted on
     merge;
-  - deletes each local branch whose PR has merged: `gh pr list --state merged --head <branch>`
-    finds the PR, then `git branch -D <branch>`. `-D`, because a squash merge leaves the branch
-    looking unmerged to git, so `git branch -d` refuses and `git branch --merged` misses it;
+  - deletes each local branch whose PR has merged **with the branch's current tip**:
+    `gh pr list --state merged --head <branch> --json headRefOid -q '.[].headRefOid'` must list
+    `git rev-parse <branch>`, then `git branch -D <branch>`. Matching the name alone isn't
+    enough: a reused branch name matches an old merged PR while holding new, unmerged work. `-D`,
+    because a squash merge leaves the branch looking unmerged to git, so `git branch -d` refuses
+    and `git branch --merged` misses it;
   - deletes the remote branch only when its PR has merged or been closed and GitHub didn't
     delete it (a repo without "delete branch on merge" yet): `git push origin --delete <branch>`.
 

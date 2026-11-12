@@ -62,7 +62,9 @@ dependencies.*
 - [ ] Set the check's `scripts` to the ones the repo **has now** (often just `typecheck lint`; add a
   `typecheck` script running `tsc --noEmit` if missing). Each later phase adds what it creates:
   `test` in Phase 3, `db:drift` once real migrations exist, `check:contrast` in Phase 5 (unless the
-  contrast check is a test that `test` already runs).
+  contrast check is a test that `test` already runs). A Drizzle app's `db:drift` is
+  `sh scripts/db-drift.sh`: copy the script from `templates/nextjs-app/scripts/` and check its
+  migrations path.
 - [ ] A repo still on npm passes `package-manager: npm` to `node-check` and
   `package-managers: npm` to `security`. Moving to pnpm is Phase 6. A repo still on Node 22
   passes `node-version: '22'` (both workflows default to 24) until its Node 24 PR.
