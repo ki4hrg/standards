@@ -82,8 +82,8 @@ change. For the app service:
 For Postgres:
 
 - `postgres:18-alpine`, with no `pull_policy` (the tag pins the major; a major upgrade is planned
-  work, and minor updates arrive through Dockhand's Re-pull images), volume mounted at `/var/lib/postgresql` (not `.../data`: PG18 keeps data in
-  a versioned subdirectory).
+  work, and minor updates arrive through Dockhand's Re-pull images), volume mounted at
+  `/var/lib/postgresql` (not `.../data`: PG18 keeps data in a versioned subdirectory).
 - `pg_isready` healthcheck.
 - No published port unless something outside the stack needs it.
 - The app gets `DATABASE_URL` **without** a password, plus `PGPASSWORD`. postgres.js and
