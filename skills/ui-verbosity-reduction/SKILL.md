@@ -21,6 +21,8 @@ Shorter must not mean vaguer. A rewrite that drops the specific thing a label re
 
 **3. Fewest words that carry the meaning.** Articles ("the", "a", "an"), filler ("simply", "just", "please", "you can"), and possessives ("your") are usually removable on a label. "Send the email" → "Send Email".
 
+The same goes for a subject the row or card already names. Statuses, hints and badges sit next to the thing they describe, so a leading "it", "this" or "they" adds nothing: start with the verb, and prefer the active form. "It will be rebooted" → "Will reboot"; "This needs a look" → "Needs review" (a specific verb beats a vague phrase). Keep the subject when dropping it would leave the sentence ambiguous, as in a confirm that covers several things.
+
 **4. Let design do the directing.** Color, button style, icons, position and grouping already tell the user what's primary, what's dangerous and what's optional. Prose that duplicates them ("This is the main action", "Optional:", "Warning:" next to a red button) can go. Work within the project's existing components and styles: if replacing prose with a design cue needs a style or component the codebase already has, use it; if it would need something new, leave the text short and note the idea in the summary instead of inventing styles.
 
 **5. Labels are concise, direct and action-oriented.** Buttons start with a verb and name the object ("Add Material", "Start Project"). Headings and tabs name the thing ("Instructions", not "How we do it"). Avoid cute or conversational phrasing in labels.
@@ -53,6 +55,8 @@ These keep enough words to stay unambiguous. Tighten them, but don't strip meani
 |---|---|---|
 | Send the email | Send Email | Article removed, Title Case |
 | Don't ask, already answered | Answered | State, not reasoning |
+| It will be rebooted | Will reboot | Subject is the row it sits in; active verb |
+| It needs a look | Needs review | Subject dropped, specific verb |
 | A series is a job you do again and again, pine straw every spring. It keeps the checklist and materials to start from next time. | Recurring projects that provide a template with materials and other details | Narration and brainstorm example removed |
 | How we do it | Instructions | Direct noun for a heading |
 | Click here to add a new material to your list | Add Material | Narration and filler removed, verb + object |

@@ -14,6 +14,8 @@ In short:
 - **Don't narrate the UI** or point at the control beside the text. A page subtitle is optional:
   one line, only when the page needs context the title can't give, never one that repeats it.
 - **Don't litigate settled decisions.** Show the state, not the reasoning behind it.
+- **No subject the context already gives.** A status or hint beside a row doesn't start with
+  "it" or "this": "Will reboot", not "It will be rebooted"; "Needs review", not "It needs a look".
 - **Let design direct.** Colour, button style, icons and position say what's primary or
   dangerous. Don't repeat it in prose.
 - **Labels:** verb plus object for buttons ("Add Material"), a plain noun for headings and tabs.
