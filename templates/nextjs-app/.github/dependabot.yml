@@ -73,3 +73,8 @@ updates:
     groups:
       actions:
         update-types: [major, minor, patch]
+    ignore:
+      # The standards' reusable workflows: a new major (v2) is breaking by definition and
+      # is adopted as planned work, never inside a routine grouped PR.
+      - dependency-name: "ki4hrg/standards*"
+        update-types: [version-update:semver-major]

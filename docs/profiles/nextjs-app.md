@@ -38,12 +38,16 @@ Every app has these, which CI calls:
   "test": "vitest run",
   "db:generate": "drizzle-kit generate",
   "db:migrate": "tsx lib/db/migrate.ts",
-  "db:drift": "drizzle-kit generate --name=drift-check && git diff --exit-code --stat -- lib/db/migrations && test -z \"$(git status --porcelain -- lib/db/migrations)\"",
+  "db:drift": "sh scripts/db-drift.sh",
   "check:contrast": "tsx scripts/check-contrast.ts"
 }
 ```
 
-`db:drift` fails if `schema.ts` has changes with no migration.
+`db:drift` (`scripts/db-drift.sh` in the template) fails if `schema.ts` has changes with no
+migration. It generates a throwaway `drift-check` migration to find out, and puts
+`lib/db/migrations` back as committed whether it passes or fails. It refuses to run while that
+directory has uncommitted changes, which the restore would otherwise delete: commit a new
+migration before running it.
 
 ## Layout
 
