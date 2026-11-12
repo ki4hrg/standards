@@ -44,7 +44,7 @@ conflicts) and evidence (a file and line, or a command and its output). Cover at
 - **Deploy:**
   - image built in CI;
   - no `build:` in compose;
-  - `pull_policy: always`;
+  - `pull_policy: always` on app images (not the database image);
   - tags and revision label;
   - webhook with the success check;
   - healthcheck and `/api/health` (no auth, no database, reports the revision). Look for an

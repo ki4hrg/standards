@@ -152,7 +152,7 @@ running.*
 
 - [ ] **compose:**
   - no `build:`;
-  - `pull_policy: always` on mutable tags;
+  - `pull_policy: always` on the app's mutable tags, not on the database image;
   - `${VAR:?}` on every required secret;
   - no hard-coded credentials;
   - no localhost defaults for public URLs.
