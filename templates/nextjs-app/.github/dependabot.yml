@@ -1,15 +1,21 @@
 version: 2
+# Monthly: every merge runs CI and a deploy, and Actions minutes are short. A public repo
+# (free minutes) may use weekly. Security updates don't wait for the schedule: they open
+# when an advisory lands, grouped into one PR per ecosystem (the `security` groups).
 updates:
   # Dependabot's `npm` ecosystem also reads pnpm-lock.yaml.
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     # PR title becomes "chore(deps): …", which merge-on-green's title check accepts.
     commit-message:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       # Prettier can change its output in any release, and `lint` runs `prettier --check`,
       # so its bump gets its own PR: a red one there doesn't hold back the group below.
       # Fix it with `pnpm format` on the branch. A dependency joins the first group it
@@ -41,11 +47,14 @@ updates:
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     commit-message:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
@@ -56,11 +65,14 @@ updates:
   - package-ecosystem: docker-compose
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     commit-message:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
@@ -71,12 +83,15 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     commit-message:
       prefix: chore
       include: scope
     # Action updates are low-risk and arrive together, majors included: one PR for all.
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       actions:
         update-types: [major, minor, patch]
     ignore:

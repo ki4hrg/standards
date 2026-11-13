@@ -1,14 +1,20 @@
 version: 2
+# Monthly: every merge runs CI and a deploy, and Actions minutes are short. A public repo
+# (free minutes) may use weekly. Security updates don't wait for the schedule: they open
+# when an advisory lands, grouped into one PR per ecosystem (the `security` groups).
 updates:
   - package-ecosystem: composer
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     # PR title becomes "chore(deps): …", which merge-on-green's title check accepts.
     commit-message:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
@@ -21,11 +27,14 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     commit-message:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
@@ -42,12 +51,15 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     commit-message:
       prefix: chore
       include: scope
     # Action updates are low-risk and arrive together, majors included: one PR for all.
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       actions:
         update-types: [major, minor, patch]
     ignore:

@@ -30,10 +30,11 @@ The reusable `security.yml` workflow runs:
 
 ## Dependabot
 
-Every repo has `.github/dependabot.yml` with weekly updates for its package ecosystem, Docker base
-images and GitHub Actions, minor and patch updates grouped into one PR per ecosystem, and `commit-message: { prefix: chore, include: scope }` so titles pass the Conventional Commit check (every ecosystem in the file, as in the
-template). Dependabot
-PRs go through CI like any other; merge them from the PR list. Majors of the runtime and
+Every repo has `.github/dependabot.yml` with monthly updates for its package ecosystem, Docker base
+images and GitHub Actions (weekly is fine for a public repo, whose minutes are free), minor and
+patch updates grouped into one PR per ecosystem, security updates grouped the same way, and
+`commit-message: { prefix: chore, include: scope }` so titles pass the Conventional Commit check
+(every ecosystem in the file, as in the template). Dependabot PRs go through CI like any other; merge them from the PR list. Majors of the runtime and
 database images (Node, Postgres), `@types/node`, TypeScript, and the frameworks (Next.js, React, Laravel,
 Livewire, Tailwind, Vite and their plugins) are ignored: those versions are a stack decision
 (`decisions.md`), a Postgres major needs a dump and restore, and a framework major needs a plan
@@ -45,7 +46,8 @@ run, a GitHub Actions bump changes `.github/workflows/`, which a person must mer
 **Dependabot alerts and security updates are on** in every repo (`scripts/repo-settings.sh`).
 The `security` job only runs on a push or PR, so an advisory published for a dependency nobody
 is changing would otherwise go unseen until the next one. Security updates open the fix PR
-straight away instead of waiting for the weekly run; they follow `dependabot.yml`'s
+straight away instead of waiting for the monthly run, one PR per ecosystem for a burst of
+advisories (`applies-to: security-updates` groups); they follow `dependabot.yml`'s
 `commit-message` and `ignore` settings and are merged by hand like any other Dependabot PR.
 
 ## In the session
