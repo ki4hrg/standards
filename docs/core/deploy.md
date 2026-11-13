@@ -191,9 +191,9 @@ deploy, check the revision by hand from the LAN (`/api/health` or the image labe
 
 The reusable `dockhand-deploy.yml` does all of this.
 
-**Where the webhook settings live.** The standard is both under Secrets, as the template passes
-them. Either Actions tab works, though, for a repo that already keeps one under Variables: the
-template passes both by name from Secrets; when a Secret isn't set, the value passed is empty and
+**Where the webhook settings live.** The standard is `DOCKHAND_WEBHOOK_URL` under Variables
+(it holds no secret) and `DOCKHAND_WEBHOOK_TOKEN` under Secrets; either tab is accepted for
+either value. The template passes both by name from Secrets; when a Secret isn't set, the value passed is empty and
 `dockhand-deploy.yml` falls back to the repo Variable of the same name (Variables reach the
 called workflow without being passed). So set each one under Secrets or Variables, not both: a
 Secret wins, and a stale one hides the Variable you just changed. `DOCKHAND_WEBHOOK_URL` may

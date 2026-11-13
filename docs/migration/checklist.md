@@ -90,7 +90,9 @@ dependencies.*
     moved into John's organization, that workflow pushes to the old owner's GHCR path, or to
     the new path while compose still pulls the old one, and fails or deploys nothing new. Before
     John merges, either disable it (`gh workflow disable <file> -R <owner>/<repo>`; the fix
-    then deploys with Phase 1's first `main` run) or put the fix in the Phase 1 PR instead. If
+    then deploys with Phase 1's first `main` run) or put the fix in the Phase 1 PR instead. When
+    the old pipeline can't deploy at all (it reads a secret that's gone, or compose pulls the
+    old owner's image), the bigger fixes ride in the Phase 1 PR, which John merges by hand. If
     the template caller replaces it under the **same file name**, re-enable it after Phase 1
     merges (`gh workflow enable`): a workflow stays disabled when its file is replaced, and
     `main` gets no runs at all.
