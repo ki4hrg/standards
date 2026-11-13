@@ -90,8 +90,9 @@ pass over the whole app is part of bringing a repo up to standard (migration Pha
 - **Creating stays on the page**, rather than navigating away and back: an inline form in the card
   or a modal, whichever suits the app. Be consistent within an app.
 - **Destructive actions confirm inline, in two steps:** the button is replaced in place by "Delete?"
-  with Confirm and Cancel. Never the browser's `confirm()`. A modal confirm is only for a delete
-  that cascades to other records, and it says what else goes.
+  with a button that repeats the verb (Delete, Remove) and Cancel, so the button says what it does.
+  Never the browser's `confirm()`. A modal confirm is only for a delete that cascades to other
+  records, and it says what else goes.
 - Forms keep what was typed when the server refuses.
 
 ## Tokens
