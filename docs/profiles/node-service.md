@@ -21,6 +21,7 @@ ESLint and Prettier, the MCP SDK), except:
 | Server | Fastify 5 |
 | SPA (optional) | React + Vite, Tailwind CSS 4 with the shared tokens in its global stylesheet (`../design.md`) |
 | Shared code | A workspace package of zod request and response schemas, used by server and SPA |
+| Format | Prettier with defaults and the Next.js profile's `.prettierignore`, with the migrations path changed and any build output `.gitignore` doesn't already list |
 | Tests | Vitest on real Postgres: Testcontainers, or a database URL that CI provides through `node-check`'s `postgres-image`. Database tests fail, never skip, when CI has no database. |
 
 ## Layout

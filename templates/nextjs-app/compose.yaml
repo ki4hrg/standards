@@ -27,7 +27,13 @@ services:
     healthcheck:
       # alpine has no curl. The entrypoint migrates before the server listens,
       # hence the start_period.
-      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -38,7 +44,7 @@ services:
     # Exposure depends on the host (docs/DEPLOYMENT.md): either publish a port for
     # the reverse proxy, or join the proxy's external network with no port.
     ports:
-      - '${APP_PORT:?set APP_PORT}:3000'
+      - "${APP_PORT:?set APP_PORT}:3000"
 
   db:
     image: postgres:18-alpine
@@ -52,7 +58,7 @@ services:
       # /var/lib/postgresql, not /var/lib/postgresql/data.
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U __APP__']
+      test: ["CMD-SHELL", "pg_isready -U __APP__"]
       interval: 5s
       timeout: 5s
       retries: 10

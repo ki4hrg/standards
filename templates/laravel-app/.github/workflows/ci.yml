@@ -12,7 +12,7 @@ on:
   push:
     branches: [main]
     # A docs-only direct push doesn't re-run checks. PRs always run (merge-on-green).
-    paths-ignore: ['docs/**', '**/*.md']
+    paths-ignore: ["docs/**", "**/*.md"]
   pull_request:
     # `labeled`: adding `automerge` to a PR whose checks already passed merges it.
     types: [opened, synchronize, reopened, labeled, ready_for_review]
@@ -24,7 +24,7 @@ on:
       # and security skip if it's still main's head. Leave it empty by hand.
       tested:
         type: string
-        default: ''
+        default: ""
 
 # Superseded runs are cancelled on a PR, never on main. On main a running build always
 # finishes; a queued one can still be replaced by a newer commit's run (GitHub keeps one
@@ -51,9 +51,9 @@ jobs:
       # runner unless MAIN_RUNNER names it, an override for stretching Actions minutes
       # (docs/core/workflow.md).
       runs-on: ${{ github.event.repository.private && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.MAIN_RUNNER) || 'ubuntu-24.04' }}
-      php-version: '8.4'             # match config.platform.php in composer.json
-      database-image: mysql:8.4      # match production's engine and major
-      scripts: check                 # composer scripts: Pint --test, Larastan, Pest
+      php-version: "8.4" # match config.platform.php in composer.json
+      database-image: mysql:8.4 # match production's engine and major
+      scripts: check # composer scripts: Pint --test, Larastan, Pest
 
   security:
     # Skipped on `labeled`: adding a label never re-tests a commit (merge-on-green
@@ -73,12 +73,12 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      actions: write   # dispatches this workflow on main after merging
-      checks: read     # waits for app checks (GitGuardian); private repos need it
+      actions: write # dispatches this workflow on main after merging
+      checks: read # waits for app checks (GitGuardian); private repos need it
     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
     with:
       # paths-ignore above doesn't apply to the dispatch after a merge; this does.
-      skip-dispatch-paths: 'docs/* *.md'
+      skip-dispatch-paths: "docs/* *.md"
       # On `labeled`, merge only if these passed on this commit in another run.
       # Names must be jobs that call a workflow: a repo's own job (e2e) goes in
       # a local `.github/workflows/<name>.yml` called with `uses: ./...`
@@ -103,5 +103,5 @@ jobs:
     needs: [check, security]
     if: ${{ !cancelled() && !failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     permissions:
-      contents: write   # pushes the deploy branch
+      contents: write # pushes the deploy branch
     uses: ki4hrg/standards/.github/workflows/runcloud-deploy.yml@v1

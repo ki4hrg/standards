@@ -17,7 +17,7 @@ skill does this). The core docs (`../core/`) apply in full.
 | Styling | Tailwind CSS 4 with the shared `@theme` tokens (`../design.md`) |
 | Tests | Vitest against real Postgres (`@testcontainers/postgresql`). Needs Docker; on a dev machine without it, CI runs the database tests (the `ship` skill). In CI, a database test with no database **fails**; it never skips. An app John has allowed to stay on SQLite tests against a real SQLite file instead (`decisions.md`). |
 | Lint | ESLint with `eslint-config-next` and `eslint-config-prettier` |
-| Format | Prettier, default settings (no config file beyond `.prettierignore`) |
+| Format | Prettier, default settings (no config file beyond `.prettierignore`: the lockfile, the migrations directory, `tsconfig*.json`, `.claude/settings.json` and `*.md`, as in the template) |
 | Components | The shared kit in `components/ui/` (`../design.md`), styled only through the tokens. Not built yet |
 | MCP | `@modelcontextprotocol/sdk` (`../mcp.md`) |
 

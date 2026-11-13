@@ -319,6 +319,14 @@ new build.
 - [ ] Package manager pnpm. (Node 24 is done in every sweep, alongside Phase 2.)
 - [ ] Prettier with defaults, in its own formatting-only PR (nothing else in the diff), with the
   commit added to `.git-blame-ignore-revs`.
+  - `.prettierignore` from the profile (`templates/nextjs-app/.prettierignore`). Leave
+    `.github/workflows/` out of it: the templates' workflows are already formatted with
+    defaults, so formatting a repo's own copies brings them in line. That part of the diff
+    touches workflows, so the PR is a hand merge.
+  - Prettier formats the markup inside `html` tagged templates (server-rendered pages in a
+    Fastify service): it rewraps attributes and lines. A test that matches the page's source
+    layout with a regex breaks. Match on what the page says (parse it, or test each attribute
+    on its own), and fix such tests in the same PR.
 - [ ] Once the shared component kit exists, it replaces the app's own Button/Card/etc., screen by
   screen.
 - [ ] Prisma → Drizzle with real migrations. The biggest item: generate a baseline migration from
