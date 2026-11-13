@@ -46,10 +46,10 @@ jobs:
     if: github.event.action != 'labeled' && !(github.event_name == 'workflow_dispatch' && inputs.tested == github.sha)
     uses: ki4hrg/standards/.github/workflows/php-check.yml@v1
     with:
-      # PR jobs run on the self-hosted runner when the repo variable PR_RUNNER names
-      # its label, for private repos and same-repo branches only; everything else,
-      # and every run on main, uses GitHub's runner (docs/core/workflow.md).
-      runs-on: ${{ github.event_name == 'pull_request' && github.event.repository.private && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || 'ubuntu-24.04' }}
+      # Private repos only: PR jobs (same-repo branches) run on the self-hosted runner
+      # when the repo variable PR_RUNNER names its label, and main's runs when
+      # MAIN_RUNNER does. Unset, or a public repo: GitHub's runner (docs/core/workflow.md).
+      runs-on: ${{ github.event.repository.private && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.MAIN_RUNNER) || 'ubuntu-24.04' }}
       php-version: '8.4'             # match config.platform.php in composer.json
       database-image: mysql:8.4      # match production's engine and major
       scripts: check                 # composer scripts: Pint --test, Larastan, Pest
@@ -61,8 +61,8 @@ jobs:
     if: github.event.action != 'labeled' && !(github.event_name == 'workflow_dispatch' && inputs.tested == github.sha)
     uses: ki4hrg/standards/.github/workflows/security.yml@v1
     with:
-      # Self-hosted for PRs when PR_RUNNER is set, as in check.
-      runs-on: ${{ github.event_name == 'pull_request' && github.event.repository.private && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || 'ubuntu-24.04' }}
+      # Self-hosted when PR_RUNNER or MAIN_RUNNER is set, as in check.
+      runs-on: ${{ github.event.repository.private && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.MAIN_RUNNER) || 'ubuntu-24.04' }}
       package-managers: composer npm
 
   automerge:

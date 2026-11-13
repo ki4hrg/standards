@@ -23,9 +23,9 @@ Code plugin (this repo's root is the plugin). See README.md.
   workflow-level `permissions:` too: asking for more fails the caller's whole run at startup,
   PR checks included. Every permission a reusable workflow declares must appear in the example
   caller in its header comment and in the templates.
-- Workflows: least-privilege `permissions`, runners pinned to `ubuntu-24.04` (a caller's PR jobs may
-  use the self-hosted runner, `docs/core/workflow.md`), a comment explaining
-  every non-obvious step.
+- Workflows: least-privilege `permissions`, runners pinned to `ubuntu-24.04` (a private
+  caller's check, audit and image jobs may use the self-hosted runner, `docs/core/workflow.md`),
+  a comment explaining every non-obvious step.
 - Skills reference the docs by path relative to the plugin root. If you move a doc, update the
   skills that name it.
 - Write rules with their reason.

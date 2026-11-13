@@ -149,19 +149,29 @@ There is no human review before merging, so review happens in the session:
   `gh issue create --label agent-found --repo <owner/repo> --title "…" --body-file <file>` by
   itself.
 
-## Self-hosted PR runner
+## Self-hosted runner
 
-A private repo's PR jobs (check, audit, the build-only PR image) can run on John's self-hosted
-runner, which costs no Actions minutes. The runner serves John's GitHub organization: app repos
-move into it as they're swept (`docs/migration/checklist.md`). The templates route PR jobs there
-when the repo variable `PR_RUNNER` holds the runner's label, and only for a private repo and a
-branch in the same repo. Unset, every job uses GitHub's runners. It's set per repo because an
-organization's variables don't reach private repos on GitHub's free plan.
+A private repo's check, audit and image jobs can run on John's self-hosted runner, which costs no
+Actions minutes. The runner serves John's GitHub organization: app repos move into it as they're
+swept (`docs/migration/checklist.md`). Two repo variables route jobs there, each holding the
+runner's label, and only for a private repo:
 
-- **Only jobs that hold nothing.** PR jobs get a read-only token and no secrets. `merge-on-green`,
-  `close-linked-issues`, the image push on `main` and the deploy stay on GitHub's runners: PR code
-  includes dependency updates nobody has read, and it must not share a machine with a token that
-  can merge, push an image or deploy.
+- `PR_RUNNER`: PR jobs from a branch in the same repo (check, audit, the build-only PR image).
+- `MAIN_RUNNER`: runs on `main` (check, audit, and the image build and push).
+
+Unset, those jobs use GitHub's runners. They're set per repo because an organization's
+variables don't reach private repos on GitHub's free plan, and they're separate so `main` can go
+back to GitHub's runners without touching PRs, or the other way round.
+
+- **Merging and deploying stay on GitHub's runners.** `merge-on-green`, `close-linked-issues` and
+  the deploy hold a token that can merge or the deploy webhook's secret, take about a minute
+  each, and the runner has no path to the lab anyway.
+- **The image push is the one write token on the runner.** On `main`, the image job holds
+  `packages: write` for the length of the job. PR jobs on the same machine run code nobody has
+  read (dependency updates), so a PR job that escaped its slot could tamper with a later `main`
+  build and push an image that deploys. John accepted that for the minutes it saves
+  (2026-11-12); each job's fresh registration, own user and wipe make it unlikely. Delete
+  `MAIN_RUNNER` to take it back.
 - **Nothing carries over between jobs.** Each job gets a just-in-time runner registration and a
   fresh rootless Docker daemon, with no build cache. PR builds run cold, which costs time, not
   minutes.
@@ -176,11 +186,15 @@ organization's variables don't reach private repos on GitHub's free plan.
 - **Its token can only register runners.** An organization-owned token with "Self-hosted runners"
   permission and no repository access, readable only by the service that starts runners. A
   repo-level runner would need a token that can also change a repo's settings or visibility.
-- **Enrolling a repo** means moving it into the organization and setting its `PR_RUNNER`
-  variable. To send a repo back to GitHub's runners, delete the variable.
-- **If the runner is down (or its token expired),** PR jobs wait in the queue and never fall back
-  to GitHub's runners; GitHub fails them after 24 hours. Delete each enrolled repo's `PR_RUNNER`
-  variable and re-run the waiting jobs. `main` builds and deploys don't depend on the runner.
+- **amd64 only.** A repo that builds an arm64 image sets its image job's `runs-on` to
+  `ubuntu-24.04-arm` alone.
+- **Enrolling a repo** means moving it into the organization and setting `PR_RUNNER` and
+  `MAIN_RUNNER`. To send a repo back to GitHub's runners, delete them.
+- **If the runner is down (or its token expired),** jobs wait in the queue and never fall back
+  to GitHub's runners; GitHub fails them after 24 hours. On `main` that means a merge doesn't
+  deploy until someone notices (the runner's heartbeat alert goes to John). Delete each enrolled
+  repo's `MAIN_RUNNER` (and `PR_RUNNER`) and re-run the waiting jobs. A job that finished every
+  step but still shows running has lost its completion report: cancel it and re-run.
 
 ## Dev machine
 

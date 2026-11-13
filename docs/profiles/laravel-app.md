@@ -23,8 +23,8 @@ profiles: question it when it does not fit.
 - The test database matches production's engine and major (`database-image`: `mysql:8.4`,
   `mariadb:11.4`, …): MySQL and MariaDB differ in JSON, collations and DDL. SQLite `:memory:`
   may stay in `phpunit.xml` for quick local runs; the job's environment overrides it in CI.
-- Runner images pinned (`ubuntu-24.04`), bumped deliberately on a quiet week. A private repo's PR
-  jobs may use the self-hosted runner (`docs/core/workflow.md`).
+- Runner images pinned (`ubuntu-24.04`), bumped deliberately on a quiet week. A private repo's check
+  and audit jobs may use the self-hosted runner (`docs/core/workflow.md`).
 
 ## Rules
 
