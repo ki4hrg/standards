@@ -79,7 +79,10 @@ advisories (`applies-to: security-updates` groups); they follow `dependabot.yml`
     the body and verifies the signature before parsing it.
 - **Sign-in with OIDC** (`openid-client`): `OIDC_ONLY` turns password sign-in off while the
   provider answers discovery (checked per request, not once at boot); while it doesn't, the
-  password form comes back, so a provider outage never locks everyone out;
+  password form comes back, so a provider outage never locks everyone out. Cache the answer:
+  a success for 60 seconds, a failure for 15, and give each recheck a 3-second timeout. The
+  success time bounds how long passwords stay off after the provider goes down, the failure time
+  how long they stay on after it comes back, and the timeout how long a sign-in page waits;
   `OIDC_TRUST_EMAIL` accepts the provider's email without its
   `email_verified`. A sign-in **never re-links** an existing account to a new subject. It may
   **create** an account only when all of these hold:

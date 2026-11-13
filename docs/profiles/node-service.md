@@ -58,11 +58,14 @@ In place of the Next-specific rules:
   `instrumentation.ts`.)
 - **Every route authenticates itself.** A global `onRequest` hook may resolve who is calling, but
   that isn't a check. Either each route plugin has a `preHandler` guard, or each handler calls one
-  (`requireActor`, `requireAdmin`) that answers 401 or 403 JSON. `/mcp` takes a bearer token;
+  (`requireActor`, `requireAdmin`) that answers 401 or 403 JSON. A server-rendered page a
+  browser navigates to answers a signed-out request with a 303 to `/login` instead; anything
+  called with `fetch` stays JSON (the Next.js profile's rule). `/mcp` takes a bearer token;
   WebDAV routes take per-device tokens. The route-guard table in `docs/ARCHITECTURE.md` covers
   every prefix.
 - **A test proves no route was missed.** An `onRoute` hook records every registered route; the
-  test calls each one signed out and expects 401, except a public list with a reason per entry.
+  test calls each one signed out and expects 401 (a server-rendered page: a 303 to `/login`,
+  decided per route, never either for any route), except a public list with a reason per entry.
   An entry for a route that no longer exists fails too. Required with per-handler guards, where
   one forgotten call is easy; worth having either way.
 - **CSRF:** with cookie sessions, every non-GET `/api` request checks `Origin`.
