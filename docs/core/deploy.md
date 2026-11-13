@@ -133,6 +133,14 @@ guards in `docs/DEPLOYMENT.md`.
 returns `{ ok: true, revision }`. Its job is to tell whether the process is serving and which commit it
 runs, not to test dependencies; the database has its own healthcheck.
 
+A database check there wouldn't catch an app that has lost its database connection while
+Postgres stays healthy either: Docker outside Swarm marks a container unhealthy and does nothing
+else, and the deploy check only runs at deploy. The drivers recover on their own (postgres-js and
+a psycopg pool open a new connection on the next query, Laravel connects per request), so a lost
+connection costs the queries in flight, not the app. One that keeps failing shows up in the app's
+error log and to the person using it. Alerting on an app that stays down between deploys is the
+homelab's uptime monitoring, not the app's.
+
 ## Migrations
 
 Applied by the container entrypoint before the server starts. Never `db push`. Each profile says
@@ -226,6 +234,19 @@ Revert the commit (a `revert:` PR) so the image and `compose.yaml` go back toget
 `APP_IMAGE` at an older `:sha-` tag under the current compose fails when the compose has moved on:
 a healthcheck changed to `/api/health` fails against an image from before that route existed.
 If you must pin an image by hand, use the compose from the same commit.
+
+Reverting never reverts the schema. Migrations are append-only and there are no down migrations,
+so the older image starts against the newer schema. Check how its migrator treats a migration it
+doesn't have: Drizzle and Laravel run only what's missing and skip it, Alembic refuses to start
+on a revision it doesn't know. Then it depends on the migration:
+
+- **Additive** (a new table, a nullable column or one with a default): the old code ignores it,
+  and the revert works.
+- **Anything the old code can't run against** (a dropped or renamed column, a `NOT NULL` column
+  the old code doesn't fill, a changed type): the revert breaks too. Fix forward with a new
+  migration, or restore the `pg_dump` taken before the deploy (above), which loses every write
+  since. A repo's `docs/DEPLOYMENT.md` says which applies to its last migration when it isn't
+  obvious.
 
 ## Checking what's running
 
