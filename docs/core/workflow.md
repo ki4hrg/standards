@@ -153,25 +153,27 @@ There is no human review before merging, so review happens in the session:
 
 A private repo's check, audit and image jobs can run on John's self-hosted runner, which costs no
 Actions minutes. The runner serves John's GitHub organization: app repos move into it as they're
-swept (`docs/migration/checklist.md`). Two repo variables route jobs there, each holding the
+swept (`docs/migration/checklist.md`). Repo variables route jobs there, each holding the
 runner's label, and only for a private repo:
 
 - `PR_RUNNER`: PR jobs from a branch in the same repo (check, audit, the build-only PR image).
-- `MAIN_RUNNER`: runs on `main` (check, audit, and the image build and push).
+  Set on every enrolled repo.
+- `MAIN_RUNNER`: check and audit on `main`.
+- `IMAGE_RUNNER`: the image build and push on `main`.
 
-Unset, those jobs use GitHub's runners. They're set per repo because an organization's
-variables don't reach private repos on GitHub's free plan, and they're separate so `main` can go
-back to GitHub's runners without touching PRs, or the other way round.
+Unset, a job uses GitHub's runners. `main` stays there by default; `MAIN_RUNNER` and
+`IMAGE_RUNNER` are overrides John sets when he needs to stretch Actions minutes, and deletes
+again for a normal pace. The variables are per repo because an organization's variables don't
+reach private repos on GitHub's free plan, and separate so each can go back on its own.
 
 - **Merging and deploying stay on GitHub's runners.** `merge-on-green`, `close-linked-issues` and
   the deploy hold a token that can merge or the deploy webhook's secret, take about a minute
   each, and the runner has no path to the lab anyway.
-- **The image push is the one write token on the runner.** On `main`, the image job holds
+- **`IMAGE_RUNNER` puts a write token on the runner.** On `main`, the image job holds
   `packages: write` for the length of the job. PR jobs on the same machine run code nobody has
   read (dependency updates), so a PR job that escaped its slot could tamper with a later `main`
-  build and push an image that deploys. John accepted that for the minutes it saves
-  (2026-11-12); each job's fresh registration, own user and wipe make it unlikely. Delete
-  `MAIN_RUNNER` to take it back.
+  build and push an image that deploys. Each job's fresh registration, own user and wipe make
+  that unlikely, but it's why the push has its own variable and GitHub's runner is the default.
 - **Nothing carries over between jobs.** Each job gets a just-in-time runner registration and a
   fresh rootless Docker daemon, with no build cache. PR builds run cold, which costs time, not
   minutes.
@@ -187,13 +189,13 @@ back to GitHub's runners without touching PRs, or the other way round.
   permission and no repository access, readable only by the service that starts runners. A
   repo-level runner would need a token that can also change a repo's settings or visibility.
 - **amd64 only.** A repo that builds an arm64 image sets its image job's `runs-on` to
-  `ubuntu-24.04-arm` alone.
-- **Enrolling a repo** means moving it into the organization and setting `PR_RUNNER` and
-  `MAIN_RUNNER`. To send a repo back to GitHub's runners, delete them.
+  `ubuntu-24.04-arm` alone and ignores `IMAGE_RUNNER`.
+- **Enrolling a repo** means moving it into the organization and setting `PR_RUNNER`. To send a
+  repo back to GitHub's runners, delete its variables.
 - **If the runner is down (or its token expired),** jobs wait in the queue and never fall back
   to GitHub's runners; GitHub fails them after 24 hours. On `main` that means a merge doesn't
   deploy until someone notices (the runner's heartbeat alert goes to John). Delete each enrolled
-  repo's `MAIN_RUNNER` (and `PR_RUNNER`) and re-run the waiting jobs. A job that finished every
+  repo's runner variables and re-run the waiting jobs. A job that finished every
   step but still shows running has lost its completion report: cancel it and re-run.
 
 ## Dev machine

@@ -46,8 +46,9 @@ jobs:
     uses: ki4hrg/standards/.github/workflows/python-check.yml@v1
     with:
       # Private repos only: PR jobs (same-repo branches) run on the self-hosted runner
-      # when the repo variable PR_RUNNER names its label, and main's runs when
-      # MAIN_RUNNER does. Unset, or a public repo: GitHub's runner (docs/core/workflow.md).
+      # when the repo variable PR_RUNNER names its label. main's runs stay on GitHub's
+      # runner unless MAIN_RUNNER names it, an override for stretching Actions minutes
+      # (docs/core/workflow.md).
       runs-on: ${{ github.event.repository.private && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.MAIN_RUNNER) || 'ubuntu-24.04' }}
 
   security:
@@ -71,8 +72,9 @@ jobs:
       packages: write
     uses: ki4hrg/standards/.github/workflows/image.yml@v1
     with:
-      # Self-hosted when PR_RUNNER or MAIN_RUNNER is set, as in check.
-      runs-on: ${{ github.event.repository.private && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.MAIN_RUNNER) || 'ubuntu-24.04' }}
+      # As in check, but main's build and push use IMAGE_RUNNER: it holds a push token, so
+      # it moves to the self-hosted runner only by its own choice (docs/core/workflow.md).
+      runs-on: ${{ github.event.repository.private && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.PR_RUNNER || github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.IMAGE_RUNNER) || 'ubuntu-24.04' }}
       push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
       platforms: linux/amd64
 

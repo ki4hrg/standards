@@ -126,8 +126,9 @@ dependencies.*
   - check the Actions secrets, variables and environments arrived (they move with the repo), and
     give the deploy host's registry login access to the new package;
   - after the first deploy, check `/api/health` reports the new revision;
-  - then set the repo variables `PR_RUNNER` and `MAIN_RUNNER` to the runner's label
-    (`workflow.md`). Until it moves and has them, its jobs use GitHub's runners.
+  - then set the repo variable `PR_RUNNER` to the runner's label (`workflow.md`). Until it
+    moves and has it, its PR jobs use GitHub's runners. `MAIN_RUNNER` and `IMAGE_RUNNER` stay
+    unset unless John asks: they're his override for stretching minutes.
 - [ ] The image name `image.yml` pushes (default `ghcr.io/<owner>/<repo>`, lowercased) is the one
   compose pulls. If compose uses a different name, pass `image:` explicitly in the caller.
 - [ ] The deploy step uses `dockhand-deploy.yml` (with the JSON success check), or deploy mode B
