@@ -40,8 +40,9 @@ It does **not** hold:
 | `docs/plans/` | Plans for work that needs more than one PR or session, linked from its issue. |
 
 Topic docs (`docs/data-model.md`, `docs/import.md`) may sit beside these when SPEC or
-ARCHITECTURE links to them. An existing spec under another name keeps it, as long as CLAUDE.md's
-layout map points to it: renaming only breaks links.
+ARCHITECTURE links to them. An existing spec or decision log under another name
+(`docs/decisions.md`) keeps it, as long as CLAUDE.md's layout map points to it: renaming only
+breaks links.
 
 Create a file when there is something to put in it; an empty skeleton is noise.
 

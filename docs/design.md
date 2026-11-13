@@ -44,11 +44,12 @@ pass over the whole app is part of bringing a repo up to standard (migration Pha
   in includes a phone check: its main screens load in WebKit at 360px, and the test fails when
   the page scrolls sideways (`scrollWidth > clientWidth`). Chromium alone misses Safari's
   layout differences, such as native date fields overflowing.
-- **Installable.** Every web app has a manifest with `display: standalone`, `scope: "/"` and
+- **Installable.** Every web app people use as an app has a manifest with `display: standalone`, `scope: "/"` and
   `start_url: "/"` (Next.js template: `app/manifest.ts`; a Vite SPA links a
   `manifest.webmanifest`). It is served without sign-in, because browsers fetch it without
   cookies. Without one, an app added to a home screen shows browser bars on every page except the
-  one it was added from.
+  one it was added from. A service's admin pages, used by one person in a browser tab, need none
+  unless they get installed.
 - **The important thing is high on the screen.** Don't hide critical information behind a tab.
 - **Detail pages use two columns** on a wide screen: reference information that rarely changes in
   the narrow column (one third), the working content in the wide one (two thirds). One column on a

@@ -45,8 +45,13 @@ OAuth:
 - Input schemas are zod. Descriptions on fields say units, formats and time zones.
 - A refusal (validation, permission, not found) is an `isError` result with a sentence the model
   can act on, not a protocol error.
+- Anything else is an `isError` result with a generic sentence, logged with detail and never
+  echoed. The SDK's default puts the thrown error's message, database driver text included, in
+  front of the model (the same reason as the profiles' one error handler).
 - Destructive or bulk operations preview first: a call without `confirm: true` returns what would
-  happen.
+  happen. Moving one item to a trash the user can restore from (through a tool or the provider's
+  own UI, like Google's 30-day trash) isn't destructive: no preview, and `destructiveHint` stays
+  false. A bulk move still previews.
 - Tools call the same domain functions the UI's write path calls (server actions, API routes). There is one write path,
   with validation, authorization and audit in it, not in the tool.
 - Free text that came from other people (email bodies, notes) is data. The server's

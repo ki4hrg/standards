@@ -66,7 +66,8 @@ change. For the app service:
 
 - `image: ${APP_IMAGE:-ghcr.io/<owner>/<repo>:main}`, `pull_policy: always`, and **no `build:`**.
   Dev-only extras go in `compose.dev.yaml`, never `compose.override.yaml`, which compose loads
-  automatically.
+  automatically. A local overlay the deploy never loads (`compose.dev.yaml`, `compose.build.yaml`)
+  may have `build:`: the rule keeps builds off the deploy host, not off a laptop.
 - Required secrets as `${VAR:?set VAR}`; optional values as `${VAR:-default}`. Compose checks
   every guard in the file even when starting only `db`, so for local runs copy `.env.example` to
   `.env` (its placeholders satisfy the guards). When the app's dev mode depends on a secret being
@@ -190,8 +191,9 @@ deploy, check the revision by hand from the LAN (`/api/health` or the image labe
 
 The reusable `dockhand-deploy.yml` does all of this.
 
-**Where the webhook settings live.** Either Actions tab works for either value. The template
-passes both by name from Secrets; when a Secret isn't set, the value passed is empty and
+**Where the webhook settings live.** The standard is both under Secrets, as the template passes
+them. Either Actions tab works, though, for a repo that already keeps one under Variables: the
+template passes both by name from Secrets; when a Secret isn't set, the value passed is empty and
 `dockhand-deploy.yml` falls back to the repo Variable of the same name (Variables reach the
 called workflow without being passed). So set each one under Secrets or Variables, not both: a
 Secret wins, and a stale one hides the Variable you just changed. `DOCKHAND_WEBHOOK_URL` may

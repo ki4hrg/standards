@@ -38,7 +38,7 @@ patch updates grouped into one PR per ecosystem, security updates grouped the sa
 database images (Node, Postgres), `@types/node`, TypeScript, and the frameworks (Next.js, React, Laravel,
 Livewire, Tailwind, Vite and their plugins) are ignored: those versions are a stack decision
 (`decisions.md`), a Postgres major needs a dump and restore, and a framework major needs a plan
-for its runtime changes (migration Phase 6). Add a repo's own framework to its ignore list, and the majors of any stack item it keeps until its Phase 6 move (Prisma, an auth library): that major is replaced, not upgraded. (`merge-on-green` can't merge them:
+for its runtime changes (migration Phase 6). Add a repo's own framework to its ignore list (a Fastify service: `fastify` and `@fastify/*`), and the majors of any stack item it keeps until its Phase 6 move (Prisma, an auth library): that major is replaced, not upgraded. (`merge-on-green` can't merge them:
 workflows triggered by Dependabot get a read-only token. Even when a person's label starts the
 run, a GitHub Actions bump changes `.github/workflows/`, which a person must merge; see
 `workflow.md`.)
@@ -77,7 +77,9 @@ advisories (`applies-to: security-updates` groups); they follow `dependabot.yml`
   - A signed webhook can't authenticate before reading, because the signature covers the body.
     It requires a `Content-Length` (411 without one), refuses one over its cap (413), then reads
     the body and verifies the signature before parsing it.
-- **Sign-in with OIDC** (`openid-client`): `OIDC_ONLY` turns password sign-in off;
+- **Sign-in with OIDC** (`openid-client`): `OIDC_ONLY` turns password sign-in off while the
+  provider answers discovery (checked per request, not once at boot); while it doesn't, the
+  password form comes back, so a provider outage never locks everyone out;
   `OIDC_TRUST_EMAIL` accepts the provider's email without its
   `email_verified`. A sign-in **never re-links** an existing account to a new subject. It may
   **create** an account only when all of these hold:

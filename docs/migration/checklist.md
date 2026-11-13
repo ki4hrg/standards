@@ -81,9 +81,10 @@ dependencies.*
     Phase 1 PR**, listed in its description. Keep the `prisma` CLI and `@prisma/client` on the
     same version: `npm audit fix` can bump one without the other, and `prisma generate` then
     fails;
-  - anything bigger (a framework major, a stack item) is its own PR **before** Phase 1, verified
-    locally (typecheck, lint, build, audit, and a run of the app), and merged by John by hand.
-    That PR gets no CI run (there's no PR CI yet). Checks needing a database run locally if the
+  - anything bigger (a major of any package, `@fastify/static` or Vitest as much as a framework,
+    or a stack item) is its own PR **before** Phase 1, verified locally (typecheck, lint, build,
+    audit, and a run of the app), and merged by John by hand. With no PR CI yet, that PR gets no
+    CI run; if the repo already has PR CI, it goes through that too. Checks needing a database run locally if the
     machine has Docker; otherwise on the deploy John watches.
   - **a hand merge still runs the repo's old push-to-main workflow.** If the repo has already
     moved into John's organization, that workflow pushes to the old owner's GHCR path, or to
@@ -216,7 +217,8 @@ running.*
 - [ ] A route-guard table in `docs/ARCHITECTURE.md` (columns in `security.md`).
 - [ ] Webhooks verify a signature or secret. Secrets never appear in logs, errors or MCP output.
 - [ ] Refusals reach the person. Domain functions throw a typed, person-readable error (`AppError`
-  or its subclasses) for everything a person can fix, not a plain `Error`; existing apps usually
+  or its subclasses) for everything a person can fix, not a plain `Error`; an equivalent class
+  under another name (`Refusal`) is renamed to `AppError`, so every repo greps the same; existing apps usually
   have many plain ones to convert. **One** place turns those into what the person sees, and
   anything else into a logged, generic failure. The profile says where:
   - Next.js: server actions return `AppError` messages through `act()`, never throw them (a
@@ -260,6 +262,11 @@ running.*
 - [ ] Any exception the repo relies on is stated in CLAUDE.md, for example direct pushes to
   `main` for an infra repo.
 
+Phase 4 is docs-only but still goes through a PR, because its triage needs review. It costs
+little: on a repo using the self-hosted runner the PR's checks are free, and a docs-only merge
+doesn't rebuild or redeploy (`skip-dispatch-paths`), so only the merge job (about a minute) runs
+on GitHub's runners.
+
 ## Phase 5: Design and copy
 
 *Done when the app follows the shared token names and dark mode, and its copy passes the
@@ -280,7 +287,8 @@ converting every view twice is waste.
 - [ ] Destructive actions confirm inline. One primary button per screen. Phone width works.
 - [ ] Names a person typed wrap and are never truncated: remove `truncate`, `line-clamp` and
   `text-ellipsis` on them, and add `wrap-anywhere` (`design.md`, Layout).
-- [ ] A web app manifest (`standalone`, scope and start URL `/`), served without sign-in.
+- [ ] A web app manifest (`standalone`, scope and start URL `/`), served without sign-in. Not for
+  a service's admin-only pages unless John installs them (`design.md`).
 - [ ] Everything a user can create can also be removed (delete, archive, or a soft delete).
 - [ ] If the repo has a Playwright suite, it includes the WebKit phone check (`design.md`).
 - [ ] **Verify:** screenshots of the main screens in light, dark, and at 360px.
@@ -350,7 +358,9 @@ new build.
 - **Node service:** phases as written, using the Next.js template's caller without the
   Next-specific scripts, `postgres-image` on `node-check` if its tests read a database URL, and a
   `build` script first in `scripts` when a workspace package must be built before typecheck.
-  Phase 3 per its profile (one error handler, per-route auth and body limits).
+  Phase 3 per its profile (one error handler, per-route auth and body limits). Phase 5 only if
+  it has pages: with no Tailwind, the token names are CSS custom properties in its stylesheet
+  and the contrast check is a test.
 - **Infra/ops repo:** phase 0 and phase 4 only. Direct pushes to `main` are allowed.
 
 ## Handoff block
