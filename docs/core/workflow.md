@@ -174,6 +174,14 @@ reach private repos on GitHub's free plan, and separate so each can go back on i
   read (dependency updates), so a PR job that escaped its slot could tamper with a later `main`
   build and push an image that deploys. Each job's fresh registration, own user and wipe make
   that unlikely, but it's why the push has its own variable and GitHub's runner is the default.
+- **No root.** A job can't `sudo`, so `playwright install --with-deps` fails. A repo's e2e job
+  runs in Playwright's image instead (`container: mcr.microsoft.com/playwright:v<version>-noble`,
+  the version matching `@playwright/test` exactly), which has the browsers and their libraries;
+  it works the same on GitHub's runners. In a job container, a `services:` database is reached
+  by its service name (`postgres:5432`), not a port on `127.0.0.1`.
+- **A repo's own CI database has no password.** A literal password in a workflow file (even
+  `postgres`) raises a GitGuardian incident. Give the service `POSTGRES_HOST_AUTH_METHOD: trust`
+  and a URL without one; it's a throwaway database only that job reaches.
 - **Nothing carries over between jobs.** Each job gets a just-in-time runner registration and a
   fresh rootless Docker daemon, with no build cache. PR builds run cold, which costs time, not
   minutes.

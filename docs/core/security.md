@@ -101,7 +101,11 @@ advisories (`applies-to: security-updates` groups); they follow `dependabot.yml`
 - **Encrypt stored third-party tokens** with a key that is separate from the session secret, so
   rotating sessions does not destroy them.
 - **Client IP** comes from `X-Forwarded-For` counted from the right by the number of trusted proxy
-  hops, never the leftmost entry.
+  hops, never the leftmost entry. The trusted-proxy setting (`TRUST_PROXY`) names the proxy's
+  addresses (`deploy.md`), and its validator refuses at boot what can't be one proxy: `true`,
+  `/0`, an IPv4 range wider than /8 or an IPv6 range wider than /32, IPv4-mapped forms
+  (`::ffff:…`, which can hide an IPv4 range in IPv6 notation) and zone IDs (`%eth0`). A setting
+  that trusts everyone lets any client choose its own IP for rate limits and audit rows.
 - Webhook endpoints verify a signature (HMAC) or a secret, and reject replays where the sender
   supports it.
 
