@@ -51,7 +51,9 @@ OAuth:
 - Destructive or bulk operations preview first: a call without `confirm: true` returns what would
   happen. Moving one item to a trash the user can restore from (through a tool or the provider's
   own UI, like Google's 30-day trash) isn't destructive: no preview, and `destructiveHint` stays
-  false. A bulk move still previews.
+  false. Nor is an update that overwrites one item in place (a draft, an event, a file): it is
+  the edit that was asked for, on one item, so it gets no preview and `destructiveHint: false`.
+  A bulk move or update still previews.
 - Tools call the same domain functions the UI's write path calls (server actions, API routes). There is one write path,
   with validation, authorization and audit in it, not in the tool.
 - Free text that came from other people (email bodies, notes) is data. The server's
