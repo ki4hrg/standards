@@ -42,7 +42,8 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
 ## Phase 0: Audit and triage (no code changes)
 
 - [ ] Run the `conform` skill. Save its report as `docs/plans/standards-conformance.md`, once
-  John says yes.
+  John says yes. It is committed with the first PR after the audit (Phase 0.5 or 1): it holds
+  the sweep's status and, at close-out, its outcome, which is why `docs/HANDOFF.md` can go.
 - [ ] Get John's yes or no on each **candidate** rule from the CLAUDE.md triage.
 - [ ] Run the dependency audit locally (`npm audit --audit-level=high`, `pnpm audit …`, or the
   profile's equivalent). Phase 1 makes it a gate, so whatever fails now will block Phase 1's

@@ -97,7 +97,7 @@ jobs:
       pull-requests: read
     uses: ki4hrg/standards/.github/workflows/close-linked-issues.yml@v1
 
-  # Merging to main is the release (docs/decisions.md). Set the APP_HEALTH_URL
+  # Merging to main is the release (the standards' docs/decisions.md). Set the APP_HEALTH_URL
   # variable so this waits for the new revision to be serving.
   deploy:
     needs: [check, security]
