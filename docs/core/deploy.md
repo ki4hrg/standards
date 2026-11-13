@@ -162,7 +162,10 @@ install) skips step 2 and runs every migration, the baseline included.
 **A. Dockhand git stack (default).** Dockhand tracks the repo's `compose.yaml`. In the stack's
 settings, turn on **Force redeploy** and **Re-pull images**. Without them a webhook redeploys only
 when the git commit changed, and doesn't pull a newer image for the same tag, so two merges
-minutes apart leave the second image unpulled. (The webhook itself takes no force option.) The
+minutes apart leave the second image unpulled. (The webhook itself takes no force option.) With
+Force redeploy on, the webhook never answers "No changes detected"; if it does, that stack has
+the setting off. Check the stack the webhook URL names (`/api/git/stacks/<id>/webhook`), which
+may not be the one you looked at. The
 `deploy` job calls the stack's webhook after the image is pushed:
 
 - a plain `GET`; the secret goes in the `?secret=` query parameter, not a header;
