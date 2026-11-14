@@ -294,7 +294,11 @@ converting every view twice is waste.
   a service's admin-only pages unless John installs them (`design.md`).
 - [ ] Everything a user can create can also be removed (delete, archive, or a soft delete).
 - [ ] If the repo has a Playwright suite, it includes the WebKit phone check (`design.md`).
-- [ ] **Verify:** screenshots of the main screens in light, dark, and at 360px.
+- [ ] **Verify:** screenshots of the main screens in light, dark, and at 360px. Take them with
+  Playwright, in the same WebKit project as the phone check. In an app with a strict
+  Content-Security-Policy, a screenshot helper that injects a style or script into the page
+  breaks it: WebKit reports the injected code's refusals as the app's own CSP errors, and they
+  appear only when screenshots are taken. Take the screenshot without injecting anything.
 
 ## Phase 6: Stack alignment (only when John asks, per repo)
 
