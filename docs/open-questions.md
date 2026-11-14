@@ -37,4 +37,8 @@ hid Unlink and Disconnect until it runs: no one-click destructive action, and no
 either. The other option is a server-rendered confirm step, a second page or form with a real
 Confirm button that works without JavaScript. Undecided: which one the standard requires, and
 whether hiding the control until JavaScript runs is acceptable. Reported 2026-11-14 by a
-migration session; John is being asked.
+migration session.
+
+Data point: for multi-google-mcp (PR #19) John chose hiding the control until `app.js` runs. He
+answered for that repo only (relayed 2026-11-14), so it is not a standard yet; the standard
+question stays open.
