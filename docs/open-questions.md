@@ -83,6 +83,9 @@ needs Node 22.22 or later, which the Node 24 rule already covers. Undecided: whe
 packages' majors are planned, as the Next.js ones are. Recommended: yes, the same way. Reported
 2026-11-14 by a migration session.
 
+Data point: John chose, for one private WordPress plugin only (relayed 2026-11-14), that
+Dependabot ignores the `@wordpress/scripts` and `@wordpress/env` majors. Not a standard yet.
+
 ## design.md inside WordPress admin and theme output
 
 `design.md` applies to every app, but two things in a WordPress plugin don't fit it cleanly: the
