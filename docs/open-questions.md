@@ -100,3 +100,11 @@ The WordPress profile runs PHPUnit "across the oldest and newest supported PHP v
 "supported" isn't defined. Undecided: whether the newest is the highest version the plugin's
 `Requires PHP` header allows and that PHP still supports (security fixes), or the newest released.
 Reported 2026-11-14 by a migration session.
+
+## When to move PHPCompatibilityWP to 10.x
+
+The WordPress profile pins PHPCompatibilityWP 2.1.8, whose stable base (PHPCompatibility 9.3.5,
+2019) knows little of PHP 8.x; PHPUnit on the newest PHP in the matrix is the real check. 10.x is
+still alpha. Undecided: the condition for moving (for example, a stable 10.0 that passes the
+plugins' own code). Reported 2026-11-14 by a migration session (Phase 1). The version numbers are
+the peer's; not checked here.
