@@ -50,7 +50,8 @@ every phase in one sweep; stopping after any phase leaves it better than it was.
   own PR. Plan the fixes (see Phase 1).
 - [ ] Agree with John which phases are in scope for this sweep. Phase 6 (stack) is out unless he
   says otherwise, except Node 24: a repo on an older Node moves to 24 in every sweep, as its own
-  PR alongside Phase 2 (John watches the deploy). Record the scope in the handoff.
+  PR alongside Phase 2 (John watches the deploy). Where Phase 2 doesn't apply (no deploy, such as
+  a WordPress plugin), the Node PR is the sweep's first PR of its own. Record the scope in the handoff.
 
 ## Phase 1: Pipeline and safety
 
@@ -321,7 +322,8 @@ before building or smoke testing. A checkout that still has the old `node_module
 framework without complaint. Stop servers left running from before, so the smoke test reaches the
 new build.
 
-- [ ] Package manager pnpm. (Node 24 is done in every sweep, alongside Phase 2.)
+- [ ] Package manager pnpm. (Node 24 is done in every sweep, alongside Phase 2, or as its own first
+  PR where Phase 2 doesn't apply.)
 - [ ] Prettier with defaults, in its own formatting-only PR (nothing else in the diff), with the
   commit added to `.git-blame-ignore-revs`.
   - `.prettierignore` from the profile (`templates/nextjs-app/.prettierignore`). Leave

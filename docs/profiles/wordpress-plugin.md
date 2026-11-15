@@ -25,6 +25,10 @@ applies. `workflow.md`, `security.md` and `agent-docs.md` do.
 - WPCS 3 plus PHPCompatibilityWP (with `testVersion` set to the supported range), PHPStan level 6
   with `szepeviktor/phpstan-wordpress`, PHPUnit (unit and integration suites), `wp-scripts lint-js`.
 - Local development with `@wordpress/env`; `package-lock.json` committed.
+- No PHP on the dev machine: run the audit the way CI does, in the official `composer:2` image:
+  `docker run --rm -v "$PWD":/app -w /app composer:2 composer audit --locked`. CI's `security.yml`
+  is the gate either way; checking `composer.lock` by hand against an advisory database is not a
+  substitute.
 
 ## CI
 
