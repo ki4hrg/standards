@@ -368,7 +368,7 @@ new build.
 ## Other profiles
 
 - **Python service:** phases 0–4 apply as written (ruff, pytest, uv lock; `pydantic-settings`
-  for phase 2). `ruff format` gets its own formatting-only PR, as Prettier does (`.git-blame-ignore-revs`). Phase 5 only if it has a UI.
+  for phase 2). Phase 5 only if it has a UI.
 - **WordPress plugin:** phase 1 means the plugin CI and tag-release workflow from its profile,
   plus `security.yml` with `composer npm`. Skip phase 2. Phase 3 means nonces, capabilities,
   sanitize/escape and REST `permission_callback`.

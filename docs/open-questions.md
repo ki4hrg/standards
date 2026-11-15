@@ -133,12 +133,19 @@ heartbeat file, written by the scheduler and read by a Docker `HEALTHCHECK`, wit
 an image label. Undecided: whether that is the standard for non-HTTP services, and where the
 revision is read from. Reported 2026-11-14 by a migration session.
 
+Data point: for one service (YNAB Balance Monitor, relayed 2026-11-14), a scheduled run that fails
+logs the error, sends an Apprise notification and waits for the next run. Per-repo, not a standard.
+
 ## Python service: env_file and optional guards
 
 `${VAR:?}` guards in `compose.yaml` catch missing variables, but `env_file:` bypasses them, and
 `deploy.md` doesn't say how Dockhand supplies a stack's variables. A guard also can't say "one of
 these variables is required". Undecided: whether `env_file:` is banned for required values, how
 Dockhand supplies them, and the pattern for a choice between variables. Reported 2026-11-14.
+
+Data point: for one service (YNAB Balance Monitor, relayed 2026-11-14), the stack supplies its
+variables through Dockhand's stack environment, which interpolates `${VAR}`, so its compose file
+moves from `env_file:` to an `environment:` list with `${VAR:?}` guards. Per-repo, not a standard.
 
 ## Python service: Python version upgrade rule
 
@@ -153,3 +160,11 @@ that is a sweep item the way Node 24 is. Reported 2026-11-14.
 whether pip-audit gets the same severity threshold as npm (pip-audit may not report severity the
 same way), and whether `security.yml` gains an ignore input for an advisory that has no fix.
 Reported 2026-11-14 by a migration session.
+
+## ruff format: its own PR, or a commit in the Phase 1 PR
+
+The Prettier rule (a formatting-only PR, the commit in `.git-blame-ignore-revs`) is decided for
+JavaScript. The Python profile doesn't say whether `ruff format` follows it. Undecided: the general
+rule. Data point: for one service (YNAB Balance Monitor, relayed 2026-11-14), John chose a one-file
+`ruff format` as its own commit in the Phase 1 PR, named in `.git-blame-ignore-revs`, because
+python-check gates `ruff format --check` from Phase 1. Per-repo, not a standard.
