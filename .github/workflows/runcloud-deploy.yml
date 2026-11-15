@@ -16,10 +16,10 @@ name: runcloud-deploy
 # for GITHUB_TOKEN pushes; only Actions triggers are suppressed). RunCloud then pulls,
 # installs and runs its deploy script (migrations).
 #
-# With the APP_HEALTH_URL variable set (the app's public URL for the route that
-# returns `{ "ok": true, "revision": "<sha>" }` from REVISION), the job waits until
-# this commit, or a later one, is serving. RunCloud's own status doesn't say which
-# commit is live.
+# With the APP_HEALTH_URL variable (or the health-url input) set (the app's public URL
+# for the route that returns `{ "ok": true, "revision": "<sha>" }` from REVISION), the job
+# waits until this commit, or a later one, is serving. RunCloud's own status doesn't say
+# which commit is live.
 #
 #   deploy:
 #     needs: [check, security]
@@ -49,11 +49,18 @@ on:
         default: public/build
       node-version:
         type: string
-        default: '24'
+        default: "24"
       wait-minutes:
         description: How long to wait for the app to report this revision.
         type: number
         default: 10
+      health-url:
+        description: >-
+          The app's public URL for the revision route. Empty uses the APP_HEALTH_URL
+          variable. Set it per call when one caller deploys two environments (staging and
+          production), each with its own check.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -142,7 +149,7 @@ jobs:
       - name: Check the running revision
         if: steps.tip.outputs.stale != 'true'
         env:
-          HEALTH_URL: ${{ vars.APP_HEALTH_URL }}
+          HEALTH_URL: ${{ inputs.health-url || vars.APP_HEALTH_URL }}
           WAIT: ${{ inputs.wait-minutes }}
         run: |
           if [ -z "$HEALTH_URL" ]; then

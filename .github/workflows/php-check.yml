@@ -18,7 +18,7 @@ on:
       php-version:
         description: Match `config.platform.php` in composer.json.
         type: string
-        default: '8.4'
+        default: "8.4"
       php-extensions:
         type: string
         default: mbstring, intl, bcmath, gd, exif, zip, pcntl, pdo_mysql, pdo_sqlite
@@ -38,7 +38,14 @@ on:
       redis-image:
         description: Redis image for tests that need one (port 6379). Empty runs none.
         type: string
-        default: ''
+        default: ""
+      env:
+        description: >-
+          Extra environment for the checks, one KEY=VALUE per line, for example a test's
+          REDIS_URL. Set after the service settings, so it wins over them. Empty adds
+          nothing. Only KEY=VALUE lines are accepted.
+        type: string
+        default: ""
       node-build:
         description: Run `ci` and `build` with the front-end package manager before the checks.
         type: boolean
@@ -49,10 +56,10 @@ on:
         default: npm
       node-version:
         type: string
-        default: '24'
+        default: "24"
       working-directory:
         type: string
-        default: '.'
+        default: "."
       runs-on:
         type: string
         # Pinned rather than ubuntu-latest so an image change never lands unannounced.
@@ -127,6 +134,16 @@ jobs:
           if [ -n "$REDIS_IMAGE" ]; then
             printf '%s\n' REDIS_HOST=127.0.0.1 REDIS_PORT=6379 >> "$GITHUB_ENV"
           fi
+      - name: Extra environment
+        if: inputs.env != ''
+        env:
+          EXTRA: ${{ inputs.env }}
+        run: |
+          # Only KEY=VALUE lines: a line without a valid name is refused, so a value can't
+          # span lines or set something unexpected.
+          bad=$(printf '%s\n' "$EXTRA" | grep -v -E '^[A-Za-z_][A-Za-z0-9_]*=' | grep -v '^$' || true)
+          if [ -n "$bad" ]; then echo "::error::env lines must be KEY=VALUE, got: $bad"; exit 1; fi
+          printf '%s\n' "$EXTRA" | grep -v '^$' >> "$GITHUB_ENV" || true
       # Laravel boots from .env; the example plus a fresh key is enough for tests.
       - name: Prepare .env
         run: |

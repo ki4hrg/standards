@@ -168,3 +168,27 @@ JavaScript. The Python profile doesn't say whether `ruff format` follows it. Und
 rule. Data point: for one service (YNAB Balance Monitor, relayed 2026-11-14), John chose a one-file
 `ruff format` as its own commit in the Phase 1 PR, named in `.git-blame-ignore-revs`, because
 python-check gates `ruff format --check` from Phase 1. Per-repo, not a standard.
+
+## Laravel: a staging environment beside a manual production gate
+
+`runcloud-deploy.yml` can serve one environment per caller. A repo that publishes staging on every
+merge and production only by manual dispatch needs two calls, each with its own deploy branch and
+health URL (`health-url`). The Laravel profile doesn't say how that fits: which branch and
+environment protection each uses, whether production's gate is a dispatch or an environment
+approval, and what the staging check proves. Undecided. Reported 2026-11-15 by a migration session
+(Phase 0 audit of a Laravel repo).
+
+## Freezing deploys around event days
+
+A repo that runs live events may need production deploys frozen for a period, manual dispatch only
+during event season. No standard covers a freeze: where it is set (a variable, a branch rule, the
+caller's `if:`), who lifts it, and whether a freeze also stops the automatic staging publish.
+Undecided. Reported 2026-11-15 by a migration session.
+
+## A second Redis for one test
+
+`php-check.yml` starts one Redis (`redis-image`, port 6379). A test that needs a second, non-persistent
+store can point at the same service through the new `env` input, if one Redis serves it. A second
+process needs a second service, and services can't be set from an input in a reusable workflow
+except by a named input (the same way `redis-image` works). Undecided: whether a second-Redis input
+is wanted, or the test should share the first. Reported 2026-11-15.
