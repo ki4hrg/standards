@@ -27,6 +27,7 @@ major version of any dependency whose API has changed before.
 
 - `python:3.x-slim`, uv copied from its official image, `uv sync --locked --no-dev`.
 - Non-root user, `HEALTHCHECK` if the service serves HTTP, `.dockerignore`.
+- `ENV PYTHONUNBUFFERED=1`, so log lines reach `docker logs` as they are written, not when a buffer fills.
 - Build for the deploy host's architecture.
 
 ## Released tools

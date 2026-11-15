@@ -108,3 +108,48 @@ The WordPress profile pins PHPCompatibilityWP 2.1.8, whose stable base (PHPCompa
 still alpha. Undecided: the condition for moving (for example, a stable 10.0 that passes the
 plugins' own code). Reported 2026-11-14 by a migration session (Phase 1). The version numbers are
 the peer's; not checked here.
+
+## Python service: `python-check.yml` in steps
+
+`python-check.yml` always runs `uv sync --locked`, `ruff check`, `ruff format --check` and pytest,
+and pytest fails with no tests. It has no input to run a subset, unlike node-check's `scripts`, so
+a Python repo adopting Phase 1 in steps must also bring uv, a ruff-clean tree and at least one
+test in the same PR. Undecided: an optional input (for example `pytest: true`, `ruff: true`) with
+defaults that keep current callers unchanged, a compatible addition at `v1`. Reported 2026-11-14
+by a migration session (Phase 0 audit).
+
+## Python service: template completeness
+
+`templates/python-service/` holds only `ci.yml`. The profile calls for a Dockerfile, `.dockerignore`
+and `compose.yaml`, and a `pyproject.toml` starter. A repo that copies the template also needs a
+uv-covering `dependabot.yml`, a PR template, and `.claude/settings.json`. Undecided: whether to
+write these now, and against which real service they are checked (none in the standards is
+built). Reported 2026-11-14.
+
+## Python service: a container without HTTP
+
+Nothing says how a container with no HTTP server exposes its revision and health. A candidate: a
+heartbeat file, written by the scheduler and read by a Docker `HEALTHCHECK`, with its revision in
+an image label. Undecided: whether that is the standard for non-HTTP services, and where the
+revision is read from. Reported 2026-11-14 by a migration session.
+
+## Python service: env_file and optional guards
+
+`${VAR:?}` guards in `compose.yaml` catch missing variables, but `env_file:` bypasses them, and
+`deploy.md` doesn't say how Dockhand supplies a stack's variables. A guard also can't say "one of
+these variables is required". Undecided: whether `env_file:` is banned for required values, how
+Dockhand supplies them, and the pattern for a choice between variables. Reported 2026-11-14.
+
+## Python service: Python version upgrade rule
+
+The profile says "current stable minus one (3.13 today)". Node has a rule (Node 24 LTS, upgraded in
+every sweep); Python has none. Undecided: the rule for when a Python version moves, and whether
+that is a sweep item the way Node 24 is. Reported 2026-11-14.
+
+## Python service: pip-audit threshold and ignores
+
+`security.md` says audits fail on high and above, but `security.yml`'s uv path runs
+`pip-audit --strict`, which fails on any advisory, and it has no input for ignoring one. Undecided:
+whether pip-audit gets the same severity threshold as npm (pip-audit may not report severity the
+same way), and whether `security.yml` gains an ignore input for an advisory that has no fix.
+Reported 2026-11-14 by a migration session.

@@ -110,6 +110,10 @@ dependencies.*
 - [ ] `merge-on-green` job with `actions: write` and `checks: read`, and the `close-issues` job after it (as in the template). Run `scripts/repo-settings.sh owner/repo`
   (squash only, delete branch on merge, `automerge` label).
 - [ ] Workflow `permissions:` are least-privilege.
+- [ ] **Before the repo goes public:** gitleaks over the full history, and the same scan over PR
+  bodies and commit messages, which become visible with it. Check the tracked files for hostnames,
+  addresses and private details, workflow comments included (`decisions.md`: a private repo goes
+  public only after this). Publishing can't be undone.
 - [ ] **Move the repo into John's organization** (`workflow.md`, Self-hosted runner), as its own
   step after the template caller is in. John does the transfer. In the same change:
   - point compose `image:` at `ghcr.io/<org>/<repo>`. CI starts pushing there by itself, while
@@ -364,7 +368,7 @@ new build.
 ## Other profiles
 
 - **Python service:** phases 0–4 apply as written (ruff, pytest, uv lock; `pydantic-settings`
-  for phase 2). Phase 5 only if it has a UI.
+  for phase 2). `ruff format` gets its own formatting-only PR, as Prettier does (`.git-blame-ignore-revs`). Phase 5 only if it has a UI.
 - **WordPress plugin:** phase 1 means the plugin CI and tag-release workflow from its profile,
   plus `security.yml` with `composer npm`. Skip phase 2. Phase 3 means nonces, capabilities,
   sanitize/escape and REST `permission_callback`.
