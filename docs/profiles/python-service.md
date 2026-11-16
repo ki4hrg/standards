@@ -34,4 +34,5 @@ major version of any dependency whose API has changed before.
 
 A service that other people install, or that is pulled into another stack (deploy mode B),
 is versioned: `version` in `pyproject.toml`, `vX.Y.Z` tags, a CI check that they match, and
-`gh release create --generate-notes`.
+`gh release create --generate-notes`. The template's `release.yml` does the check and publishes
+the release's images (multi-arch when other people install it); `ci.yml` drops `deploy`.

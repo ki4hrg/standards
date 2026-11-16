@@ -178,6 +178,20 @@ environment protection each uses, whether production's gate is a dispatch or an 
 approval, and what the staging check proves. Undecided. Reported 2026-11-15 by a migration session
 (Phase 0 audit of a Laravel repo).
 
+## `runcloud-deploy.yml`: an empty `health-url` falls back to `APP_HEALTH_URL`
+
+In `runcloud-deploy.yml`, an empty `health-url` uses the repo's `APP_HEALTH_URL` variable. A caller
+with two environments therefore can't turn the check off for one of them. If it forgets the
+staging URL, the staging job polls production's URL and fails after `wait-minutes`, a confusing
+failure that looks like a slow deploy. The workflow has no `environment:` input, so the variable
+can't be scoped per environment either. The reporting repo works around it by setting both URLs.
+Options: a sentinel such as `health-url: none` meaning "no check" (a compatible `v1` change); an
+`environment` input so `vars.APP_HEALTH_URL` resolves per environment (compatible, but that
+environment's protection rules then gate the deploy job); or failing fast when the
+URL is the same for two deploy branches (a single call can't see the other call's URL, so this
+would be a caller-side check, not the workflow's). Undecided. Reported 2026-11-16 by a migration
+session (Laravel repo on RunCloud).
+
 ## Freezing deploys around event days
 
 A repo that runs live events may need production deploys frozen for a period, manual dispatch only
@@ -192,3 +206,21 @@ store can point at the same service through the new `env` input, if one Redis se
 process needs a second service, and services can't be set from an input in a reusable workflow
 except by a named input (the same way `redis-image` works). Undecided: whether a second-Redis input
 is wanted, or the test should share the first. Reported 2026-11-15.
+
+## A single-user tool with no sign-in
+
+`security.md` assumes requests are authenticated where they arrive, and has no rule for a
+single-user tool that has no sign-in of its own. Data point, John 2026-11-16, for one public tool:
+no in-app sign-in; it relies on the network or a reverse proxy's auth, recorded as a per-repo
+exception, but the app still refuses cross-site writes (checking `Origin` or `Sec-Fetch-Site`) and
+requests for unknown `Host` names (DNS rebinding). Undecided: whether that becomes a rule for every
+such tool. Reported 2026-11-16 by a migration session.
+
+## Public repos and the move into the organization
+
+`decisions.md` says app repos move into John's organization as they're swept. Data point, John
+2026-11-16: a public repo can stay on his personal account, because his "no pushes to the personal
+account" rule was about Actions minutes, which public repos don't use. The recorded reason for the
+move (an organization runner token instead of a repo-level Administration token) is about the
+self-hosted runner, which public repos never use either. Undecided: whether `decisions.md` carves
+out public repos. Reported 2026-11-16 by a migration session.

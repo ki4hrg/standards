@@ -2,8 +2,8 @@ name: ci
 
 # PR: check + security → image (build only) → merge-on-green (if labelled `automerge`)
 # main: check + security → image (build + push to GHCR) → deploy (Dockhand webhook)
-# For deploy mode B (service in another stack), drop `deploy` and publish on
-# version tags instead: standards docs/core/deploy.md.
+# For deploy mode B (a released tool, or a service in another stack), drop `deploy`
+# and add release.yml, which publishes version tags: standards docs/core/deploy.md.
 # A second image or lockfile (a worker): copy the `image` or `security` job once per
 # image or directory, and add every copy to automerge's `needs` and `require-jobs` and
 # to deploy's `needs` (docs/core/deploy.md, Several images or lockfiles).

@@ -4,6 +4,10 @@ name: image
 # :sha-<sha>, labelled with org.opencontainers.image.revision. GIT_REVISION is
 # passed as a build arg so the app can report what it is running.
 #
+# A released tool (deploy mode B, docs/core/deploy.md) also sets `release-tags`, so a
+# `vX.Y.Z` release adds :X.Y.Z, :X.Y and :latest, and `multi-arch`, so amd64 and arm64
+# are built natively and pushed as one manifest list.
+#
 # The caller must grant `packages: write` to this job.
 #
 #   image:
@@ -14,6 +18,16 @@ name: image
 #       push: ${{ github.event_name != 'pull_request' }}
 #       platforms: linux/arm64
 #       runs-on: ubuntu-24.04-arm
+#
+# A released tool, called from a workflow triggered by `release: types: [published]`:
+#
+#   image:
+#     permissions: { contents: read, packages: write }
+#     uses: ki4hrg/standards/.github/workflows/image.yml@v1
+#     with:
+#       push: true
+#       release-tags: true
+#       multi-arch: true
 
 on:
   workflow_call:
@@ -32,25 +46,43 @@ on:
         type: string
         default: Dockerfile
       platforms:
-        description: Match the deploy host. Build arm64 on an arm runner, not under QEMU.
+        description: >-
+          Match the deploy host. Build arm64 on an arm runner, not under QEMU. Ignored
+          with multi-arch.
         type: string
         default: linux/amd64
       runs-on:
+        description: Ignored with multi-arch, which uses GitHub's amd64 and arm64 runners.
         type: string
         default: ubuntu-24.04
       build-args:
         description: Extra build args, one KEY=value per line. GIT_REVISION is always set.
         type: string
         default: ''
+      release-tags:
+        description: >-
+          On a vX.Y.Z tag (a release, or a tag push), also tag :X.Y.Z, :X.Y and :latest.
+          A pre-release (a GitHub pre-release, or a tag like v1.2.0-rc.1) gets only
+          :X.Y.Z-rc.1.
+        type: boolean
+        default: false
+      multi-arch:
+        description: >-
+          Build linux/amd64 and linux/arm64, each on its own native runner, and push one
+          manifest list. For images other people install on hosts we don't know.
+        type: boolean
+        default: false
     outputs:
       digest:
-        value: ${{ jobs.image.outputs.digest }}
+        description: The image digest; with multi-arch, the manifest list's (empty unless pushed).
+        value: ${{ jobs.image.outputs.digest || jobs.manifest.outputs.digest }}
 
 permissions:
   contents: read
 
 jobs:
   image:
+    if: ${{ !inputs.multi-arch }}
     runs-on: ${{ inputs.runs-on }}
     permissions:
       contents: read
@@ -66,20 +98,34 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # GHCR rejects uppercase in a repository path.
+      # GHCR rejects uppercase in a repository path. `stable`: a release tag that isn't
+      # a pre-release, the only build that moves :latest. Same step in `arch` and `manifest`.
       - id: name
         env:
           IMAGE: ${{ inputs.image }}
+          PRERELEASE: ${{ github.event.release.prerelease || false }}
         run: |
           if [ -z "$IMAGE" ]; then IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"; fi
           echo "value=$IMAGE" >> "$GITHUB_OUTPUT"
+          stable=false
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ && "$PRERELEASE" != true ]]; then
+            stable=true
+          fi
+          echo "stable=$stable" >> "$GITHUB_OUTPUT"
+      # Same tags as `manifest`. semver tags apply only on a vX.Y.Z tag ref, and
+      # metadata-action gives a pre-release only its full version. latest=false: :latest
+      # comes from the raw rule alone, never from metadata-action's own default.
       - id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ steps.name.outputs.value }}
+          flavor: latest=false
           tags: |
             type=ref,event=branch
             type=sha,prefix=sha-
+            type=semver,pattern={{version}},enable=${{ inputs.release-tags }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ inputs.release-tags }}
+            type=raw,value=latest,enable=${{ inputs.release-tags && steps.name.outputs.stable == 'true' }}
       - id: build
         uses: docker/build-push-action@v7
         with:
@@ -98,3 +144,146 @@ jobs:
           # The cache is an optimisation and must never fail a good build. Only pushes
           # write it, so PR builds can't evict main's cache.
           cache-to: ${{ inputs.push && format('type=gha,mode=max,ignore-error=true,scope={0}', steps.name.outputs.value) || '' }}
+
+  # multi-arch, step 1: each architecture builds on a native runner (QEMU emulation is
+  # several times slower and has broken builds that compile native code) and pushes by
+  # digest only, untagged, so the two jobs can't overwrite each other's tags.
+  arch:
+    if: ${{ inputs.multi-arch }}
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - if: inputs.push
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # As in `image`. `key`: the image name made safe for an artifact name, so a repo
+      # building two images in one run keeps their digests apart.
+      - id: name
+        env:
+          IMAGE: ${{ inputs.image }}
+        run: |
+          if [ -z "$IMAGE" ]; then IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"; fi
+          echo "value=$IMAGE" >> "$GITHUB_OUTPUT"
+          key=${IMAGE//[\/:]/-}
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+      # Labels only (the revision label goes on each architecture's image config, which
+      # is what `docker inspect` shows on the host). Tags are set by `manifest`.
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.name.outputs.value }}
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ steps.name.outputs.value }},push-by-digest=true,name-canonical=true,push=${{ inputs.push }}
+          build-args: |
+            GIT_REVISION=${{ github.sha }}
+            ${{ inputs.build-args }}
+          # One cache per image and architecture, so the two builds don't evict each other.
+          cache-from: type=gha,scope=${{ steps.name.outputs.value }}-${{ matrix.arch }}
+          cache-to: ${{ inputs.push && format('type=gha,mode=max,ignore-error=true,scope={0}-{1}', steps.name.outputs.value, matrix.arch) || '' }}
+      - if: inputs.push
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
+      - if: inputs.push
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ steps.name.outputs.key }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # multi-arch, step 2: one manifest list over both digests, tagged as `image` would be.
+  manifest:
+    needs: arch
+    if: ${{ inputs.multi-arch && inputs.push }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      # As in `image` and `arch`.
+      - id: name
+        env:
+          IMAGE: ${{ inputs.image }}
+          PRERELEASE: ${{ github.event.release.prerelease || false }}
+        run: |
+          if [ -z "$IMAGE" ]; then IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"; fi
+          echo "value=$IMAGE" >> "$GITHUB_OUTPUT"
+          key=${IMAGE//[\/:]/-}
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          stable=false
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ && "$PRERELEASE" != true ]]; then
+            stable=true
+          fi
+          echo "stable=$stable" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: digests-${{ steps.name.outputs.key }}-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/digests
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Same tags as `image`.
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.name.outputs.value }}
+          flavor: latest=false
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}},enable=${{ inputs.release-tags }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ inputs.release-tags }}
+            type=raw,value=latest,enable=${{ inputs.release-tags && steps.name.outputs.stable == 'true' }}
+      # The index carries the source (GHCR links the package to the repo by it) and the
+      # revision; each architecture's image already has the full label set.
+      - id: push
+        env:
+          IMAGE: ${{ steps.name.outputs.value }}
+          DIR: ${{ runner.temp }}/digests
+        run: |
+          mapfile -t tags < <(jq -r '.tags[]' <<<"$DOCKER_METADATA_OUTPUT_JSON")
+          args=()
+          for t in "${tags[@]}"; do args+=(-t "$t"); done
+          refs=()
+          for d in "$DIR"/*; do refs+=("$IMAGE@sha256:$(basename "$d")"); done
+          if [ "${#refs[@]}" -ne 2 ]; then
+            echo "::error::Expected 2 architecture digests, found ${#refs[@]}."; exit 1
+          fi
+          docker buildx imagetools create "${args[@]}" \
+            --annotation "index:org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --annotation "index:org.opencontainers.image.revision=$GITHUB_SHA" \
+            "${refs[@]}"
+          digest=$(docker buildx imagetools inspect "${tags[0]}" --format '{{json .Manifest}}' | jq -r .digest)
+          echo "Pushed ${tags[*]} as $digest."
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"

@@ -228,6 +228,15 @@ own, there is no webhook. Publish on version tags (`:latest` plus `:X.Y.Z`) and 
 auto-update (Dockhand auto-update or Diun) pull, or redeploy by hand. Say which in
 `docs/DEPLOYMENT.md`.
 
+Publishing a GitHub release for a `vX.Y.Z` tag runs the profile's `release.yml`
+(`templates/python-service/.github/workflows/release.yml`): it checks the tag against the
+version in the code, then calls `image.yml` with `release-tags: true`, which adds `:X.Y.Z`,
+`:X.Y` and `:latest` (a pre-release gets only its full version), and `multi-arch: true` when
+other people install the image on hosts we don't know. Multi-arch builds amd64 and arm64 each
+on a native GitHub runner and pushes them as one manifest list, never under QEMU (slower, and
+it has broken builds that compile native code). The `ci.yml` caller drops its `deploy` job and
+keeps testing PRs and pushing `:main` and `:sha-<sha>`.
+
 ## Rolling back
 
 Revert the commit (a `revert:` PR) so the image and `compose.yaml` go back together. Pointing
