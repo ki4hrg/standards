@@ -251,7 +251,8 @@ can't run here runs in CI instead (`ship`).
     because a squash merge leaves the branch looking unmerged to git, so `git branch -d` refuses
     and `git branch --merged` misses it;
   - deletes the remote branch only when its PR has merged or been closed and GitHub didn't
-    delete it (a repo without "delete branch on merge" yet): `git push origin --delete <branch>`.
+    delete it (a repo without "delete branch on merge" yet, or a merge-on-green merge it
+    skipped): `git push origin --delete <branch>`.
 
   Never a branch with an open PR, and never one that isn't the task's own unless its PR has
   merged: another session may be working on it. Git refuses to delete a branch checked out in

@@ -31,8 +31,8 @@ applies. `workflow.md`, `security.md` and `agent-docs.md` do.
   separate `tests-cli` environment and the `env` key in `.wp-env.json`. Both still work but warn; a
   plugin's `test:php` needs its own `--config` before the next major.
 - No PHP on the dev machine: run the audit the way CI does, in the official `composer:2` image:
-  `docker run --rm -v "$PWD":/app -w /app composer:2 composer audit --locked`. CI's `security.yml`
-  is the gate either way; checking `composer.lock` by hand against an advisory database is not a
+  `docker run --rm -v "$PWD":/app -w /app composer:2 composer audit --locked --ignore-severity low
+  --ignore-severity medium` (high and above fail, as in CI). CI's `security.yml` is the gate either way; checking `composer.lock` by hand against an advisory database is not a
   substitute.
 
 ## CI

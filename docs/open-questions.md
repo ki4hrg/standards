@@ -64,7 +64,11 @@ about 11 minutes per merge but leaves main untested by any run except the PR's. 
 The WordPress profile says to copy "the two most recent plugins built this way" and their release
 workflow, bump script and updater, but names neither plugin, and no bump script is in the standards.
 Undecided: which local plugins are the references, and whether the bump script is written once here
-as a template. Reported 2026-11-14 by a migration session (Phase 0 audit).
+as a template. Reported 2026-11-14 by a migration session (Phase 0 audit). There is no `templates/wordpress-plugin/`
+either (no phpcs config, `ci.yml` caller, `release.yml`, Dependabot or PR template), so a second
+legacy plugin's Phase 1 copies from the plugin already on the standard; its phpcbf run took
+`--standard=WordPress,PHPCompatibilityWP --runtime-set testVersion 8.1-` from the profile text
+(2026-11-16).
 
 ## A self-hosted runner for a repo outside the organization
 
@@ -124,7 +128,9 @@ by a migration session (Phase 0 audit).
 and `compose.yaml`, and a `pyproject.toml` starter. A repo that copies the template also needs a
 uv-covering `dependabot.yml`, a PR template, and `.claude/settings.json`. Undecided: whether to
 write these now, and against which real service they are checked (none in the standards is
-built). Reported 2026-11-14.
+built). Reported 2026-11-14. Phase 4 hits it too (2026-11-16): the checklist says
+`.claude/settings.json` and `AGENTS.md` go in "as in the template", but only the Next.js template
+has them and a CLAUDE.md skeleton (the Laravel template has `.claude/settings.json` only).
 
 ## Python service: a container without HTTP
 
@@ -224,3 +230,51 @@ account" rule was about Actions minutes, which public repos don't use. The recor
 move (an organization runner token instead of a repo-level Administration token) is about the
 self-hosted runner, which public repos never use either. Undecided: whether `decisions.md` carves
 out public repos. Reported 2026-11-16 by a migration session.
+
+## WordPress: a Composer runtime library
+
+The WordPress profile says Composer is for dev tooling only. It doesn't cover a plugin that needs
+a library at runtime (dompdf, for PDFs) and ships it in the release zip, built with
+`composer install --no-dev -o`. Undecided: whether runtime libraries are allowed, and if so how
+they're kept from clashing with another plugin's copy of the same library (prefixing, such as
+PHP-Scoper or Strauss, or not). Reported 2026-11-16 by a migration session.
+
+## WordPress: moving a legacy install to the release zip
+
+A legacy plugin installed by zip or git checkout under a folder name other than its slug has to
+move once to the release zip and the updater, which installs to `<slug>/`. The profile doesn't
+say how: deactivate, remove the old folder, install the zip, reactivate, and check that settings
+(stored by option name, not folder) survive. Undecided: whether that becomes a migration
+checklist step. Reported 2026-11-16 by a migration session.
+
+## A formatting-only PR for PHP (phpcbf)
+
+The formatting-only PR rule (its own commit, named in `.git-blame-ignore-revs`, kept by a merge
+commit) is written for Prettier, and `ruff format` is still open above. Nothing says whether a
+first `phpcbf` run follows it. Undecided: whether one rule covers every formatter. Reported
+2026-11-16 by a migration session. Found in that run: two WordPress-standard fixers aren't
+formatting-only. `Squiz.PHP.EmbeddedPhp` splits `value="<?php echo esc_attr(...); ?>"` and
+`<textarea><?php ... ?></textarea>` across lines, putting whitespace into the attribute or the
+content (a `type="time"` input breaks, and a save stores the whitespace).
+`Universal.Operators.StrictComparisons` turns `==` into `===`, which changes behaviour. A
+formatting-only PR excludes both; whether the profile says so is part of this question.
+
+## A public tool's README beside `docs/ARCHITECTURE.md`
+
+`agent-docs.md` doesn't say how a tool other people install splits its user-facing README (what it
+does, how to install and configure it) from `docs/ARCHITECTURE.md`. Some repetition of "how it
+works" is legitimate when the README's readers never open the docs. Related: for an app without
+sign-in (the single-user tool question above), the route-guard table describes the middleware
+stack (Origin and Host checks) rather than authentication. Undecided. Reported 2026-11-16 by a
+migration session (Phase 4 of a public Python service).
+
+## WordPress: running upgrades without the activation hook
+
+An update through the updater, or a zip upload over the old files, never fires
+`register_activation_hook`, so a data or schema upgrade wired only to activation silently doesn't
+run. The WordPress profile doesn't say where upgrades run. One legacy plugin's Phase 3
+(2026-11-16) compares a stored db-version option with a `DB_VERSION` constant on
+`plugins_loaded` (and on activation), takes a non-blocking MySQL `GET_LOCK` so two requests can't
+migrate at once, re-reads the option uncached, migrates idempotently, then stores the new version.
+Undecided: whether that pattern becomes a line in the profile. Reported 2026-11-16 by a migration
+session.

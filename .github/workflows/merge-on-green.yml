@@ -13,8 +13,9 @@ name: merge-on-green
 # `workflow_dispatch` is exempt from that rule, so after merging this job
 # dispatches the caller's workflow on main, which builds and deploys.
 #
-# The branch is deleted by the repo's "delete branch on merge" setting
-# (scripts/repo-settings.sh).
+# After merging it deletes the head branch itself (a branch in this repo only):
+# the repo's "delete branch on merge" setting (scripts/repo-settings.sh) covers hand
+# merges but doesn't act on a merge made with GITHUB_TOKEN.
 #
 #   automerge:
 #     needs: [check, security, image]
@@ -290,3 +291,32 @@ jobs:
           fi
           gh workflow run "$WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$BASE" "${args[@]}"
           echo "Dispatched $WORKFLOW on $BASE."
+
+      # GitHub's "delete branch on merge" doesn't act on a merge made with GITHUB_TOKEN
+      # (seen on two repos with it on, 2026-11-16), so delete the head branch here. After
+      # the dispatch, so a failure here never stops a deploy, and it never fails the job.
+      # Only a branch in this repo (never a fork's), only while it still points at the
+      # merged commit (nobody pushed after), and not while an open PR is based on it:
+      # deleting a base branch through the API closes those PRs, where GitHub's own
+      # setting retargets them.
+      - name: Delete the merged branch
+        if: steps.merge.outputs.merged == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          tip=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$BRANCH" --jq .object.sha 2>/dev/null || true)
+          if [ -z "$tip" ]; then echo "$BRANCH is already gone."; exit 0; fi
+          if [ "$tip" != "$SHA" ]; then
+            echo "::warning::$BRANCH moved past the merged commit; not deleting it."; exit 0
+          fi
+          based=$(gh pr list --repo "$GITHUB_REPOSITORY" --base "$BRANCH" --state open --json number --jq 'length' || echo unknown)
+          if [ "$based" != 0 ]; then
+            echo "::warning::Open PRs are based on $BRANCH ($based); not deleting it."; exit 0
+          fi
+          if gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$BRANCH" >/dev/null; then
+            echo "Deleted $BRANCH."
+          else
+            echo "::warning::Couldn't delete $BRANCH; delete it by hand."
+          fi

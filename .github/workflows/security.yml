@@ -65,8 +65,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           coverage: none
+      # Composer has no level flag: ignoring low and medium leaves high and critical (and
+      # an advisory with no severity) failing, as the npm audits do.
       - if: steps.pm.outputs.composer
-        run: composer audit --locked --abandoned=report
+        run: composer audit --locked --abandoned=report --ignore-severity low --ignore-severity medium
 
       - if: steps.pm.outputs.uv
         uses: astral-sh/setup-uv@v7
