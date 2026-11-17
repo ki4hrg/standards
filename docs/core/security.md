@@ -16,8 +16,10 @@ The reusable `security.yml` workflow runs:
   3. If no patched version exists and the advisory doesn't affect the app, record the exception in
      `docs/DECISIONS.md` and ignore that one advisory in the package manager's config (pnpm:
      `auditConfig.ignoreGhsas` in `pnpm-workspace.yaml`; composer: `config.audit.ignore`).
-     **npm has no per-advisory ignore.** An npm repo that needs one moves to pnpm for it (the
-     Phase 6 item, brought forward).
+     **npm has no per-advisory ignore:** an npm repo lists the GHSA in the security
+     workflow's `ignore-unpatched` input instead. It holds only while no fixed version of the
+     package is published; once one is, the audit fails again, naming the advisory, so the fix
+     isn't missed. Then upgrade (step 1 or 2) and drop the id.
 
   A release-age gate (pnpm's `minimumReleaseAge`, where a repo uses one) never holds back a
   security fix: exclude just the patched package (`minimumReleaseAgeExclude`), record it in

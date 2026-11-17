@@ -4,11 +4,14 @@ name: security
 # the GitGuardian GitHub app on every PR (docs/core/security.md). Advisories at `high` or above fail the job. To accept one advisory,
 # ignore it in the package manager's own config and record why in
 # docs/DECISIONS.md (see docs/core/security.md) — don't lower the level.
+# npm has no per-advisory ignore: list its GHSA in `ignore-unpatched`, which
+# holds only while no fixed version of the package is published.
 #
 #   security:
 #     uses: ki4hrg/standards/.github/workflows/security.yml@v1
 #     with:
 #       package-managers: pnpm   # space-separated: pnpm npm composer uv
+#       ignore-unpatched: ''     # npm only: GHSA ids with no fixed version yet
 
 on:
   workflow_call:
@@ -26,6 +29,13 @@ on:
       runs-on:
         type: string
         default: ubuntu-24.04
+      ignore-unpatched:
+        description: >-
+          npm only. Space-separated GHSA ids to pass while no fixed version of the
+          package is published; each fails again once one is. Record why in the
+          repo's docs/DECISIONS.md.
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -58,8 +68,62 @@ jobs:
       # Audits read the lockfile; no install needed.
       - if: steps.pm.outputs.pnpm
         run: pnpm audit --audit-level=high
-      - if: steps.pm.outputs.npm
+      - if: steps.pm.outputs.npm && inputs.ignore-unpatched == ''
         run: npm audit --audit-level=high
+      # npm has no per-advisory ignore. This reads `npm audit --json` and fails on
+      # any advisory at high or above, except one listed in ignore-unpatched while
+      # no fixed version of its package is published; once one is, it fails again,
+      # naming the advisory, so the upgrade isn't missed. semver is npm's own copy.
+      - if: steps.pm.outputs.npm && inputs.ignore-unpatched != ''
+        env:
+          IGNORE_UNPATCHED: ${{ inputs.ignore-unpatched }}
+        run: |
+          node - <<'JS'
+          const { execFileSync } = require("node:child_process");
+          const path = require("node:path");
+          const semver = require(path.join(execFileSync("npm", ["root", "-g"]).toString().trim(), "npm/node_modules/semver"));
+          const ignored = new Set((process.env.IGNORE_UNPATCHED || "").split(/\s+/).filter(Boolean));
+          let report;
+          try {
+            report = JSON.parse(execFileSync("npm", ["audit", "--json"], { maxBuffer: 64 << 20 }).toString());
+          } catch (e) {
+            // npm audit exits non-zero when it finds anything; its JSON is still on stdout.
+            report = JSON.parse(e.stdout.toString());
+          }
+          const HIGH = new Set(["high", "critical"]);
+          const advisories = new Map();
+          for (const vuln of Object.values(report.vulnerabilities || {})) {
+            for (const via of vuln.via) {
+              if (typeof via !== "object" || !HIGH.has(via.severity)) continue;
+              advisories.set(via.url, { pkg: via.name, range: via.range, title: via.title, url: via.url });
+            }
+          }
+          // A fixed version: a published release newer than the newest vulnerable one
+          // and outside the advisory's range.
+          const fixedVersion = (pkg, range) => {
+            const versions = [].concat(JSON.parse(execFileSync("npm", ["view", pkg, "versions", "--json"]).toString())).filter((v) => !semver.prerelease(v));
+            const newestVulnerable = semver.maxSatisfying(versions, range);
+            return versions.find((v) => (!newestVulnerable || semver.gt(v, newestVulnerable)) && !semver.satisfies(v, range)) ?? null;
+          };
+          let failed = false;
+          for (const a of advisories.values()) {
+            const id = a.url.split("/").pop();
+            if (!ignored.has(id)) {
+              console.log(`::error::${id} (${a.pkg}, ${a.range}): ${a.title}`);
+              failed = true;
+              continue;
+            }
+            const fixed = fixedVersion(a.pkg, a.range);
+            if (fixed) {
+              console.log(`::error::${id} (${a.pkg}) is fixed in ${fixed}: upgrade, then drop it from ignore-unpatched`);
+              failed = true;
+            } else {
+              console.log(`::warning::${id} (${a.pkg}, ${a.range}) ignored: no fixed version is published yet`);
+            }
+          }
+          if (!failed) console.log(`No high or critical advisories outside ignore-unpatched (${advisories.size} found).`);
+          process.exit(failed ? 1 : 0);
+          JS
 
       - if: steps.pm.outputs.composer
         uses: shivammathur/setup-php@v2
