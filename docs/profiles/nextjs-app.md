@@ -69,7 +69,8 @@ components/
   ui/               shared primitives built on tokens
 docs/               see ../core/agent-docs.md
 test/               Vitest
-instrumentation.ts  validates env at boot; starts jobs
+instrumentation.ts  imports instrumentation-node.ts in the Node runtime only
+instrumentation-node.ts  validates env at boot; starts jobs
 ```
 
 ## Rules
@@ -124,8 +125,11 @@ instrumentation.ts  validates env at boot; starts jobs
 - **Dates** shown to the user are computed in the user's time zone, through one date helper module.
 - **A failure in `instrumentation.ts` exits the process.** Next only logs a throw from
   `register()` and keeps running without serving, so catch, log the message and
-  `process.exit(1)` (as the template does).
-- **Background jobs** start from `instrumentation.ts` and take a Postgres advisory lock, so two
+  `process.exit(1)` (as the template does). Keep that and other Node-only code in
+  `instrumentation-node.ts`, imported only inside `if (process.env.NEXT_RUNTIME === "nodejs")`:
+  Next also builds `instrumentation.ts` for the Edge runtime and warns about `process.exit` there,
+  even behind an early return.
+- **Background jobs** start from `instrumentation-node.ts` and take a Postgres advisory lock, so two
   instances never run the same job at once.
 - **Claude in the product:** use the current model ID explicitly, pin the SDK, and degrade
   gracefully when no API key is set. Tests never call a model; they pass a fake.

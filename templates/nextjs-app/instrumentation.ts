@@ -1,15 +1,8 @@
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  try {
-    const { env } = await import("./lib/env");
-    env();
-  } catch (err) {
-    // Next only logs a throw from register() ("Failed to prepare server") and keeps
-    // the process alive without serving, so the container looks up until the
-    // healthcheck gives out. Exit instead, with the reason in the log.
-    console.error(err instanceof Error ? err.message : err);
-    process.exit(1);
+  // Node-only code lives in instrumentation-node.ts, imported only inside this check:
+  // Next builds this file for the Edge runtime too, and warns about Node APIs
+  // (process.exit) it can see there even behind an early return.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./instrumentation-node");
   }
-  // Start background jobs here. Each takes a Postgres advisory lock so two
-  // instances never run the same job at once.
 }
