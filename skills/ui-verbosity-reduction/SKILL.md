@@ -40,6 +40,8 @@ Default:
 
 Override the default only when the project has an *explicit, recorded* casing decision, such as a style guide, a design-system doc, or a line in CLAUDE.md/README/CONTRIBUTING. Look for one before editing. An existing codebase that just happens to use sentence case is not a decision; that's usually agent output nobody chose, so apply the default.
 
+A label string can also be used inside a sentence (an enum's label shown as a badge and also in a request body: "Changes needed: …"). Title Casing the shared string breaks the sentence. Keep a badge form and a sentence form for it rather than one string for both.
+
 Because the default may differ from what the rest of the app currently uses, casing changes inside a narrow scope create mismatches (a "New Series" link that opens a page titled "New series"). Fix the immediate counterparts of what you changed (the page title a link opens, the button a confirm belongs to) and list any remaining sentence-case labels elsewhere in the app as a follow-up, offering an app-wide casing pass.
 
 ## Handle with care
