@@ -77,5 +77,8 @@ RunCloud pulls a git branch. CI builds the front-end assets and publishes them o
   `APP_HEALTH_URL` variable to that route's public URL, and point RunCloud's Git deployment at
   `deploy-production` with its GitHub webhook on push. RunCloud's deploy script drops any
   `npm` build step: the assets arrive built.
+- If the front end imports from `vendor/` (a Filament panel theme, Livewire or Flux CSS), set
+  `composer-install: true` on the `deploy` job, or the build can't resolve those imports.
+  `vendor/` is installed for the build only and isn't published.
 - Migrations and seeders run in RunCloud's deploy script (`php artisan migrate --force`), after
   the pull.

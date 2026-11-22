@@ -278,3 +278,10 @@ run. The WordPress profile doesn't say where upgrades run. One legacy plugin's P
 migrate at once, re-reads the option uncached, migrates idempotently, then stores the new version.
 Undecided: whether that pattern becomes a line in the profile. Reported 2026-11-16 by a migration
 session.
+
+## `runcloud-deploy.yml`: Composer packages that need credentials
+
+`composer-install` installs `vendor/` for asset builds that import from it, with no repository
+credentials. A paid package (Flux Pro, Filament plugins sold through a private repository) would
+fail there. Undecided: whether to add an `auth.json` secret input, and how it's named. Raised
+2026-11-22 alongside the input, by a Laravel app session.

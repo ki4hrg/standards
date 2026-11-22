@@ -21,6 +21,10 @@ name: runcloud-deploy
 # waits until this commit, or a later one, is serving. RunCloud's own status doesn't say
 # which commit is live.
 #
+# With composer-install, vendor/ is installed before the build, for assets that
+# import from it (a Filament panel theme, Livewire or Flux CSS). vendor/ is only
+# read by the build; it is never published to the deploy branch.
+#
 #   deploy:
 #     needs: [check, security]
 #     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -61,6 +65,12 @@ on:
           production), each with its own check.
         type: string
         default: ""
+      composer-install:
+        description: >-
+          Run composer install before building, for assets that import from vendor/ (a
+          Filament panel theme). vendor/ is not published.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -112,6 +122,23 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.package-manager }}
+      # The build only reads files (CSS) from vendor/; no PHP runs. So the runner's own
+      # PHP and Composer will do, and platform requirements (PHP version, extensions)
+      # are ignored rather than matched. --no-scripts: package:discover boots the app,
+      # which has no .env here. Packages that need repository credentials aren't supported.
+      - id: composer-cache
+        if: steps.tip.outputs.stale != 'true' && inputs.composer-install
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - if: steps.tip.outputs.stale != 'true' && inputs.composer-install
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Install Composer packages
+        if: steps.tip.outputs.stale != 'true' && inputs.composer-install
+        run: composer install --no-dev --no-scripts --prefer-dist --no-progress --no-interaction --ignore-platform-reqs
+
       - name: Build assets
         if: steps.tip.outputs.stale != 'true'
         env:
