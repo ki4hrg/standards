@@ -28,6 +28,14 @@ profiles: question it when it does not fit.
 
 ## Rules
 
+- **Migrations are append-only once merged to `main`.** A later schema change is a new migration.
+  A migration still on an unmerged branch may be edited (`../decisions.md`).
+- **Name composite indexes and foreign keys yourself.** Laravel builds the name from the table and
+  every column, which can pass MySQL and MariaDB's 64-character identifier limit. SQLite has no
+  limit, so local runs pass and only the CI database fails the migration.
+- **Use block `@php … @endphp` in Blade views, not inline `@php(...)`.** When a view mixes the two,
+  Blade compiles everything from the inline one to the next `@endphp` as one PHP block, and the
+  view fails with parse errors such as "unexpected endif".
 - **Livewire actions skip custom route middleware.** `/livewire/update` re-applies only `auth`
   and `can:` from the page's route, so any other middleware the page relies on (2FA enrolment,
   a tenant or consent check) is skipped on actions from a page that is already open. Register it
