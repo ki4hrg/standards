@@ -64,40 +64,47 @@ RunCloud pulls a git branch. CI builds the front-end assets and publishes them o
   added in `then:` get no group middleware:
 
   ```php
-  use Illuminate\Support\Facades\Route;   // at the top of bootstrap/app.php
+  use App\Http\Controllers\HealthController;   // at the top of bootstrap/app.php
+  use Illuminate\Support\Facades\Route;
 
   ->withRouting(
       web: __DIR__.'/../routes/web.php',
       health: '/up',
-      // No auth, no session, no database: says which commit this release is
-      // (REVISION is written by CI on the deploy branch).
-      // The handler must be the only closure on its line (see below).
+      // No auth, no session, no database: says which commit this release is.
       then: function (): void {
-          Route::get('/api/health', function () {
-              return response()->json([
-                  'ok' => true,
-                  'revision' => is_file(base_path('REVISION')) ? trim((string) file_get_contents(base_path('REVISION'))) : null,
-              ]);
-          });
+          Route::get('/api/health', HealthController::class)->name('health');
       },
   )
+  ```
+
+  ```php
+  // app/Http/Controllers/HealthController.php
+  class HealthController extends Controller
+  {
+      public function __invoke(): JsonResponse
+      {
+          // REVISION is written by CI on the deploy branch. Missing or empty reports null.
+          $revision = trim((string) @file_get_contents(base_path('REVISION')));
+
+          return response()->json([
+              'ok' => true,
+              'revision' => $revision !== '' ? $revision : null,
+          ])->header('Cache-Control', 'no-store');
+      }
+  }
   ```
 
   or in `routes/api.php`, if the app registers it, after checking that the `api` group adds
   nothing that touches the database (a `throttle` on a database cache store writes per request).
 
-  **Wherever it goes, keep the handler the only closure on its line** (not
-  `then: fn () => Route::get(..., fn () => ...)`).
-  `route:cache`, which `optimize` runs on deploy, serializes the handler by reading its source
-  line, takes the outer closure, and the cached route returns a `Route` object: every request
-  gets a 500 and the revision check fails. Tests don't cache routes, so add one that
-  round-trips the handler:
+  **A controller, not a closure.** `route:cache`, which `optimize` runs on deploy, serializes a
+  closure handler by reading its source line. With two closures on one line
+  (`then: fn () => Route::get(..., fn () => ...)`, this profile's earlier example) it takes the
+  outer one, the cached route returns a `Route` object, every request gets a 500 and the
+  revision check fails. Tests don't cache routes, so they pass. An app that keeps a closure
+  handler keeps it alone on its line and tests that it survives serialization:
 
   ```php
-  use Illuminate\Http\JsonResponse;
-  use Illuminate\Http\Request;
-  use Laravel\SerializableClosure\SerializableClosure;
-
   it('still answers once routes are cached', function () {
       $route = app('router')->getRoutes()->match(Request::create('/api/health'));
       $action = unserialize(serialize(new SerializableClosure($route->getAction('uses'))))->getClosure();
