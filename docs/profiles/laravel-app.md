@@ -41,6 +41,9 @@ profiles: question it when it does not fit.
   a tenant or consent check) is skipped on actions from a page that is already open. Register it
   with `Livewire::addPersistentMiddleware([...])`, and test an action posted without it. Check
   this in migration Phase 3 for every Livewire app.
+- **Mailgun needs its mailer defined.** Laravel's `config/mail.php` skeleton has no `mailgun`
+  entry, so `MAIL_MAILER=mailgun` fails with "Mailer [mailgun] is not defined" until
+  `'mailgun' => ['transport' => 'mailgun']` is added under `mailers`.
 - Policies and validation as in `../core/security.md`: Form Requests or `$request->validate`, and
   a policy or gate for every action, in Livewire component methods too.
 
@@ -119,6 +122,13 @@ RunCloud pulls a git branch. CI builds the front-end assets and publishes them o
 - If the front end imports from `vendor/` (a Filament panel theme, Livewire or Flux CSS), set
   `composer-install: true` on the `deploy` job, or the build can't resolve those imports.
   `vendor/` is installed for the build only and isn't published.
+- **Remove `ignore_user_abort`, `set_time_limit`, `fpassthru` and `tmpfile` from the web app's
+  PHP `disable_functions`.** RunCloud disables them by default, and Laravel and Livewire call
+  them. Without `ignore_user_abort` every `BinaryFileResponse` fails, so PHP-served files 502,
+  Livewire's own script among them: Filament and Livewire screens render but nothing on them
+  works. Without `fpassthru`, Storage downloads fail. The process functions (`exec`,
+  `proc_open` and the rest) stay disabled for the web pool. CLI PHP (queue, cron) has its own,
+  empty list.
 - **Containerized RunCloud servers:** PHP runs inside the `runcloud_phpXXrc` container, so
   `/RunCloud/Packages/phpXXrc/bin/php` and the `{PHPXX}` replacers fail in deploy hooks there.
   Use plain `php`. On other RunCloud servers keep the replacer, which picks the site's version.
