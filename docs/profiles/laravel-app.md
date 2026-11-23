@@ -124,3 +124,16 @@ RunCloud pulls a git branch. CI builds the front-end assets and publishes them o
   Use plain `php`. On other RunCloud servers keep the replacer, which picks the site's version.
 - Migrations and seeders run in RunCloud's deploy script (`php artisan migrate --force`), after
   the pull.
+- **Atomic Deployment by default** (`../decisions.md`): each release is built in its own
+  directory and `live/` points at it once it's ready, so nothing serves half-updated code.
+  The setup that works:
+  - `.env` as a **Config Symlink**, never edited through the Laravel Environment editor. Then
+    `chmod 600` it: RunCloud creates it 644, in a directory every user on the server can enter.
+  - `storage` as a **Directory Symlink** (Link From `app_storage/persistent`), with Laravel's
+    `storage/` skeleton (`app/public`, `framework/{cache,sessions,views}`, `logs`) created there
+    before the first deploy.
+  - `php artisan queue:restart` in the **Activate Latest Release → After** hook, so workers load
+    the new release.
+  - Supervisor and cron commands point at `live/`, not at a release directory.
+  - Switching an app to atomic deployment **changes its Git webhook URL**. The old one answers
+    403 "Unable to process request!", so update the GitHub webhook in the same sitting.
